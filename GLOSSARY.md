@@ -1,37 +1,69 @@
 # A Touch of Darkness
 
-One paragraph: the mechanic this Module gives, and which Consumers use it.
+The Pillar of A Touch Of that owns the Dark: a player who stays unlit too long is struck by something unseen until they reach light, and every Light Source burns out. Modpacks load it; the other Pillars meet it only through vanilla state.
 
 ## Language
 
-The Module's terms, each with what it is and the words to avoid. `/domain-modeling` adds them as they are resolved.
+The Pillar's own terms, each with what it is and the words to avoid. The suite's terms (Pillar, Runtime, Dark, Light Source, Spent Torch) are defined in the A Touch Of glossary, in `5thlayer/atouchof`. `/domain-modeling` adds terms here as they are resolved.
 
 ### Parties
 
 **A Touch of Darkness**:
-This Module.
-_Avoid_: Library, Binding
+This Pillar.
+_Avoid_: Module (a FactoryWorks mod), Library, Binding
 
-**FactoryWorks**:
-The suite of 5thlayer mods this Module belongs to, with the other Modules.
-_Avoid_: the -works suite, the Pack
+**A Touch Of**:
+The suite this Pillar belongs to, with A Touch of Madness and A Touch of Cold.
+_Avoid_: FactoryWorks (another suite), the Pack
 
 **Consumer**:
-A mod that builds against this Module, such as another FactoryWorks Module, or a modpack that loads it.
+A modpack that loads this Pillar.
 _Avoid_: client (collides with the game's client side), dependent, integration
+
+### The Dark
+
+**Lit**:
+A player is lit when the light at their eyes, vanilla's light with the sky dimmed for the hour and the weather, is enough. They are also lit under the open sky of a dimension whose sky never darkens, such as the End, and on the surface at night under a full moon when it isn't raining. A burning Light Source a player carries lights the world around them as a placed one would.
+_Avoid_: bright, safe
+
+**Grace Period**:
+How long a player can be in the Dark before the first Strike. It refills only after the player has been lit for a moment without a break.
+_Avoid_: timer, countdown
+
+**Strike**:
+One blow from what lives in the Dark: heavy damage that armour, enchantments and effects soften as they do any other, scaled by difficulty to nothing on Peaceful, and repeated while the player stays in the Dark. Where A Touch of Madness is loaded it also costs Sanity, on Peaceful too. It never touches anything but players, nor players in Creative or Spectator.
+_Avoid_: attack, Charlie (Klei's name), grue
+
+### Light
+
+**Torch**:
+This Pillar's torch: crafted burning, carried in the hand and never placed, and burning only while held. It goes out underwater and burns out into a Spent Torch.
+_Avoid_: lit torch, burning torch (every torch is)
+
+**Lamp**:
+This Pillar's lantern: a Light Source carried or placed, turned on and off by hand, fed fuel by hand up to what it can hold, and shining at its full light while it is on and has fuel.
+_Avoid_: lantern (vanilla's block), FE lamp (not made yet)
+
+**Campfire**:
+This Pillar's placed fire, put down already burning and fed fuel by hand up to what it can hold; its light dims as its fuel runs down.
+_Avoid_: fire pit, bonfire
+
+**Unlit**:
+A block that would give light in vanilla but gives none at all here, for every player and every mob, because this Pillar or a pack has put it out. Cheap light that can't lose its recipe is closed this way.
+_Avoid_: dimmed, ignored, light-blocked
 
 ### Dev runs
 
 **Game-test pack**:
-A datapack only this Module's game tests switch on, holding the data a Consumer would supply, such as a tag's entries or a recipe, so a test can stand on it. Never in what players download.
+A datapack only this Pillar's game tests switch on, holding the data a Consumer would supply, such as a tag's entries or a recipe, so a test can stand on it. Never in what players download.
 _Avoid_: test datapack, gametest datapack
 
 **Dev pack**:
-A datapack only this Module's dev client switches on, holding the data a Consumer would supply, so a feature a Consumer turns on with data can be tried by hand. Never in what players download.
+A datapack only this Pillar's dev client switches on, holding the data a Consumer would supply, so a feature a Consumer turns on with data can be tried by hand. Never in what players download.
 _Avoid_: debug pack, test pack
 
 ### Shipped packs
 
 **Gallery pack**:
-A datapack in this Module's jar, off until a player turns it on, whose functions build a working scene of each of the Module's features, each with a sign naming it. Functions only: turning it on changes nothing about how the Module plays (libworks ADR 0010).
+A datapack in this Pillar's jar, off until a player turns it on, whose functions build a working scene of each of the Pillar's features, each with a sign naming it. Functions only: turning it on changes nothing about how the Pillar plays (libworks ADR 0010).
 _Avoid_: demo pack, showcase pack, gallery datapack

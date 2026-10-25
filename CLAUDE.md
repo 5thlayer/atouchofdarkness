@@ -1,6 +1,6 @@
 # A Touch of Darkness
 
-A 5thlayer Module: a mod its Consumers, other Modules or a pack, read from the local maven repository by version. See `GLOSSARY.md` for the domain glossary.
+A Pillar of the A Touch Of suite (`5thlayer/atouchof`, which holds the suite's glossary and ADRs): a mod its Consumers, modpacks, read from the local maven repository by version. See `GLOSSARY.md` for the domain glossary.
 
 ## Workflow
 
