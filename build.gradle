@@ -2,7 +2,7 @@
 // ModDevGradle on Java 25, the game test server that names each test, the jar's licensing, ~/.m2-only
 // publishing, and the release, upload and buildGametestStructures tasks.
 plugins {
-    id 'io.github.5thlayer.libworks.module' version '0.4.2'
+    id 'io.github.5thlayer.libworks.module' version '0.4.4'
 }
 
 // What the Module requires of other Modules, each as a range (libworks ADR 0003):
