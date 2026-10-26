@@ -3,9 +3,11 @@
 
 package io.github._5thlayer.atouchofdarkness.gametest;
 
+import java.util.Set;
 import java.util.UUID;
 
 import com.mojang.authlib.GameProfile;
+import io.github._5thlayer.atouchofdarkness.dark.DarkState;
 import io.netty.channel.embedded.EmbeddedChannel;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -20,6 +22,7 @@ import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.level.GameType;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.LightBlock;
+import net.neoforged.neoforge.network.registration.NetworkRegistry;
 
 /**
  * The shared fixture of the tests of a player in the Dark: a survival player with 100 health, so the
@@ -138,6 +141,9 @@ final class DarkFixture {
         var player = new ServerPlayer(server, helper.getLevel(), cookie.gameProfile(), cookie.clientInformation());
         var connection = new Connection(PacketFlow.SERVERBOUND);
         new EmbeddedChannel(connection);
+        // As if the client had this Pillar, so the Dark's state may be sent it. Only that channel: a
+        // client with every one is due NeoForge's config sync, which only a real login sets up.
+        NetworkRegistry.onMinecraftRegister(connection, Set.of(DarkState.TYPE.id()));
         server.getPlayerList().placeNewPlayer(connection, player, cookie);
         // As a client says once it has loaded the world; till then, or 60 ticks, nothing hurts the player.
         player.connection.markClientLoaded();

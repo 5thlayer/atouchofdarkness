@@ -30,7 +30,8 @@ import net.neoforged.neoforge.registries.NeoForgeRegistries;
 /**
  * The Dark (GLOSSARY.md): every game tick, each player in a dimension tagged
  * {@code atouchofdarkness:dark} who isn't Lit drains their Grace Period, and a Strike lands when it
- * runs out. Only players are ticked, and the Dark never reaches Creative and Spectator players.
+ * runs out, and the player feels both through the {@link DarkCues}. Only players are ticked, and the
+ * Dark never reaches Creative and Spectator players.
  */
 public final class Dark {
 
@@ -66,6 +67,7 @@ public final class Dark {
 
     public static void register(IEventBus modBus) {
         ATTACHMENTS.register(modBus);
+        DarkCues.register(modBus);
         NeoForge.EVENT_BUS.addListener(Dark::tick);
     }
 
@@ -110,9 +112,13 @@ public final class Dark {
                 continue;
             }
             boolean inTheDark = darkHere && !player.isCreative() && !player.isSpectator() && !isLit(player);
-            if (player.getData(GRACE_PERIOD).tick(inTheDark, settings)) {
+            var gracePeriod = player.getData(GRACE_PERIOD);
+            var cue = gracePeriod.tick(inTheDark, settings);
+            DarkCues.play(player, cue);
+            if (cue == GracePeriod.Cue.STRIKE) {
                 strike(level, player);
             }
+            DarkCues.send(player, new DarkState(inTheDark, gracePeriod.drainedFraction(settings)));
         }
     }
 

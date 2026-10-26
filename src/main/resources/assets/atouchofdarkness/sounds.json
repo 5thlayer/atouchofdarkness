@@ -1,0 +1,25 @@
+{
+  "dark.enter": {
+    "subtitle": "subtitles.atouchofdarkness.dark.enter",
+    "sounds": [
+      "minecraft:ambient/cave/cave13",
+      "minecraft:ambient/cave/cave14",
+      "minecraft:ambient/cave/cave16"
+    ]
+  },
+  "dark.warning": {
+    "subtitle": "subtitles.atouchofdarkness.dark.warning",
+    "sounds": [
+      "minecraft:mob/warden/nearby_closest_1",
+      "minecraft:mob/warden/nearby_closest_2",
+      "minecraft:mob/warden/nearby_closest_3"
+    ]
+  },
+  "dark.strike": {
+    "subtitle": "subtitles.atouchofdarkness.dark.strike",
+    "sounds": [
+      "minecraft:mob/warden/attack_impact_1",
+      "minecraft:mob/warden/attack_impact_2"
+    ]
+  }
+}

@@ -12,6 +12,19 @@ package io.github._5thlayer.atouchofdarkness.dark;
  */
 public final class GracePeriod {
 
+    /** The warning's lead on each Strike: 2 s. */
+    public static final int WARNING = 40;
+
+    /** What a tick has the player hear, beside nothing. */
+    public enum Cue {
+        NONE,
+        /** The Grace Period starts to drain from full. */
+        ENTER,
+        /** A Strike lands in {@link #WARNING} ticks, unless the player reaches light first. */
+        WARNING,
+        STRIKE
+    }
+
     /** The ticks, each 1/20 s, that the config sets. */
     public record Settings(int length, int refillDelay, int strikeInterval) {
     }
@@ -59,8 +72,16 @@ public final class GracePeriod {
         return Math.max(spent ? settings.strikeInterval() - sinceStrike : settings.length() - drained, 0);
     }
 
-    /** One tick, in the Dark or out of it; true when a Strike lands on it. */
-    public boolean tick(boolean inTheDark, Settings settings) {
+    /** How much of the Grace Period is drained, from 0 when full to 1 once the first Strike has landed. */
+    public float drainedFraction(Settings settings) {
+        return spent ? 1F : (float) Math.min(drained, settings.length()) / settings.length();
+    }
+
+    /**
+     * One tick, in the Dark or out of it, and what it has the player hear. A Grace Period or interval of
+     * 2 s or less has no warning, and a cue that falls on the tick of another gives way to it.
+     */
+    public Cue tick(boolean inTheDark, Settings settings) {
         if (!inTheDark) {
             litFor = Math.min(litFor + 1, settings.refillDelay());
             if (litFor >= settings.refillDelay()) {
@@ -68,25 +89,30 @@ public final class GracePeriod {
                 spent = false;
                 sinceStrike = 0;
             }
-            return false;
+            return Cue.NONE;
         }
         litFor = 0;
+        boolean full = drained == 0;
         if (drained < settings.length()) {
             drained++;
         }
         // At or past the length, as a config that shortens it leaves a player already in the Dark.
         if (drained < settings.length()) {
-            return false;
+            return full ? Cue.ENTER : warning(settings);
         }
         if (!spent) {
             spent = true;
-            return true;
+            return Cue.STRIKE;
         }
         sinceStrike++;
         if (sinceStrike >= settings.strikeInterval()) {
             sinceStrike = 0;
-            return true;
+            return Cue.STRIKE;
         }
-        return false;
+        return warning(settings);
+    }
+
+    private Cue warning(Settings settings) {
+        return ticksToStrike(settings) == WARNING ? Cue.WARNING : Cue.NONE;
     }
 }

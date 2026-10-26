@@ -7,5 +7,8 @@
   "death.attack.atouchofdarkness.strike.3": "%1$s was found by the Babau",
   "death.attack.atouchofdarkness.strike.3.player": "%1$s was found by the Babau while fleeing %2$s",
   "death.attack.atouchofdarkness.strike.4": "The Babau took %1$s in the dark",
-  "death.attack.atouchofdarkness.strike.4.player": "The Babau took %1$s in the dark while they fled %2$s"
+  "death.attack.atouchofdarkness.strike.4.player": "The Babau took %1$s in the dark while they fled %2$s",
+  "subtitles.atouchofdarkness.dark.enter": "The dark closes in",
+  "subtitles.atouchofdarkness.dark.warning": "Something stirs in the dark",
+  "subtitles.atouchofdarkness.dark.strike": "The Babau strikes"
 }
