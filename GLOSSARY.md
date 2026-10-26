@@ -52,6 +52,18 @@ _Avoid_: lantern (vanilla's block), FE lamp (not made yet)
 This Pillar's placed fire, put down already burning and fed fuel by hand up to what it can hold; its light dims as its fuel runs down.
 _Avoid_: fire pit, bonfire
 
+**Lampad**:
+A torch-bearing spirit of the underworld, after Hecate's nymphs, summoned from a Lamp set on gold and kindled with a Torch, the gold becoming her Votive. She carries fuel from her Votive into the placed Lamps and Campfires around it, and takes gold from it as they grow in number. Her binding fades within a week, and once it has faded she stands dormant until a Nightbrand renews it. Hurt, she retreats to the Dark and tends nothing until she has healed. She gives no light and is not a Light Source.
+_Avoid_: golem (vanilla's kind), lamplighter, servant, Munaciello
+
+**Votive**:
+The offering stand a Lampad is summoned at and works from, holding the fuel, the Nightbrand and the gold she takes. She works from nothing else.
+_Avoid_: shrine, chest, altar
+
+**Nightbrand**:
+A Spent Torch that a player has carried in the Dark until it has soaked the Dark up, which renews a Lampad's binding. Each player can darken only one a day. It gives no light and is not a Light Source.
+_Avoid_: steeped torch, dark torch, Stygian Torch
+
 **Unlit**:
 A block that would give light in vanilla but gives none at all here, for every player and every mob, because this Pillar or a pack has put it out. Cheap light that can't lose its recipe is closed this way.
 _Avoid_: dimmed, ignored, light-blocked
