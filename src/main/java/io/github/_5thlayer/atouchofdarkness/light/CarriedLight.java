@@ -9,6 +9,7 @@ import java.util.function.Supplier;
 
 import io.github._5thlayer.atouchofdarkness.ATouchOfDarkness;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.GlobalPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
@@ -32,6 +33,13 @@ public final class CarriedLight {
 
     private static final long NO_CLOCK = Long.MIN_VALUE;
 
+    /**
+     * Ticks of the clock a held Light Source's burn gathers before it is written to the stack, so the
+     * hand is sent to the client once a second rather than every tick. A jump of the clock, such as
+     * sleep, is written at once.
+     */
+    private static final int BURN_STEP = 20;
+
     private static final DeferredRegister<AttachmentType<?>> ATTACHMENTS =
             DeferredRegister.create(NeoForgeRegistries.ATTACHMENT_TYPES, ATouchOfDarkness.MOD_ID);
 
@@ -40,10 +48,12 @@ public final class CarriedLight {
             () -> AttachmentType.builder(Carrier::new).build());
 
     private static final class Carrier {
-        /** The time of day the player's held Light Sources last burned to. */
+        /** The time of day the player was last ticked at. */
         long clock = NO_CLOCK;
-        /** Where the player's light was placed last tick, if anywhere. */
-        @Nullable BlockPos lit;
+        /** Ticks of the clock since then that their held Light Sources haven't yet burned. */
+        long unburnt;
+        /** Where the player's light was placed last tick, if anywhere, in whichever level they were in. */
+        @Nullable GlobalPos lit;
     }
 
     private CarriedLight() {
@@ -69,11 +79,16 @@ public final class CarriedLight {
             var carrier = player.getData(CARRIER);
             long elapsed = carrier.clock == NO_CLOCK ? 0 : Burn.elapsed(carrier.clock, now);
             carrier.clock = now;
-            if (!player.isAlive()) {
+            // A Spectator's hands, and the dead's, are paused as an inventory is.
+            if (!player.isAlive() || player.isSpectator()) {
+                carrier.unburnt = 0;
                 continue;
             }
             VanillaTorches.convert(player);
-            burnHeld(player, elapsed);
+            carrier.unburnt += elapsed;
+            long burnt = carrier.unburnt >= BURN_STEP ? carrier.unburnt : 0;
+            carrier.unburnt -= burnt;
+            burnHeld(player, burnt);
             int light = heldLight(player);
             if (light > 0) {
                 wanted.merge(eyes(player), light, Math::max);
@@ -81,15 +96,21 @@ public final class CarriedLight {
         }
         for (ServerPlayer player : level.players()) {
             var carrier = player.getData(CARRIER);
-            if (carrier.lit != null && !wanted.containsKey(carrier.lit)) {
-                remove(level, carrier.lit);
+            var lit = carrier.lit;
+            boolean stillWanted = lit != null && lit.dimension() == level.dimension() && wanted.containsKey(lit.pos());
+            if (lit != null && !stillWanted) {
+                // From the level they left, too, on a change of dimension.
+                var litLevel = level.getServer().getLevel(lit.dimension());
+                if (litLevel != null) {
+                    remove(litLevel, lit.pos());
+                }
             }
             carrier.lit = null;
         }
         wanted.forEach((pos, light) -> {
             if (place(level, pos, light)) {
                 level.players().stream().filter(player -> heldLight(player) > 0 && eyes(player).equals(pos))
-                        .forEach(player -> player.getData(CARRIER).lit = pos);
+                        .forEach(player -> player.getData(CARRIER).lit = GlobalPos.of(level.dimension(), pos));
             }
         });
     }

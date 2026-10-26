@@ -8,6 +8,7 @@ import static io.github._5thlayer.atouchofdarkness.gametest.DarkFixture.*;
 import java.util.List;
 
 import io.github._5thlayer.atouchofdarkness.ATouchOfDarkness;
+import io.github._5thlayer.atouchofdarkness.light.Burning;
 import io.github._5thlayer.atouchofdarkness.light.CarriedLightBlock;
 import io.github._5thlayer.atouchofdarkness.light.HeldLightSource;
 import io.github._5thlayer.atouchofdarkness.light.Light;
@@ -28,6 +29,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.crafting.CraftingInput;
 import net.minecraft.world.item.crafting.CraftingRecipe;
+import net.minecraft.world.level.GameType;
 import net.minecraft.world.level.LightLayer;
 import net.minecraft.world.level.MoonPhase;
 import net.minecraft.world.level.block.Blocks;
@@ -133,13 +135,20 @@ final class TorchTests {
         });
     }
 
-    /** A player whose eyes are below the water's surface: the Torch in their hand goes out at once. */
+    /**
+     * A player whose eyes are below the water's surface: the Torch in their hand goes out at once into a
+     * Spent Torch, and the relit one in their other hand is gone, so relighting is never endless light.
+     */
     private static void underwater(GameTestHelper helper) {
         var player = caged(helper, 0);
         player.setItemInHand(InteractionHand.MAIN_HAND, Light.TORCH.toStack());
+        var relit = Light.TORCH.toStack();
+        relit.set(Light.BURNING, Burning.relit(BURN));
+        player.setItemInHand(InteractionHand.OFF_HAND, relit);
         helper.setBlock(EYES, Blocks.WATER);
         helper.runAtTickTime(3, () -> {
             helper.assertTrue(player.getMainHandItem().is(Light.SPENT_TORCH), "underwater the Torch became " + player.getMainHandItem());
+            helper.assertTrue(player.getOffhandItem().isEmpty(), "underwater the relit Torch became " + player.getOffhandItem());
             leave(player);
             helper.succeed();
         });
@@ -192,7 +201,7 @@ final class TorchTests {
     }
 
     /**
-     * A burning Torch dropped on the ground gives no light, and a carried light with no carrier, one left
+     * A Torch dropped on the ground gives no light, and a carried light with no carrier, one left
      * in the air, one in water, and one whose carrier logged out, is gone within its second's check.
      */
     private static void orphans(GameTestHelper helper) {
@@ -273,7 +282,8 @@ final class TorchTests {
 
     /**
      * Held, a Torch lasts 5 min of the time of day, moved on at once as sleep does, and a soul Torch twice
-     * that, each ending as a Spent Torch. One in the inventory, a chest or on the ground hasn't burned at all.
+     * that, each ending as a Spent Torch. One in the inventory, a chest, on the ground or a Spectator's hand
+     * hasn't burned at all.
      */
     private static void burnsOut(GameTestHelper helper) {
         var holder = caged(helper, new BlockPos(2, 1, 2), 0);
@@ -281,6 +291,9 @@ final class TorchTests {
         var soulHolder = caged(helper, new BlockPos(6, 1, 2), 0);
         soulHolder.setItemInHand(InteractionHand.MAIN_HAND, Light.SOUL_TORCH.toStack());
         holder.getInventory().setItem(9, Light.TORCH.toStack());
+        var spectator = caged(helper, new BlockPos(4, 1, 4), 0);
+        spectator.setGameMode(GameType.SPECTATOR);
+        spectator.setItemInHand(InteractionHand.MAIN_HAND, Light.TORCH.toStack());
         var chest = new BlockPos(6, 1, 6);
         helper.setBlock(chest, Blocks.CHEST);
         var chestEntity = helper.getBlockEntity(chest, ChestBlockEntity.class);
@@ -295,8 +308,8 @@ final class TorchTests {
         helper.runAtTickTime(5, () -> {
             assertHolds(helper, holder, Light.SPENT_TORCH.get());
             assertHolds(helper, soulHolder, Light.SOUL_TORCH.get());
-            for (var unburnt : List.of(holder.getInventory().getItem(9), chestEntity.getItem(0), dropped.getItem())) {
-                helper.assertTrue(unburnt.is(Light.TORCH) && !unburnt.has(Light.BURNING), "a Torch out of hand burned: " + unburnt);
+            for (var unburnt : List.of(holder.getInventory().getItem(9), chestEntity.getItem(0), dropped.getItem(), spectator.getMainHandItem())) {
+                helper.assertTrue(unburnt.is(Light.TORCH) && !unburnt.has(Light.BURNING), "a Torch out of a player's hand burned: " + unburnt);
             }
             KeepsClock.advance(helper, SOUL_BURN - BURN - 3 * MARGIN);
         });
@@ -306,6 +319,7 @@ final class TorchTests {
         });
         helper.runAtTickTime(9, () -> {
             assertHolds(helper, soulHolder, Light.SPENT_TORCH.get());
+            leave(spectator);
             leave(holder);
             leave(soulHolder);
             helper.succeed();
@@ -313,7 +327,7 @@ final class TorchTests {
     }
 
     /**
-     * Five Spent Torches, relit by flint and steel, a fire charge, a burning Torch in the other hand, fire and
+     * Five Spent Torches, relit by flint and steel, a fire charge, a Torch in the other hand, fire and
      * lava: each a Torch of a quarter of a fresh one's burn, which then burns away to nothing.
      */
     private static void relit(GameTestHelper helper) {

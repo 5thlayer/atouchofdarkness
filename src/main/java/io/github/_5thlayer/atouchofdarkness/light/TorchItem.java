@@ -10,11 +10,12 @@ import net.minecraft.util.Mth;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import org.jspecify.annotations.Nullable;
 
 /**
  * The Torch (GLOSSARY.md), and the soul Torch: crafted burning, never placed, and burning only while
  * held, by the time of day, twice as fast in rain under the open sky. Underwater, or burnt out, it
- * becomes a Spent Torch, unless it was a Spent Torch relit, which burns away to nothing. Its burn shows
+ * becomes a Spent Torch, unless it was a Spent Torch relit, which is gone. Its burn shows
  * as an item bar once it has started.
  */
 public final class TorchItem extends Item implements HeldLightSource {
@@ -40,13 +41,13 @@ public final class TorchItem extends Item implements HeldLightSource {
 
     @Override
     public ItemStack burnHeld(ItemStack stack, ServerPlayer player, long elapsed) {
+        var burning = stack.get(Light.BURNING);
         if (eyesUnderWater(player)) {
-            return Light.SPENT_TORCH.toStack();
+            return goneOut(burning);
         }
         if (elapsed == 0) {
             return stack;
         }
-        var burning = stack.get(Light.BURNING);
         if (burning == null) {
             burning = Burning.fresh(LightConfig.TORCH_BURN_TIME.getAsInt() * burnFactor);
         }
@@ -54,10 +55,15 @@ public final class TorchItem extends Item implements HeldLightSource {
         int rate = player.level().isRainingAt(BlockPos.containing(player.getEyePosition()).above()) ? Burn.IN_RAIN : Burn.STILL;
         int left = Burn.burn(burning.left(), elapsed, rate);
         if (left == 0) {
-            return burning.relit() ? ItemStack.EMPTY : Light.SPENT_TORCH.toStack();
+            return goneOut(burning);
         }
         stack.set(Light.BURNING, burning.withLeft(left));
         return stack;
+    }
+
+    /** A Spent Torch, or nothing for one already relit, so relighting is never endless light. */
+    private static ItemStack goneOut(@Nullable Burning burning) {
+        return burning != null && burning.relit() ? ItemStack.EMPTY : Light.SPENT_TORCH.toStack();
     }
 
     /** Whether the player's eyes are below the surface of water, as vanilla's own check, which only a player's own tick updates. */
