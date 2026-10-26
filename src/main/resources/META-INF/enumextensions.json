@@ -1,0 +1,13 @@
+{
+  "entries": [
+    {
+      "enum": "net/minecraft/world/damagesource/DamageScaling",
+      "name": "ATOUCHOFDARKNESS_STRIKE",
+      "constructor": "(Ljava/lang/String;Lnet/neoforged/neoforge/common/damagesource/IScalingFunction;)V",
+      "parameters": {
+        "class": "io/github/_5thlayer/atouchofdarkness/dark/StrikeScaling$Proxy",
+        "field": "STRIKE"
+      }
+    }
+  ]
+}

@@ -13,6 +13,8 @@ authors = "5thlayer"
 description = '''
 ${mod_description}
 '''
+# Adds the Strike's difficulty scaling to vanilla's DamageScaling.
+enumExtensions = "META-INF/enumextensions.json"
 
 [[dependencies.${mod_id}]]
 modId = "neoforge"

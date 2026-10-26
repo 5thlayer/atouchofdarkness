@@ -39,8 +39,14 @@ public final class ATouchOfDarknessGameTests {
     private static final DeferredRegister<MapCodec<? extends GameTestInstance>> TEST_TYPES =
             DeferredRegister.create(Registries.TEST_INSTANCE_TYPE, ATouchOfDarkness.MOD_ID);
 
+    private static final DeferredRegister<MapCodec<? extends TestEnvironmentDefinition<?>>> ENVIRONMENT_TYPES =
+            DeferredRegister.create(Registries.TEST_ENVIRONMENT_DEFINITION_TYPE, ATouchOfDarkness.MOD_ID);
+
     static {
         TEST_TYPES.register("code", () -> CodeGameTest.CODEC);
+        ENVIRONMENT_TYPES.register("with_test_pack", () -> WithTestPack.CODEC);
+        ENVIRONMENT_TYPES.register("with_difficulty", () -> WithDifficulty.CODEC);
+        ENVIRONMENT_TYPES.register("with_dark_config", () -> WithDarkConfig.CODEC);
     }
 
     private ATouchOfDarknessGameTests() {
@@ -53,6 +59,8 @@ public final class ATouchOfDarknessGameTests {
 
     public static void register(IEventBus modBus) {
         TEST_TYPES.register(modBus);
+        ENVIRONMENT_TYPES.register(modBus);
+        modBus.addListener(WithTestPack::addPackFinders);
         // Posted only when game tests are enabled, which a production game never is.
         modBus.addListener(ATouchOfDarknessGameTests::registerTests);
     }
@@ -64,6 +72,7 @@ public final class ATouchOfDarknessGameTests {
         LoadTests.register(tests);
         GameTestPackTests.register(tests);
         CreativeTabTests.register(tests);
+        DarkTests.register(tests);
     }
 
     private static Identifier id(String path) {
@@ -72,6 +81,19 @@ public final class ATouchOfDarknessGameTests {
 
     /** What a test class is handed: a name, a tick budget and a body per test. */
     record Registrar(RegisterGameTestsEvent event, Holder<TestEnvironmentDefinition<?>> environment) {
+
+        /**
+         * The same, for tests that run in a batch of their own, in an environment that changes what
+         * every test beside them would see, such as the difficulty or the config. Each name once.
+         */
+        Registrar in(String name, TestEnvironmentDefinition<?> definition) {
+            return new Registrar(event, event.registerEnvironment(id(name), definition));
+        }
+
+        /** The same, for tests that run in a batch of their own with one of the tests' datapacks switched on. */
+        Registrar withPack(String pack) {
+            return in("with_" + pack, new WithTestPack(pack));
+        }
 
         void test(String name, int maxTicks, Consumer<GameTestHelper> body) {
             var id = id(name);

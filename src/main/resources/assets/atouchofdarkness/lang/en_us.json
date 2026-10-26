@@ -1,3 +1,5 @@
 {
-  "itemGroup.atouchofdarkness": "A Touch of Darkness"
+  "itemGroup.atouchofdarkness": "A Touch of Darkness",
+  "death.attack.atouchofdarkness.strike": "%1$s was struck by the Dark",
+  "death.attack.atouchofdarkness.strike.player": "%1$s was struck by the Dark while fleeing %2$s"
 }
