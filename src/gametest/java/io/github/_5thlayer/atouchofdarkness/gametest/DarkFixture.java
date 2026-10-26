@@ -13,6 +13,7 @@ import net.minecraft.core.SectionPos;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.network.Connection;
 import net.minecraft.network.protocol.PacketFlow;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.network.CommonListenerCookie;
 import net.minecraft.world.entity.ai.attributes.Attributes;
@@ -23,8 +24,8 @@ import net.minecraft.world.level.block.LightBlock;
 /**
  * The shared fixture of the tests of a player in the Dark: a survival player with 100 health, so the
  * Strikes a test counts never kill it, standing on the platform, shut in a stone cage where neither sky
- * nor block light reaches, with their eyes lit by vanilla's light block at the level a test needs. The
- * light engine is settled after each block placed.
+ * nor block light reaches, with their eyes lit by vanilla's light block at the level a test needs, or
+ * else under the open sky. The light engine is settled after each block placed.
  */
 final class DarkFixture {
 
@@ -54,11 +55,26 @@ final class DarkFixture {
     static ServerPlayer caged(GameTestHelper helper, BlockPos stand, int light) {
         cage(helper, stand);
         light(helper, stand.above(), light);
+        return standing(helper, stand);
+    }
+
+    /** A survival player with 100 health on the platform under the open sky, with no block light at their eyes. */
+    static ServerPlayer inTheOpen(GameTestHelper helper, BlockPos stand) {
+        settleLight(helper, stand);
+        return standing(helper, stand);
+    }
+
+    private static ServerPlayer standing(GameTestHelper helper, BlockPos stand) {
         var player = survivalPlayer(helper);
         standAt(helper, stand, player);
+        withHealth(player);
+        return player;
+    }
+
+    /** Gives the player 100 health. */
+    static void withHealth(ServerPlayer player) {
         player.getAttribute(Attributes.MAX_HEALTH).setBaseValue(HEALTH);
         player.setHealth(HEALTH);
-        return player;
     }
 
     /** Stone on every side of the two blocks over the stand, and above them; the platform is below. */
@@ -86,8 +102,12 @@ final class DarkFixture {
      * number of ticks late, and a test of the refill delay would read a shorter spell of light.
      */
     static void settleLight(GameTestHelper helper, BlockPos pos) {
-        var engine = helper.getLevel().getChunkSource().getLightEngine();
-        var at = helper.absolutePos(pos);
+        settleLight(helper.getLevel(), helper.absolutePos(pos));
+    }
+
+    /** The same, in any level, at a position in its own coordinates. */
+    static void settleLight(ServerLevel level, BlockPos at) {
+        var engine = level.getChunkSource().getLightEngine();
         var settled = engine.waitForPendingTasks(SectionPos.blockToSectionCoord(at.getX()), SectionPos.blockToSectionCoord(at.getZ()));
         // The engine updates in batches, each scheduled from here.
         while (!settled.isDone()) {

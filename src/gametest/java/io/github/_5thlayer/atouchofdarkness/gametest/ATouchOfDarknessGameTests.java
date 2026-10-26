@@ -47,6 +47,7 @@ public final class ATouchOfDarknessGameTests {
         ENVIRONMENT_TYPES.register("with_game_test_pack", () -> WithGameTestPack.CODEC);
         ENVIRONMENT_TYPES.register("with_difficulty", () -> WithDifficulty.CODEC);
         ENVIRONMENT_TYPES.register("with_dark_config", () -> WithDarkConfig.CODEC);
+        ENVIRONMENT_TYPES.register("at_night", () -> AtNight.CODEC);
     }
 
     private ATouchOfDarknessGameTests() {
@@ -73,6 +74,7 @@ public final class ATouchOfDarknessGameTests {
         GameTestPackTests.register(tests);
         CreativeTabTests.register(tests);
         DarkTests.register(tests);
+        SkyTests.register(tests);
     }
 
     private static Identifier id(String path) {
@@ -84,10 +86,11 @@ public final class ATouchOfDarknessGameTests {
 
         /**
          * The same, for tests that run in a batch of their own, in an environment that changes what
-         * every test beside them would see, such as the difficulty or the config. Each name once.
+         * every test beside them would see, such as the difficulty or the config, all of them at once.
+         * Each name once.
          */
-        Registrar in(String name, TestEnvironmentDefinition<?> definition) {
-            return new Registrar(event, event.registerEnvironment(id(name), definition));
+        Registrar in(String name, TestEnvironmentDefinition<?>... definitions) {
+            return new Registrar(event, event.registerEnvironment(id(name), definitions));
         }
 
         /** The same, for tests that run in a batch of their own with one game-test pack switched on. */

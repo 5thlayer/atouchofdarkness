@@ -14,8 +14,8 @@ import net.minecraft.server.level.ServerLevel;
  */
 final class WithDarkConfig implements TestEnvironmentDefinition<WithDarkConfig.Values> {
 
-    /** A threshold of 5, a 2 s Grace Period, a refill delay of half a second, and a Strike of 4 every 2 s. */
-    static final Values SET = new Values(5, 40, 10, 4.0, 40);
+    /** A threshold of 8, a 2 s Grace Period, a refill delay of half a second, and a Strike of 4 every 2 s. */
+    static final Values SET = new Values(8, 40, 10, 4.0, 40);
 
     static final WithDarkConfig INSTANCE = new WithDarkConfig();
 

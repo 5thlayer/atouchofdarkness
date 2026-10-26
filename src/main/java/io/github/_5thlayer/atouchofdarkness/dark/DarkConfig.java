@@ -27,8 +27,8 @@ public final class DarkConfig {
         var builder = new ModConfigSpec.Builder();
         builder.push("dark");
         LIT_THRESHOLD = builder
-                .comment("The light at a player's eyes, vanilla's raw brightness, at or above which they are Lit.")
-                .defineInRange("litThreshold", 3, 0, 15);
+                .comment("The light at a player's eyes, vanilla's raw brightness, at or above which they are Lit. The open sky reads 4 at night.")
+                .defineInRange("litThreshold", 5, 0, 15);
         GRACE_PERIOD = builder
                 .comment("Ticks a player can be in the Dark before the first Strike.")
                 .defineInRange("gracePeriod", 200, 1, Integer.MAX_VALUE);

@@ -16,7 +16,9 @@ import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.tags.TagKey;
+import net.minecraft.world.attribute.EnvironmentAttributes;
 import net.minecraft.world.damagesource.DamageType;
+import net.minecraft.world.level.MoonPhase;
 import net.minecraft.world.level.dimension.DimensionType;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.attachment.AttachmentType;
@@ -34,6 +36,12 @@ public final class Dark {
 
     /** The dimension types the Dark reaches: by default the Overworld's, the Nether's and the End's. */
     public static final TagKey<DimensionType> DIMENSIONS = TagKey.create(Registries.DIMENSION_TYPE, id("dark"));
+
+    /**
+     * The dimension types whose open sky always keeps a player Lit, whatever the light at their eyes: by
+     * default the End's.
+     */
+    public static final TagKey<DimensionType> SKY_ALWAYS_LIT = TagKey.create(Registries.DIMENSION_TYPE, id("sky_always_lit"));
 
     /** The Strike's damage type, {@code data/atouchofdarkness/damage_type/strike.json}. */
     public static final ResourceKey<DamageType> STRIKE = ResourceKey.create(Registries.DAMAGE_TYPE, id("strike"));
@@ -61,10 +69,28 @@ public final class Dark {
         NeoForge.EVENT_BUS.addListener(Dark::tick);
     }
 
-    /** Whether the light at the player's eyes is at or above the threshold. Night Vision changes nothing here. */
+    /**
+     * Whether the player is Lit: the light at their eyes is at or above the threshold, or their eyes see
+     * the sky of a dimension tagged {@link #SKY_ALWAYS_LIT}, or a full moon's night sky with no rain.
+     * Night Vision changes nothing here.
+     */
     public static boolean isLit(ServerPlayer player) {
+        ServerLevel level = player.level();
         BlockPos eyes = BlockPos.containing(player.getEyePosition());
-        return player.level().getMaxLocalRawBrightness(eyes) >= DarkConfig.LIT_THRESHOLD.getAsInt();
+        if (level.getMaxLocalRawBrightness(eyes) >= DarkConfig.LIT_THRESHOLD.getAsInt()) {
+            return true;
+        }
+        // A dimension with no sky, such as the Nether, has no sky light, so it is never seen there.
+        if (!level.canSeeSky(eyes)) {
+            return false;
+        }
+        return level.dimensionTypeRegistration().is(SKY_ALWAYS_LIT) || underAFullMoon(level, eyes);
+    }
+
+    /** Night, a full moon, and no rain: a dimension with a fixed time, such as the End, has no night. */
+    private static boolean underAFullMoon(ServerLevel level, BlockPos eyes) {
+        return level.isDarkOutside() && !level.isRaining()
+                && level.environmentAttributes().getValue(EnvironmentAttributes.MOON_PHASE, eyes) == MoonPhase.FULL_MOON;
     }
 
     private static void tick(LevelTickEvent.Post event) {

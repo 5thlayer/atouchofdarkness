@@ -60,9 +60,9 @@ final class DarkTests {
         configured.test("dark_config_sets_the_refill_delay", 90, DarkTests::configuredRefill);
     }
 
-    /** At light 2, just below the threshold of 3, and on Normal: 10 when the Grace Period ends, and 10 more 10 s later. */
+    /** At light 4, just below the threshold of 5, and on Normal: 10 when the Grace Period ends, and 10 more 10 s later. */
     private static void strikesThenRepeats(GameTestHelper helper) {
-        var player = caged(helper, 2);
+        var player = caged(helper, 4);
         expectStruck(helper, player, BEFORE_FIRST, 0F);
         expectStruck(helper, player, AFTER_FIRST, 10F);
         expectStruck(helper, player, BEFORE_FIRST + 200, 10F);
@@ -70,7 +70,7 @@ final class DarkTests {
     }
 
     private static void neverStruckAtTheThreshold(GameTestHelper helper) {
-        finishAt(helper, caged(helper, 3), QUIET, 0F);
+        finishAt(helper, caged(helper, 5), QUIET, 0F);
     }
 
     private static void briefDarkness(GameTestHelper helper) {
@@ -209,11 +209,11 @@ final class DarkTests {
     }
 
     /**
-     * At light 4, below the configured threshold of 5: a Strike of 4 when the 40-tick Grace Period
-     * runs out, and another 40 ticks later.
+     * At light 7, below the configured threshold of 8 and above the default 5: a Strike of 4 when the
+     * 40-tick Grace Period runs out, and another 40 ticks later.
      */
     private static void configuredStrikes(GameTestHelper helper) {
-        var player = caged(helper, 4);
+        var player = caged(helper, 7);
         expectStruck(helper, player, WithDarkConfig.SET.gracePeriod() - 5, 0F);
         expectStruck(helper, player, WithDarkConfig.SET.gracePeriod() + 10, 4F);
         expectStruck(helper, player, WithDarkConfig.SET.gracePeriod() + WithDarkConfig.SET.strikeInterval() - 5, 4F);
