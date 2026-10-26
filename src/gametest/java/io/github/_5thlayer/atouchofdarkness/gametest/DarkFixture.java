@@ -79,12 +79,19 @@ final class DarkFixture {
 
     /** Stone on every side of the two blocks over the stand, and above them; the platform is below. */
     static void cage(GameTestHelper helper, BlockPos stand) {
+        cage(helper.getLevel(), helper.absolutePos(stand));
+    }
+
+    /** The same, in any level, at a position in its own coordinates, with stone under the stand too. */
+    static void cage(ServerLevel level, BlockPos stand) {
+        var stone = Blocks.STONE.defaultBlockState();
+        level.setBlockAndUpdate(stand.below(), stone);
         for (var side : Direction.Plane.HORIZONTAL) {
-            helper.setBlock(stand.relative(side), Blocks.STONE);
-            helper.setBlock(stand.above().relative(side), Blocks.STONE);
+            level.setBlockAndUpdate(stand.relative(side), stone);
+            level.setBlockAndUpdate(stand.above().relative(side), stone);
         }
-        helper.setBlock(stand.above(2), Blocks.STONE);
-        settleLight(helper, stand);
+        level.setBlockAndUpdate(stand.above(2), stone);
+        settleLight(level, stand);
     }
 
     static void light(GameTestHelper helper, int level) {
