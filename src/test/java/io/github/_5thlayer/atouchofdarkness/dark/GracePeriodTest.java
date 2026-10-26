@@ -78,6 +78,15 @@ class GracePeriodTest {
         assertEquals(EnumSet.of(Cue.WARNING), period.tick(true, new GracePeriod.Settings(100, 40, 200)));
     }
 
+    /** Warned, then Lit long enough to refill: the next time in the Dark warns again. */
+    @Test
+    void aRefillWarnsAgain() {
+        var period = new GracePeriod();
+        assertEquals(EnumSet.of(Cue.ENTER, Cue.WARNING), tick(period, true, 170, SETTINGS));
+        tick(period, false, 40);
+        assertEquals(EnumSet.of(Cue.ENTER, Cue.WARNING), tick(period, true, 170, SETTINGS));
+    }
+
     /** What the ticks had the player hear, all together. */
     private static Set<Cue> tick(GracePeriod period, boolean inTheDark, int ticks, GracePeriod.Settings settings) {
         var heard = EnumSet.noneOf(Cue.class);
