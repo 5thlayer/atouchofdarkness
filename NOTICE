@@ -5,3 +5,37 @@ Each entry names the files, their author, where they came from and the licence t
 file listed here is NOT covered by the licence this repository states for its own work; its own
 licence governs it. Which licence covers which file is REUSE.toml's to say; this list is the
 credits for what was copied in.
+
+Votive
+------
+
+Files:   data/art/block_metal_aurichalcum_rune_3.png
+         data/art/block_metal_aurichalcum_block_1.png
+         src/main/resources/assets/atouchofdarkness/textures/block/votive_side.png
+         src/main/resources/assets/atouchofdarkness/textures/block/votive_top.png
+Author:  Malcolm Riley
+Source:  https://github.com/malcolmriley/unused-textures
+         blocks/block_metal_aurichalcum_rune_3.png and blocks/block_metal_aurichalcum_block_1.png, at
+         commit 8b85ad732023174d9a9da74e6bf2272d6c0bef17. The files under data/art/ are the
+         unmodified copies. The Votive's side and top are built from them by
+         scripts/build-textures.py, which recolours each plate to the colours of vanilla's gold block.
+Licence: Creative Commons Attribution 4.0 International
+         https://creativecommons.org/licenses/by/4.0/
+
+Lampad
+------
+
+Files:   data/art/fabric_purple_ends.png
+         data/art/fabric_black_sides.png
+         src/main/resources/assets/atouchofdarkness/textures/entity/lampad/lampad.png
+         src/main/resources/assets/atouchofdarkness/textures/entity/lampad/lampad_statue.png
+Author:  Malcolm Riley
+Source:  https://github.com/malcolmriley/unused-textures
+         blocks/fabric_purple_ends.png and blocks/fabric_black_sides.png, at commit
+         8b85ad732023174d9a9da74e6bf2272d6c0bef17. The files under data/art/ are the unmodified
+         copies. The Lampad's sheet is built from them by scripts/build-textures.py, which recolours
+         the purple fabric to her indigo for her robe and the black darker for her hair, and tiles
+         them over her generated sheet, data/lampad_template.png, whose face, skin, trim and Nightbrand
+         are kept. Her statue sheet is that sheet turned grey.
+Licence: Creative Commons Attribution 4.0 International
+         https://creativecommons.org/licenses/by/4.0/
