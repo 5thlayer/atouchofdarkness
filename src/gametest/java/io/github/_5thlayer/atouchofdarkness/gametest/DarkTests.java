@@ -3,59 +3,33 @@
 
 package io.github._5thlayer.atouchofdarkness.gametest;
 
-import java.util.UUID;
+import static io.github._5thlayer.atouchofdarkness.gametest.DarkFixture.*;
+
 import java.util.concurrent.atomic.AtomicReference;
 
-import com.mojang.authlib.GameProfile;
 import io.github._5thlayer.atouchofdarkness.dark.Dark;
 import io.github._5thlayer.atouchofdarkness.dark.StrikeDeathMessage;
-import io.netty.channel.embedded.EmbeddedChannel;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.Direction;
-import net.minecraft.core.SectionPos;
 import net.minecraft.gametest.framework.GameTestHelper;
-import net.minecraft.network.Connection;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.protocol.PacketFlow;
 import net.minecraft.network.protocol.game.ServerboundClientCommandPacket;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.server.network.CommonListenerCookie;
 import net.minecraft.world.Difficulty;
 import net.minecraft.world.damagesource.CombatEntry;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.EquipmentSlot;
-import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.GameType;
-import net.minecraft.world.level.block.Blocks;
-import net.minecraft.world.level.block.LightBlock;
 
 /**
  * The Dark: a survival player whose eyes are below the lit threshold loses their Grace Period, and is
- * struck when it runs out and every 10 s after, until they reach light. Each test shuts a player in a
- * stone cage on the platform, where neither sky nor block light reaches, and lights their eyes with
- * vanilla's light block at the level it needs. A player is given 100 health, so the Strikes it counts
- * never kill it. Every test's name starts {@code dark_}.
+ * struck when it runs out and every 10 s after, until they reach light. Each test stands on the
+ * {@link DarkFixture}. Every test's name starts {@code dark_}.
  */
 final class DarkTests {
-
-    /** Where the player stands, on the platform's stone floor. */
-    private static final BlockPos STAND = new BlockPos(4, 1, 4);
-
-    /** The block at the player's eyes, which the Dark reads. */
-    private static final BlockPos EYES = STAND.above();
-
-    private static final float HEALTH = 100F;
-
-    /** When the first Strike lands at the defaults, a tick or two after the 10 s Grace Period. */
-    private static final int BEFORE_FIRST = 195;
-    private static final int AFTER_FIRST = 210;
-
-    /** Long enough for a Strike at the defaults to have landed, had one been coming. */
-    private static final int QUIET = 255;
 
     private DarkTests() {
     }
@@ -255,100 +229,5 @@ final class DarkTests {
         helper.runAtTickTime(30, () -> light(helper, 15));
         helper.runAtTickTime(55, () -> light(helper, 0));
         finishAt(helper, player, 85, 0F);
-    }
-
-    /** A survival player with 100 health, shut in the cage with their eyes at this light. */
-    private static ServerPlayer caged(GameTestHelper helper, int light) {
-        return caged(helper, STAND, light);
-    }
-
-    private static ServerPlayer caged(GameTestHelper helper, BlockPos stand, int light) {
-        cage(helper, stand);
-        light(helper, stand.above(), light);
-        var player = survivalPlayer(helper);
-        standAt(helper, stand, player);
-        player.getAttribute(Attributes.MAX_HEALTH).setBaseValue(HEALTH);
-        player.setHealth(HEALTH);
-        return player;
-    }
-
-    /** Stone on every side of the two blocks over the stand, and above them; the platform is below. */
-    private static void cage(GameTestHelper helper, BlockPos stand) {
-        for (var side : Direction.Plane.HORIZONTAL) {
-            helper.setBlock(stand.relative(side), Blocks.STONE);
-            helper.setBlock(stand.above().relative(side), Blocks.STONE);
-        }
-        helper.setBlock(stand.above(2), Blocks.STONE);
-        settleLight(helper, stand);
-    }
-
-    private static void light(GameTestHelper helper, int level) {
-        light(helper, EYES, level);
-    }
-
-    private static void light(GameTestHelper helper, BlockPos eyes, int level) {
-        helper.setBlock(eyes, level == 0 ? Blocks.AIR.defaultBlockState() : Blocks.LIGHT.defaultBlockState().setValue(LightBlock.LEVEL, level));
-        settleLight(helper, eyes);
-    }
-
-    /**
-     * Waits for the light engine to light what was just placed. It runs on a thread of its own, and the
-     * game-test server ticks faster than 20 a second, so a block's light would otherwise show a varying
-     * number of ticks late, and a test of the refill delay would read a shorter spell of light.
-     */
-    private static void settleLight(GameTestHelper helper, BlockPos pos) {
-        var engine = helper.getLevel().getChunkSource().getLightEngine();
-        var at = helper.absolutePos(pos);
-        var settled = engine.waitForPendingTasks(SectionPos.blockToSectionCoord(at.getX()), SectionPos.blockToSectionCoord(at.getZ()));
-        // The engine updates in batches, each scheduled from here.
-        while (!settled.isDone()) {
-            engine.tryScheduleUpdate();
-            Thread.onSpinWait();
-        }
-    }
-
-    private static void standAt(GameTestHelper helper, BlockPos stand, ServerPlayer player) {
-        var at = helper.absolutePos(stand);
-        player.snapTo(at.getX() + 0.5, at.getY(), at.getZ() + 0.5);
-    }
-
-    /**
-     * A player on the server, in survival. {@link GameTestHelper#makeMockServerPlayerInLevel} makes one
-     * that is always in Creative, which the Dark never strikes.
-     */
-    private static ServerPlayer survivalPlayer(GameTestHelper helper) {
-        var server = helper.getLevel().getServer();
-        var cookie = CommonListenerCookie.createInitial(new GameProfile(UUID.randomUUID(), "dark-test-player"), false);
-        var player = new ServerPlayer(server, helper.getLevel(), cookie.gameProfile(), cookie.clientInformation());
-        var connection = new Connection(PacketFlow.SERVERBOUND);
-        new EmbeddedChannel(connection);
-        server.getPlayerList().placeNewPlayer(connection, player, cookie);
-        // As a client says once it has loaded the world; till then, or 60 ticks, nothing hurts the player.
-        player.connection.markClientLoaded();
-        player.setGameMode(GameType.SURVIVAL);
-        return player;
-    }
-
-    /** At the tick, the player has taken this much from Strikes. */
-    private static void expectStruck(GameTestHelper helper, ServerPlayer player, int tick, float taken) {
-        helper.runAtTickTime(tick, () -> assertTaken(helper, player, tick, taken));
-    }
-
-    private static void finishAt(GameTestHelper helper, ServerPlayer player, int tick, float taken) {
-        helper.runAtTickTime(tick, () -> {
-            assertTaken(helper, player, tick, taken);
-            leave(player);
-            helper.succeed();
-        });
-    }
-
-    private static void assertTaken(GameTestHelper helper, ServerPlayer player, int tick, float taken) {
-        float actual = HEALTH - player.getHealth();
-        helper.assertTrue(actual == taken, "by tick " + tick + " the player took " + actual + ", not " + taken);
-    }
-
-    /** Takes the player off the server, so the Dark stops ticking them once their test is done. */
-    private static void leave(ServerPlayer player) {
-        player.level().getServer().getPlayerList().remove(player);
     }
 }
