@@ -28,7 +28,7 @@ import net.neoforged.neoforge.registries.NeoForgeRegistries;
 /**
  * The Dark (GLOSSARY.md): every game tick, each player in a dimension tagged
  * {@code atouchofdarkness:dark} who isn't Lit drains their Grace Period, and a Strike lands when it
- * runs out. Only players are ticked, and Creative and Spectator players count as Lit.
+ * runs out. Only players are ticked, and the Dark never reaches Creative and Spectator players.
  */
 public final class Dark {
 
@@ -42,6 +42,7 @@ public final class Dark {
     private static final MapCodec<GracePeriod> GRACE_PERIOD_CODEC = RecordCodecBuilder.mapCodec(instance -> instance.group(
             Codec.INT.fieldOf("drained").forGetter(GracePeriod::drained),
             Codec.INT.fieldOf("lit_for").forGetter(GracePeriod::litFor),
+            Codec.BOOL.fieldOf("spent").forGetter(GracePeriod::spent),
             Codec.INT.fieldOf("since_strike").forGetter(GracePeriod::sinceStrike)
     ).apply(instance, GracePeriod::new));
 
@@ -71,14 +72,14 @@ public final class Dark {
             return;
         }
         boolean darkHere = level.dimensionTypeRegistration().is(DIMENSIONS);
-        var settings = DarkConfig.gracePeriod();
+        var settings = DarkConfig.gracePeriodSettings();
         // A copy, since a Strike can kill and so change the list.
         for (ServerPlayer player : level.players().toArray(ServerPlayer[]::new)) {
             if (!player.isAlive()) {
                 continue;
             }
-            boolean safe = !darkHere || player.isCreative() || player.isSpectator() || isLit(player);
-            if (player.getData(GRACE_PERIOD).tick(safe, settings)) {
+            boolean inTheDark = darkHere && !player.isCreative() && !player.isSpectator() && !isLit(player);
+            if (player.getData(GRACE_PERIOD).tick(inTheDark, settings)) {
                 strike(level, player);
             }
         }

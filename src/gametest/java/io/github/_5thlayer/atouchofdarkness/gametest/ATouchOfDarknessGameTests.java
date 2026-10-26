@@ -44,7 +44,7 @@ public final class ATouchOfDarknessGameTests {
 
     static {
         TEST_TYPES.register("code", () -> CodeGameTest.CODEC);
-        ENVIRONMENT_TYPES.register("with_test_pack", () -> WithTestPack.CODEC);
+        ENVIRONMENT_TYPES.register("with_game_test_pack", () -> WithGameTestPack.CODEC);
         ENVIRONMENT_TYPES.register("with_difficulty", () -> WithDifficulty.CODEC);
         ENVIRONMENT_TYPES.register("with_dark_config", () -> WithDarkConfig.CODEC);
     }
@@ -60,7 +60,7 @@ public final class ATouchOfDarknessGameTests {
     public static void register(IEventBus modBus) {
         TEST_TYPES.register(modBus);
         ENVIRONMENT_TYPES.register(modBus);
-        modBus.addListener(WithTestPack::addPackFinders);
+        modBus.addListener(WithGameTestPack::addPackFinders);
         // Posted only when game tests are enabled, which a production game never is.
         modBus.addListener(ATouchOfDarknessGameTests::registerTests);
     }
@@ -90,9 +90,9 @@ public final class ATouchOfDarknessGameTests {
             return new Registrar(event, event.registerEnvironment(id(name), definition));
         }
 
-        /** The same, for tests that run in a batch of their own with one of the tests' datapacks switched on. */
+        /** The same, for tests that run in a batch of their own with one game-test pack switched on. */
         Registrar withPack(String pack) {
-            return in("with_" + pack, new WithTestPack(pack));
+            return in("with_" + pack, new WithGameTestPack(pack));
         }
 
         void test(String name, int maxTicks, Consumer<GameTestHelper> body) {

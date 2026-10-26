@@ -7,8 +7,8 @@ package io.github._5thlayer.atouchofdarkness.dark;
  * One player's Grace Period (GLOSSARY.md), ticked once a game tick. It drains while the player is in
  * the Dark, and a Strike lands the tick it runs out, then every interval while they stay there. It
  * refills only once they have been Lit for the refill delay without a break; light shorter than that
- * pauses it. A new one is full, which is what a respawned player gets. Plain Java, so the JUnit tests
- * run it with no Minecraft on the class path; {@link Dark} keeps it with the player.
+ * pauses it. A new one is full, which is what a respawned player gets. {@link Dark} keeps it with the
+ * player.
  */
 public final class GracePeriod {
 
@@ -22,15 +22,19 @@ public final class GracePeriod {
     /** Ticks Lit without a break. */
     private int litFor;
 
-    /** Ticks in the Dark since the last Strike, once the Grace Period has run out. */
+    /** Whether the first Strike has landed since the Grace Period last refilled. */
+    private boolean spent;
+
+    /** Ticks in the Dark since the last Strike, once the first has landed. */
     private int sinceStrike;
 
     public GracePeriod() {
     }
 
-    GracePeriod(int drained, int litFor, int sinceStrike) {
+    GracePeriod(int drained, int litFor, boolean spent, int sinceStrike) {
         this.drained = drained;
         this.litFor = litFor;
+        this.spent = spent;
         this.sinceStrike = sinceStrike;
     }
 
@@ -42,16 +46,21 @@ public final class GracePeriod {
         return litFor;
     }
 
+    boolean spent() {
+        return spent;
+    }
+
     int sinceStrike() {
         return sinceStrike;
     }
 
-    /** One tick, Lit or in the Dark; true when a Strike lands on it. */
-    public boolean tick(boolean lit, Settings settings) {
-        if (lit) {
+    /** One tick, in the Dark or out of it; true when a Strike lands on it. */
+    public boolean tick(boolean inTheDark, Settings settings) {
+        if (!inTheDark) {
             litFor = Math.min(litFor + 1, settings.refillDelay());
             if (litFor >= settings.refillDelay()) {
                 drained = 0;
+                spent = false;
                 sinceStrike = 0;
             }
             return false;
@@ -59,7 +68,14 @@ public final class GracePeriod {
         litFor = 0;
         if (drained < settings.length()) {
             drained++;
-            return drained == settings.length();
+        }
+        // At or past the length, as a config that shortens it leaves a player already in the Dark.
+        if (drained < settings.length()) {
+            return false;
+        }
+        if (!spent) {
+            spent = true;
+            return true;
         }
         sinceStrike++;
         if (sinceStrike >= settings.strikeInterval()) {

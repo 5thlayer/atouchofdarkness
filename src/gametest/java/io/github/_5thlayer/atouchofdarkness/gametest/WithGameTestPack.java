@@ -26,15 +26,15 @@ import net.neoforged.neoforge.event.AddPackFindersEvent;
 import net.neoforged.neoforge.resource.JarContentsPackResources;
 
 /**
- * A test environment whose batch runs with one of the tests' datapacks switched on, as a Consumer's
+ * A test environment whose batch runs with one game-test pack switched on, as a Consumer's datapack
  * would be, and switched off again after it. The packs live under {@code gametest_packs/} in
  * {@code src/gametest/resources}, which the jar leaves out (libworks ADR 0004). The game-test server
  * switches on every pack it finds, so a pack is found only while its batch runs: offered, found, then
  * selected by a reload, and the other way round after. Craftworks' {@code WithTestPack}, as it stood.
  */
-record WithTestPack(String name) implements TestEnvironmentDefinition<Unit> {
+record WithGameTestPack(String name) implements TestEnvironmentDefinition<Unit> {
 
-    static final MapCodec<WithTestPack> CODEC = Codec.STRING.fieldOf("pack").xmap(WithTestPack::new, WithTestPack::name);
+    static final MapCodec<WithGameTestPack> CODEC = Codec.STRING.fieldOf("pack").xmap(WithGameTestPack::new, WithGameTestPack::name);
 
     /** The packs being offered, by name. */
     private static final Set<String> OFFERED = ConcurrentHashMap.newKeySet();
@@ -60,7 +60,7 @@ record WithTestPack(String name) implements TestEnvironmentDefinition<Unit> {
     }
 
     @Override
-    public MapCodec<WithTestPack> codec() {
+    public MapCodec<WithGameTestPack> codec() {
         return CODEC;
     }
 
@@ -87,7 +87,7 @@ record WithTestPack(String name) implements TestEnvironmentDefinition<Unit> {
                 new JarContentsPackResources.JarContentsResourcesSupplier(file.getContents(), "gametest_packs/" + name),
                 PackType.SERVER_DATA, new PackSelectionConfig(false, Pack.Position.TOP, false));
         if (pack == null) {
-            throw new IllegalStateException("the tests' pack " + name + " has no readable pack.mcmeta");
+            throw new IllegalStateException("the game-test pack " + name + " has no readable pack.mcmeta");
         }
         return pack;
     }

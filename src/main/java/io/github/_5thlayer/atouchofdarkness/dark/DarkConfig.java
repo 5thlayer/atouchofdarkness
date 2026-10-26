@@ -48,7 +48,7 @@ public final class DarkConfig {
     private DarkConfig() {
     }
 
-    static GracePeriod.Settings gracePeriod() {
+    static GracePeriod.Settings gracePeriodSettings() {
         return new GracePeriod.Settings(GRACE_PERIOD.getAsInt(), REFILL_DELAY.getAsInt(), STRIKE_INTERVAL.getAsInt());
     }
 }
