@@ -32,6 +32,11 @@ public record Steeping(int steeped, int full) {
         return new Steeping(Steep.steep(steeped, ticks, full), full);
     }
 
+    /** The ticks in the Dark it has left before it is a Nightbrand, none once done. */
+    public int left() {
+        return Math.max(full - steeped, 0);
+    }
+
     boolean done() {
         return Steep.done(steeped, full);
     }

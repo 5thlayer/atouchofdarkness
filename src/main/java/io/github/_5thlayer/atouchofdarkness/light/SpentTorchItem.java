@@ -70,9 +70,11 @@ public final class SpentTorchItem extends Item {
     @SuppressWarnings("deprecation")
     public void appendHoverText(ItemStack stack, TooltipContext context, TooltipDisplay display, Consumer<Component> builder, TooltipFlag flag) {
         builder.accept(Component.translatable(HINT).withStyle(ChatFormatting.GRAY));
-        var steeping = stack.get(Nightbrand.STEEPING);
-        if (flag.isAdvanced() && steeping != null) {
-            builder.accept(TimeLeft.line(STEEP_LEFT, Math.max(steeping.full() - steeping.steeped(), 0)));
+        if (flag.isAdvanced()) {
+            var steeping = stack.get(Nightbrand.STEEPING);
+            if (steeping != null) {
+                builder.accept(TimeLeft.line(STEEP_LEFT, steeping.left()));
+            }
         }
     }
 

@@ -60,7 +60,7 @@ final class NightbrandTests {
                 .test("nightbrand_steeps_on_peaceful", STEEP + MARGIN, NightbrandTests::onPeaceful);
         tests.in("nightbrand_daily", KeepsClock.INSTANCE, WithDarkConfig.INSTANCE)
                 .test("nightbrand_one_a_day_per_player_and_the_count_resets_at_dawn", 4 * SHORT_STEEP, NightbrandTests::oneADay);
-        tests.test("nightbrand_advanced_tooltip_counts_the_steep_down", 1, NightbrandTests::tooltip);
+        tests.test("nightbrand_advanced_tooltip_counts_the_steep_down", 1, NightbrandTests::tooltips);
         tests.test("nightbrand_never_steeps_a_stack_nor_out_of_an_unlit_players_hand_and_gives_no_light", STEEP + 2 * MARGIN, NightbrandTests::neverSteeps);
     }
 
@@ -229,7 +229,7 @@ final class NightbrandTests {
      * A Spent Torch halfway through its steep tells, with advanced tooltips (F3+H), the time in the Dark it
      * has left, as m:ss; without them, or before it has started, it tells nothing of it.
      */
-    private static void tooltip(GameTestHelper helper) {
+    private static void tooltips(GameTestHelper helper) {
         var half = Light.SPENT_TORCH.toStack();
         half.set(Nightbrand.STEEPING, new Steeping(STEEP / 2, STEEP));
         assertSteepLine(helper, half, TooltipFlag.ADVANCED, "0:15 in the Dark to a Nightbrand");
@@ -238,10 +238,10 @@ final class NightbrandTests {
         helper.succeed();
     }
 
-    private static void assertSteepLine(GameTestHelper helper, ItemStack stack, TooltipFlag flag, @Nullable String line) {
+    private static void assertSteepLine(GameTestHelper helper, ItemStack stack, TooltipFlag flag, @Nullable String countdown) {
         var lines = stack.getTooltipLines(Item.TooltipContext.of(helper.getLevel()), null, flag).stream().map(Component::getString).toList();
         boolean told = lines.stream().anyMatch(text -> text.endsWith("to a Nightbrand"));
-        helper.assertTrue(line == null ? !told : lines.contains(line), stack + "'s tooltip " + lines + " with " + flag + " should read " + line);
+        helper.assertTrue(countdown == null ? !told : lines.contains(countdown), stack + "'s tooltip " + lines + " with " + flag + " should read " + countdown);
     }
 
     /** A Spent Torch most of the way steeped, which its item bar shows. */
