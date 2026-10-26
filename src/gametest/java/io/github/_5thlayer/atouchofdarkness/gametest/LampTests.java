@@ -48,9 +48,9 @@ import org.jspecify.annotations.Nullable;
 /**
  * The Lamp: carried or placed, turned on and off by hand or, placed, by redstone, fed fuel by hand up
  * to a day, shining while on with fuel and burning only then, rain or not, until it runs dry into a
- * dark Lamp, a comparator reading its fuel, and the Campfire's. Its carried light
- * and its placed burn are the Torch's and the Campfire's, so only what is new to it is tested here. A
- * test that moves the clock runs in a batch of its own. Every test's name starts {@code lamp_}.
+ * dark Lamp, a comparator reading its fuel, and the Campfire's. Its carried light and its placed burn
+ * are the Torch's and the Campfire's, so only what is new to it is tested here. A test that moves the
+ * clock runs in a batch of its own. Every test's name starts {@code lamp_}.
  */
 final class LampTests {
 

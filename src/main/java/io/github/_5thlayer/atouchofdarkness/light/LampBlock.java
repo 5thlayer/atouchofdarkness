@@ -89,7 +89,7 @@ public final class LampBlock extends LanternBlock implements EntityBlock {
         // Burnt up to now, as by a hand, so turning it off charges what it owed.
         boolean on = upToDate(server, state, lamp).left() > 0 && signal;
         if (on != state.getValue(LIT)) {
-            switched(level, pos, on);
+            playSwitchSound(level, pos, on);
         }
         level.setBlockAndUpdate(pos, state.setValue(POWERED, signal).setValue(LIT, on));
     }
@@ -175,11 +175,12 @@ public final class LampBlock extends LanternBlock implements EntityBlock {
             return InteractionResult.PASS;
         }
         level.setBlockAndUpdate(pos, state.setValue(LIT, on));
-        switched(level, pos, on);
+        playSwitchSound(level, pos, on);
         return InteractionResult.SUCCESS_SERVER;
     }
 
-    private static void switched(Level level, BlockPos pos, boolean on) {
+    /** A flint and steel's strike turned on, a fire put out turned off. */
+    private static void playSwitchSound(Level level, BlockPos pos, boolean on) {
         level.playSound(null, pos, on ? SoundEvents.FLINTANDSTEEL_USE : SoundEvents.FIRE_EXTINGUISH, SoundSource.BLOCKS, 0.5F, 1F);
     }
 }
