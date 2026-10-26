@@ -51,7 +51,7 @@ final class SkyTests {
 
     /** The player under the full moon is never struck, the one in the cage beside them is. */
     private static void fullMoon(GameTestHelper helper) {
-        openLitRoofedStruck(helper, inTheOpen(helper, OPEN), caged(helper, 0));
+        assertOpenUntouchedRoofedStruck(helper, inTheOpen(helper, OPEN), caged(helper, 0));
     }
 
     private static void struckInTheOpen(GameTestHelper helper) {
@@ -67,11 +67,11 @@ final class SkyTests {
         end.setBlockAndUpdate(END_OPEN.below(), Blocks.STONE.defaultBlockState());
         settleLight(end, END_OPEN);
         cage(end, END_ROOFED);
-        openLitRoofedStruck(helper, inTheEnd(helper, end, END_OPEN), inTheEnd(helper, end, END_ROOFED));
+        assertOpenUntouchedRoofedStruck(helper, inTheEnd(helper, end, END_OPEN), inTheEnd(helper, end, END_ROOFED));
     }
 
     /** Once a Strike would have landed, the player in the open has taken none and the one under a roof one. */
-    private static void openLitRoofedStruck(GameTestHelper helper, ServerPlayer open, ServerPlayer roofed) {
+    private static void assertOpenUntouchedRoofedStruck(GameTestHelper helper, ServerPlayer open, ServerPlayer roofed) {
         helper.runAtTickTime(QUIET, () -> {
             assertTaken(helper, open, QUIET, 0F);
             assertTaken(helper, roofed, QUIET, 10F);

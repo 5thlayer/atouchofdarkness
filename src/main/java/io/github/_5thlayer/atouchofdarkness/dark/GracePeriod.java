@@ -56,7 +56,7 @@ public final class GracePeriod {
 
     /** Ticks in the Dark until the next Strike: what is left of the Grace Period, or of the interval once it has run out. */
     int ticksToStrike(Settings settings) {
-        return spent ? settings.strikeInterval() - sinceStrike : Math.max(settings.length() - drained, 0);
+        return Math.max(spent ? settings.strikeInterval() - sinceStrike : settings.length() - drained, 0);
     }
 
     /** One tick, in the Dark or out of it; true when a Strike lands on it. */
