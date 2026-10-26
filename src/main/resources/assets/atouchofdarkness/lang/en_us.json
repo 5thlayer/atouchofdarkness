@@ -26,5 +26,9 @@
   "block.atouchofdarkness.soul_lamp": "Soul Lamp",
   "item.atouchofdarkness.lamp.hint": "Click fuel onto it to fill it",
   "item.atouchofdarkness.lamp.fuel_left": "%s of fuel left",
-  "item.atouchofdarkness.lamp.toggle_hint": "Right-click it placed to turn it on or off"
+  "item.atouchofdarkness.lamp.toggle_hint": "Right-click it placed to turn it on or off",
+  "block.atouchofdarkness.votive": "Votive",
+  "container.atouchofdarkness.votive": "Votive",
+  "entity.atouchofdarkness.lampad": "Lampad",
+  "item.atouchofdarkness.lampad_spawn_egg": "Lampad Spawn Egg"
 }

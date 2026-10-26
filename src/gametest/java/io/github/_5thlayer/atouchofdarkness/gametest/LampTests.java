@@ -55,7 +55,7 @@ import org.jspecify.annotations.Nullable;
 final class LampTests {
 
     /** A Lamp's cap at the defaults, a day, and the soul Lamp's. */
-    private static final int CAP = 24_000;
+    static final int CAP = 24_000;
     private static final int SOUL_CAP = 2 * CAP;
 
     /** Ticks short of a burn the clock is moved, and then past it, as the clock also runs a tick a tick. */
@@ -420,17 +420,17 @@ final class LampTests {
     }
 
     /** A Lamp set at the block, on if it holds any fuel. */
-    private static void lamp(GameTestHelper helper, Block lamp, BlockPos at, int fuel) {
+    static void lamp(GameTestHelper helper, Block lamp, BlockPos at, int fuel) {
         helper.setBlock(at, lamp.defaultBlockState().setValue(LampBlock.ON, fuel > 0).setValue(LampBlock.LIT, fuel > 0));
         helper.getBlockEntity(at, LampBlockEntity.class).setFuel(fuel);
     }
 
     /** The player uses the stack on the side of the block at {@code at}. */
-    private static void useOn(GameTestHelper helper, ServerPlayer player, ItemStack stack, BlockPos at) {
+    static void useOn(GameTestHelper helper, ServerPlayer player, ItemStack stack, BlockPos at) {
         useOn(helper, player, stack, at, Direction.SOUTH);
     }
 
-    private static void useOn(GameTestHelper helper, ServerPlayer player, ItemStack stack, BlockPos at, Direction side) {
+    static void useOn(GameTestHelper helper, ServerPlayer player, ItemStack stack, BlockPos at, Direction side) {
         player.setItemInHand(InteractionHand.MAIN_HAND, stack);
         var pos = helper.absolutePos(at);
         var hit = new BlockHitResult(Vec3.atCenterOf(pos).relative(side, 0.5), side, pos, false);
@@ -438,7 +438,7 @@ final class LampTests {
     }
 
     /** The placed Lamp is a Lamp still, on or not, with this much fuel, or any for -1. */
-    private static void assertPlaced(GameTestHelper helper, BlockPos at, boolean lit, int fuel) {
+    static void assertPlaced(GameTestHelper helper, BlockPos at, boolean lit, int fuel) {
         var state = helper.getBlockState(at);
         helper.assertTrue(state.getBlock() instanceof LampBlock, "the Lamp at " + at + " became " + state);
         int left = helper.getBlockEntity(at, LampBlockEntity.class).fuelLeft();

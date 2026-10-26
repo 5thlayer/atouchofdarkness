@@ -6,6 +6,7 @@ package io.github._5thlayer.atouchofdarkness.light;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.Level;
 
 /**
  * The one way fuel goes into a placed Light Source, a Lamp or a Campfire, whoever brings it: a player's
@@ -16,6 +17,11 @@ import net.minecraft.world.item.ItemStack;
 public final class PlacedFuel {
 
     private PlacedFuel() {
+    }
+
+    /** Whether a placed light takes it as fuel: any furnace fuel but a tool. */
+    public static boolean isFuel(ItemStack stack, Level level) {
+        return HandFuel.burnTime(stack, level) > 0;
     }
 
     /** Whether the block there is a placed light with room for the whole of one of these. */

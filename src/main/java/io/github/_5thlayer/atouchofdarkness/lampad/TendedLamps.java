@@ -1,0 +1,73 @@
+// SPDX-FileCopyrightText: 2026 5thlayer
+// SPDX-License-Identifier: LGPL-3.0-only
+
+package io.github._5thlayer.atouchofdarkness.lampad;
+
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+
+import io.github._5thlayer.atouchofdarkness.light.LampBlockEntity;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.SectionPos;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import org.jspecify.annotations.Nullable;
+
+/**
+ * The placed Lamps a Votive's Lampad tends: those within 16 blocks of it either way across, 32 in all,
+ * and 8 up or down, in loaded chunks, that are nearer it than any other Votive in whose range they are,
+ * a tie going to the Votive first in block order. Carried Lamps and Campfires are never among them.
+ */
+final class TendedLamps {
+
+    static final int ACROSS = 16;
+    static final int UP_DOWN = 8;
+
+    private TendedLamps() {
+    }
+
+    /** Its Lamps, nearest it first. */
+    static List<BlockPos> of(ServerLevel level, BlockPos votive) {
+        var votives = positionsOf(level, votive, 2 * ACROSS, 2 * UP_DOWN, VotiveBlockEntity.class);
+        return positionsOf(level, votive, ACROSS, UP_DOWN, LampBlockEntity.class).stream()
+                .filter(lamp -> votive.equals(nearestVotive(lamp, votives)))
+                .sorted(nearestFirst(votive))
+                .toList();
+    }
+
+    static boolean inRange(BlockPos votive, BlockPos pos) {
+        return Math.abs(pos.getX() - votive.getX()) <= ACROSS && Math.abs(pos.getZ() - votive.getZ()) <= ACROSS
+                && Math.abs(pos.getY() - votive.getY()) <= UP_DOWN;
+    }
+
+    private static @Nullable BlockPos nearestVotive(BlockPos lamp, List<BlockPos> votives) {
+        return votives.stream().filter(votive -> inRange(votive, lamp)).min(nearestFirst(lamp)).orElse(null);
+    }
+
+    private static Comparator<BlockPos> nearestFirst(BlockPos from) {
+        return Comparator.comparingDouble((BlockPos pos) -> pos.distSqr(from)).thenComparing(Comparator.naturalOrder());
+    }
+
+    /** The block entities of this kind within so far of the centre, in chunks that are loaded. */
+    private static List<BlockPos> positionsOf(ServerLevel level, BlockPos centre, int across, int upDown, Class<? extends BlockEntity> kind) {
+        var found = new ArrayList<BlockPos>();
+        var chunks = level.getChunkSource();
+        for (int x = SectionPos.blockToSectionCoord(centre.getX() - across); x <= SectionPos.blockToSectionCoord(centre.getX() + across); x++) {
+            for (int z = SectionPos.blockToSectionCoord(centre.getZ() - across); z <= SectionPos.blockToSectionCoord(centre.getZ() + across); z++) {
+                var chunk = chunks.getChunkNow(x, z);
+                if (chunk == null) {
+                    continue;
+                }
+                for (var entry : chunk.getBlockEntities().entrySet()) {
+                    var pos = entry.getKey();
+                    if (kind.isInstance(entry.getValue()) && Math.abs(pos.getX() - centre.getX()) <= across
+                            && Math.abs(pos.getZ() - centre.getZ()) <= across && Math.abs(pos.getY() - centre.getY()) <= upDown) {
+                        found.add(pos);
+                    }
+                }
+            }
+        }
+        return found;
+    }
+}

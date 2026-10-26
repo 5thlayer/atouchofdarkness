@@ -22,6 +22,8 @@ public final class LightConfig {
     public static final ModConfigSpec.IntValue LAMP_CAP;
     public static final ModConfigSpec.BooleanValue VANILLA_LIGHT;
     public static final ModConfigSpec.IntValue NIGHTBRAND_GRACE_PERIODS;
+    public static final ModConfigSpec.IntValue LAMPAD_BINDING;
+    public static final ModConfigSpec.IntValue LAMPAD_LAMPS_PER_NUGGET;
 
     static {
         var builder = new ModConfigSpec.Builder();
@@ -48,6 +50,14 @@ public final class LightConfig {
         NIGHTBRAND_GRACE_PERIODS = builder
                 .comment("Grace Periods a single Spent Torch held in the Dark takes to darken into a Nightbrand, its progress kept between dips.")
                 .defineInRange("gracePeriods", 3, 1, 1000);
+        builder.pop();
+        builder.push("lampad");
+        LAMPAD_BINDING = builder
+                .comment("Ticks of game time a Lampad's binding lasts, seven days, counted only while she is loaded; a Nightbrand from her Votive renews it.")
+                .defineInRange("binding", 168000, 1, Integer.MAX_VALUE);
+        LAMPAD_LAMPS_PER_NUGGET = builder
+                .comment("Lamps in a Lampad's range that each gold nugget pays for, taken from her Votive at each renewal, the count rounded up.")
+                .defineInRange("lampsPerNugget", 8, 1, 1024);
         builder.pop();
         SPEC = builder.build();
     }

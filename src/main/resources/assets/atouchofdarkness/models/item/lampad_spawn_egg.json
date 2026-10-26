@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:item/generated",
+  "textures": {
+    "layer0": "atouchofdarkness:item/lampad_spawn_egg"
+  }
+}

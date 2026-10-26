@@ -3,6 +3,7 @@
 
 package io.github._5thlayer.atouchofdarkness;
 
+import io.github._5thlayer.atouchofdarkness.lampad.Lampad;
 import io.github._5thlayer.atouchofdarkness.light.Light;
 import io.github._5thlayer.atouchofdarkness.nightbrand.Nightbrand;
 import net.minecraft.core.registries.Registries;
@@ -54,5 +55,7 @@ public final class DarknessTab {
         output.accept(Light.LAMP_ITEM);
         output.accept(Light.SOUL_LAMP_ITEM);
         output.accept(Nightbrand.NIGHTBRAND);
+        output.accept(Lampad.VOTIVE_ITEM);
+        output.accept(Lampad.LAMPAD_SPAWN_EGG);
     }
 }

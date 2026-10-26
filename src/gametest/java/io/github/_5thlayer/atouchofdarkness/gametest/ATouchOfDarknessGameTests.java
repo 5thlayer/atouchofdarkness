@@ -50,6 +50,7 @@ public final class ATouchOfDarknessGameTests {
         ENVIRONMENT_TYPES.register("at_night", () -> AtNight.CODEC);
         ENVIRONMENT_TYPES.register("keeps_clock", () -> KeepsClock.CODEC);
         ENVIRONMENT_TYPES.register("with_vanilla_light", () -> WithVanillaLight.CODEC);
+        ENVIRONMENT_TYPES.register("with_lampad_config", () -> WithLampadConfig.CODEC);
     }
 
     private ATouchOfDarknessGameTests() {
@@ -83,6 +84,7 @@ public final class ATouchOfDarknessGameTests {
         LampTests.register(tests);
         UnlitTests.register(tests);
         NightbrandTests.register(tests);
+        LampadTests.register(tests);
     }
 
     private static Identifier id(String path) {
