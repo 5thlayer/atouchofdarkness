@@ -93,6 +93,11 @@ public final class Dark {
                 && level.environmentAttributes().getValue(EnvironmentAttributes.MOON_PHASE, eyes) == MoonPhase.FULL_MOON;
     }
 
+    /** Ticks the player could still spend in the Dark before the next Strike lands. */
+    public static int ticksToStrike(ServerPlayer player) {
+        return player.getData(GRACE_PERIOD).ticksToStrike(DarkConfig.gracePeriodSettings());
+    }
+
     private static void tick(LevelTickEvent.Post event) {
         if (!(event.getLevel() instanceof ServerLevel level) || level.players().isEmpty()) {
             return;
