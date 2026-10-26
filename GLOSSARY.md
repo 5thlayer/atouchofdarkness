@@ -45,7 +45,7 @@ This Pillar's torch: crafted burning, carried in the hand and never placed, and 
 _Avoid_: lit torch, burning torch (every torch is)
 
 **Lamp**:
-This Pillar's lantern: a Light Source carried or placed, turned on and off by hand, fed fuel by hand up to what it can hold, and shining at its full light while it is on and has fuel.
+This Pillar's lantern: a Light Source carried or placed, turned on and off by hand or by redstone, fed fuel by hand up to what it can hold, and shining at its full light while it is on and has fuel.
 _Avoid_: lantern (vanilla's block), FE lamp (not made yet)
 
 **Campfire**:
