@@ -10,15 +10,20 @@ import net.minecraft.SharedConstants;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.Mth;
 
-/** A countdown in an advanced tooltip (F3+H): the ticks left, as m:ss. */
-final class TimeLeft {
+/** A countdown in an advanced tooltip (F3+H), or Jade's: the ticks left, as m:ss. */
+public final class TimeLeft {
 
     private TimeLeft() {
     }
 
     /** The line, from a translation that takes the m:ss. */
     static Component line(String key, int ticks) {
+        return Component.translatable(key, clock(ticks)).withStyle(ChatFormatting.DARK_GRAY);
+    }
+
+    /** The ticks as m:ss, a part second counted whole. */
+    public static String clock(int ticks) {
         int seconds = Mth.positiveCeilDiv(ticks, SharedConstants.TICKS_PER_SECOND);
-        return Component.translatable(key, String.format(Locale.ROOT, "%d:%02d", seconds / 60, seconds % 60)).withStyle(ChatFormatting.DARK_GRAY);
+        return String.format(Locale.ROOT, "%d:%02d", seconds / 60, seconds % 60);
     }
 }

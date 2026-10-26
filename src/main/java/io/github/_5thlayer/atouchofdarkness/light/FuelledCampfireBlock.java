@@ -79,6 +79,11 @@ public final class FuelledCampfireBlock extends CampfireBlock implements Fuelled
         builder.add(LIGHT);
     }
 
+    /** The light it gives in this state: its fuel's while lit, none while out. */
+    public static int light(BlockState state) {
+        return state.getValue(LIT) ? state.getValue(LIGHT) : 0;
+    }
+
     /** The fuel it holds at most, from the config: the soul Campfire's is twice the Campfire's. */
     @Override
     public int cap() {

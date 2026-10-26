@@ -30,5 +30,16 @@
   "block.atouchofdarkness.votive": "Votive",
   "container.atouchofdarkness.votive": "Votive",
   "entity.atouchofdarkness.lampad": "Lampad",
-  "item.atouchofdarkness.lampad_spawn_egg": "Lampad Spawn Egg"
+  "item.atouchofdarkness.lampad_spawn_egg": "Lampad Spawn Egg",
+  "atouchofdarkness.jade.fuel_left": "%s of fuel left",
+  "atouchofdarkness.jade.light": "Light %s",
+  "atouchofdarkness.jade.out": "Out",
+  "atouchofdarkness.jade.on": "On",
+  "atouchofdarkness.jade.off": "Off",
+  "atouchofdarkness.jade.empty": "Empty",
+  "config.jade.plugin_atouchofdarkness.fuel": "Placed Campfire's and Lamp's fuel",
+  "emi.atouchofdarkness.info.fuel": "Any furnace fuel but a tool, used on a placed Lamp or Campfire, or clicked onto a Lamp in an inventory, adds %s times its furnace burn time to its fuel, up to its cap; the rest is lost. Caps: Campfire %s, Soul Campfire %s, Lamp %s, Soul Lamp %s.",
+  "emi.atouchofdarkness.info.relight": "A Spent Torch relights into a Torch that burns a quarter as long as a fresh one: use it with flint and steel, a fire charge, a burning Torch or a Lamp that is on in the other hand, or while looking at fire, lava or a lit campfire.",
+  "emi.atouchofdarkness.info.vanilla_lights": "Vanilla's torches, lanterns and campfires become the Pillar's own in a player's inventory, soul to soul: a torch a Torch, a lantern a full Lamp that is on, a campfire a Campfire.",
+  "emi.atouchofdarkness.info.no_recipe": "Vanilla's cheap light has no recipe here: its torches, lanterns, candles, campfires and the rest. The light config's vanillaLight switch brings the recipes back."
 }

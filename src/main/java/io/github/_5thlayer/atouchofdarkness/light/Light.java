@@ -101,7 +101,7 @@ public final class Light {
     /** Vanilla's campfire's, but for the light, which its fuel sets, and the loot table, which a full copy would take too. */
     private static BlockBehaviour.Properties campfire(BlockBehaviour.Properties properties) {
         return properties.mapColor(MapColor.PODZOL).instrument(NoteBlockInstrument.BASS).strength(2F).sound(SoundType.WOOD).noOcclusion().ignitedByLava()
-                .lightLevel(state -> state.getValue(FuelledCampfireBlock.LIT) ? state.getValue(FuelledCampfireBlock.LIGHT) : 0);
+                .lightLevel(FuelledCampfireBlock::light);
     }
 
     /** Vanilla's lantern's, but for the light, which it gives only while lit. */
