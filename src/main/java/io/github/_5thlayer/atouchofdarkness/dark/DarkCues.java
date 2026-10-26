@@ -19,6 +19,7 @@ import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
 import net.neoforged.neoforge.registries.DeferredHolder;
 import net.neoforged.neoforge.registries.DeferredRegister;
 import net.neoforged.neoforge.registries.NeoForgeRegistries;
+import org.jspecify.annotations.Nullable;
 
 /**
  * How a player feels the Dark before it strikes: a sound on entering it, a warning 2 s before each
@@ -37,15 +38,14 @@ public final class DarkCues {
     private static final DeferredRegister<AttachmentType<?>> ATTACHMENTS =
             DeferredRegister.create(NeoForgeRegistries.ATTACHMENT_TYPES, ATouchOfDarkness.MOD_ID);
 
-    /** What no state is, as a player has been sent none. */
-    private static final DarkState UNSENT = new DarkState(false, -1F);
+    /** Never saved nor copied, so a player who joins or respawns is sent their state afresh. */
+    private static final Supplier<AttachmentType<Sent>> SENT = ATTACHMENTS.register("sent_dark_state",
+            () -> AttachmentType.builder(Sent::new).build());
 
-    /**
-     * The state the player's client was last sent. Never saved nor copied, so a player who joins or
-     * respawns is sent theirs afresh.
-     */
-    private static final Supplier<AttachmentType<DarkState>> SENT = ATTACHMENTS.register("sent_dark_state",
-            () -> AttachmentType.builder(() -> UNSENT).build());
+    /** The state a player's client was last sent, if any. */
+    private static final class Sent {
+        @Nullable DarkState state;
+    }
 
     private DarkCues() {
     }
@@ -61,11 +61,9 @@ public final class DarkCues {
         event.registrar("1").playToClient(DarkState.TYPE, DarkState.STREAM_CODEC);
     }
 
-    /** Plays the tick's cue to the player. */
+    /** Plays a cue to the player. */
     static void play(ServerPlayer player, GracePeriod.Cue cue) {
         switch (cue) {
-            case NONE -> {
-            }
             case ENTER -> play(player, ENTER, SoundSource.AMBIENT);
             case WARNING -> play(player, WARNING, SoundSource.HOSTILE);
             case STRIKE -> play(player, STRIKE, SoundSource.HOSTILE);
@@ -79,10 +77,11 @@ public final class DarkCues {
 
     /** Sends the player's client their state if it changed, and if their client can read it. */
     static void send(ServerPlayer player, DarkState state) {
-        if (state.equals(player.getData(SENT)) || !player.connection.hasChannel(DarkState.TYPE)) {
+        var sent = player.getData(SENT);
+        if (state.equals(sent.state) || !player.connection.hasChannel(DarkState.TYPE)) {
             return;
         }
-        player.setData(SENT, state);
+        sent.state = state;
         player.connection.send(state);
     }
 

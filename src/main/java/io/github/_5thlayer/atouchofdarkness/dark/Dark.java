@@ -113,9 +113,9 @@ public final class Dark {
             }
             boolean inTheDark = darkHere && !player.isCreative() && !player.isSpectator() && !isLit(player);
             var gracePeriod = player.getData(GRACE_PERIOD);
-            var cue = gracePeriod.tick(inTheDark, settings);
-            DarkCues.play(player, cue);
-            if (cue == GracePeriod.Cue.STRIKE) {
+            var cues = gracePeriod.tick(inTheDark, settings);
+            cues.forEach(cue -> DarkCues.play(player, cue));
+            if (cues.contains(GracePeriod.Cue.STRIKE)) {
                 strike(level, player);
             }
             DarkCues.send(player, new DarkState(inTheDark, gracePeriod.drainedFraction(settings)));

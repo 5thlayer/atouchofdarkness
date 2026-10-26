@@ -3,6 +3,9 @@
 
 package io.github._5thlayer.atouchofdarkness.dark;
 
+import java.util.EnumSet;
+import java.util.Set;
+
 /**
  * One player's Grace Period (GLOSSARY.md), ticked once a game tick. It drains while the player is in
  * the Dark, and a Strike lands the tick it runs out, then every interval while they stay there. It
@@ -13,14 +16,13 @@ package io.github._5thlayer.atouchofdarkness.dark;
 public final class GracePeriod {
 
     /** The warning's lead on each Strike: 2 s. */
-    public static final int WARNING = 40;
+    public static final int WARNING_LEAD = 40;
 
-    /** What a tick has the player hear, beside nothing. */
+    /** What a tick has the player hear. */
     public enum Cue {
-        NONE,
         /** The Grace Period starts to drain from full. */
         ENTER,
-        /** A Strike lands in {@link #WARNING} ticks, unless the player reaches light first. */
+        /** A Strike lands in {@link #WARNING_LEAD} ticks or fewer, unless the player reaches light first. */
         WARNING,
         STRIKE
     }
@@ -40,6 +42,12 @@ public final class GracePeriod {
 
     /** Ticks in the Dark since the last Strike, once the first has landed. */
     private int sinceStrike;
+
+    /**
+     * Whether the coming Strike has been warned of. Not kept with the player, so one who joins within
+     * the warning's lead of a Strike is warned again.
+     */
+    private boolean warned;
 
     public GracePeriod() {
     }
@@ -78,41 +86,54 @@ public final class GracePeriod {
     }
 
     /**
-     * One tick, in the Dark or out of it, and what it has the player hear. A Grace Period or interval of
-     * 2 s or less has no warning, and a cue that falls on the tick of another gives way to it.
+     * One tick, in the Dark or out of it, and what it has the player hear. The warning comes on the
+     * first tick in the Dark with {@link #WARNING_LEAD} or fewer left before the coming Strike, so a
+     * Grace Period or interval shorter than that, or a config that shortens one, warns at once.
      */
-    public Cue tick(boolean inTheDark, Settings settings) {
+    public Set<Cue> tick(boolean inTheDark, Settings settings) {
         if (!inTheDark) {
             litFor = Math.min(litFor + 1, settings.refillDelay());
             if (litFor >= settings.refillDelay()) {
                 drained = 0;
                 spent = false;
                 sinceStrike = 0;
+                warned = false;
             }
-            return Cue.NONE;
+            return EnumSet.noneOf(Cue.class);
         }
         litFor = 0;
-        boolean full = drained == 0;
+        var cues = EnumSet.noneOf(Cue.class);
+        if (drained == 0) {
+            cues.add(Cue.ENTER);
+        }
+        if (strikes(settings)) {
+            warned = false;
+            cues.add(Cue.STRIKE);
+        } else if (!warned && ticksToStrike(settings) <= WARNING_LEAD) {
+            warned = true;
+            cues.add(Cue.WARNING);
+        }
+        return cues;
+    }
+
+    /** Drains one tick in the Dark; true when a Strike lands on it. */
+    private boolean strikes(Settings settings) {
         if (drained < settings.length()) {
             drained++;
         }
         // At or past the length, as a config that shortens it leaves a player already in the Dark.
         if (drained < settings.length()) {
-            return full ? Cue.ENTER : warning(settings);
+            return false;
         }
         if (!spent) {
             spent = true;
-            return Cue.STRIKE;
+            return true;
         }
         sinceStrike++;
         if (sinceStrike >= settings.strikeInterval()) {
             sinceStrike = 0;
-            return Cue.STRIKE;
+            return true;
         }
-        return warning(settings);
-    }
-
-    private Cue warning(Settings settings) {
-        return ticksToStrike(settings) == WARNING ? Cue.WARNING : Cue.NONE;
+        return false;
     }
 }

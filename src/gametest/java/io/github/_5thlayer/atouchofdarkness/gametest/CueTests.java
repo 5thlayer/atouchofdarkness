@@ -15,6 +15,7 @@ import com.google.gson.JsonParser;
 import io.github._5thlayer.atouchofdarkness.ATouchOfDarkness;
 import io.github._5thlayer.atouchofdarkness.dark.DarkCues;
 import io.github._5thlayer.atouchofdarkness.dark.DarkState;
+import io.github._5thlayer.atouchofdarkness.dark.GracePeriod;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.locale.Language;
 import net.minecraft.sounds.SoundEvent;
@@ -26,9 +27,6 @@ import net.minecraft.sounds.SoundEvent;
  * {@code dark_cues_}.
  */
 final class CueTests {
-
-    /** The warning's lead on the Strike, 2 s. */
-    private static final long WARNING = 40;
 
     private CueTests() {
     }
@@ -52,7 +50,7 @@ final class CueTests {
             helper.assertTrue(struck.size() == 2, "the Strike was heard at ticks " + struck + ", not twice");
             helper.assertTrue(warned.size() == 2, "the warning was heard at ticks " + warned + ", not twice");
             for (int i = 0; i < 2; i++) {
-                helper.assertTrue(struck.get(i) - warned.get(i) == WARNING,
+                helper.assertTrue(struck.get(i) - warned.get(i) == GracePeriod.WARNING_LEAD,
                         "Strike " + (i + 1) + " was heard at tick " + struck.get(i) + ", its warning at " + warned.get(i));
             }
             leave(player);
