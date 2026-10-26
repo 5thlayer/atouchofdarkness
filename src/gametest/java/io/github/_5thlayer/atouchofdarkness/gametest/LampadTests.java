@@ -139,6 +139,7 @@ final class LampadTests {
      * pays for 8 of the 9 Lamps, and she puts a coal into each of those 8 nearest the Votive that a whole
      * coal fits, its 16000 ticks: the one that's off stays off, the one that's on shines, and one nearly
      * full gets none. Long after, the farthest Lamp, the Campfire and the carried Lamp still have none.
+     * A second nugget put in her Votive then pays for the farthest Lamp, and she feeds it.
      */
     private static void tends(GameTestHelper helper) {
         var player = survivalPlayer(helper);
@@ -185,6 +186,9 @@ final class LampadTests {
                 helper.assertTrue(fire <= 2000, "the Lampad fed the Campfire, to " + fire);
                 helper.assertTrue(player.getMainHandItem().getOrDefault(Light.LAMP_FUEL, 0) == 0, "the Lampad fed a carried Lamp");
                 assertHolds(helper, votiveEntity, VotiveBlockEntity.FUEL, Items.COAL, 20 - fed.size());
+                assertHolds(helper, votiveEntity, VotiveBlockEntity.GOLD, Items.GOLD_NUGGET, 0);
+                votiveEntity.setItem(VotiveBlockEntity.GOLD, new ItemStack(Items.GOLD_NUGGET));
+            } else if (helper.getTick() > fedAt[0] + 200 && helper.getBlockEntity(farthest, LampBlockEntity.class).fuelLeft() == 16_000) {
                 assertHolds(helper, votiveEntity, VotiveBlockEntity.GOLD, Items.GOLD_NUGGET, 0);
                 leave(player);
                 helper.succeed();
