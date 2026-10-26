@@ -42,7 +42,7 @@ final class NightbrandTests {
     private static final int DIP = 100;
 
     /** The steep with {@link WithDarkConfig}'s 2 s Grace Period. */
-    private static final int SET_STEEP = 3 * WithDarkConfig.SET.gracePeriod();
+    private static final int SHORT_STEEP = 3 * WithDarkConfig.SET.gracePeriod();
 
     private static final int DAY = 24000;
 
@@ -55,14 +55,16 @@ final class NightbrandTests {
         tests.in("nightbrand_peaceful", new WithDifficulty(Difficulty.PEACEFUL))
                 .test("nightbrand_steeps_on_peaceful", STEEP + MARGIN, NightbrandTests::onPeaceful);
         tests.in("nightbrand_daily", KeepsClock.INSTANCE, WithDarkConfig.INSTANCE)
-                .test("nightbrand_one_a_day_per_player_and_the_count_resets_at_dawn", 4 * SET_STEEP, NightbrandTests::oneADay);
+                .test("nightbrand_one_a_day_per_player_and_the_count_resets_at_dawn", 4 * SHORT_STEEP, NightbrandTests::oneADay);
         tests.test("nightbrand_never_steeps_a_stack_nor_out_of_an_unlit_players_hand_and_gives_no_light", STEEP + 2 * MARGIN, NightbrandTests::neverSteeps);
     }
 
     /**
      * A survival player with a Spent Torch in the main hand, and an adventure player with one in the off
-     * hand, both in the Dark: halfway, each Spent Torch's item bar is half full; short of three Grace Periods
-     * each is a Spent Torch still, and past them a Nightbrand.
+     * hand, both in the Dark, and a third with one in each hand: halfway, each Spent Torch's item bar
+     * is half full; short of three Grace Periods
+     * each is a Spent Torch still, and past them a Nightbrand. Of the third's, only the main hand's
+     * steeped, as only one torch at a time is ever darkened.
      */
     private static void steeps(GameTestHelper helper) {
         var survival = caged(helper, new BlockPos(2, 1, 2), 0);
@@ -70,6 +72,9 @@ final class NightbrandTests {
         var adventure = caged(helper, new BlockPos(6, 1, 2), 0);
         adventure.setGameMode(GameType.ADVENTURE);
         adventure.setItemInHand(InteractionHand.OFF_HAND, Light.SPENT_TORCH.toStack());
+        var twoHanded = caged(helper, new BlockPos(4, 1, 6), 0);
+        twoHanded.setItemInHand(InteractionHand.MAIN_HAND, Light.SPENT_TORCH.toStack());
+        twoHanded.setItemInHand(InteractionHand.OFF_HAND, Light.SPENT_TORCH.toStack());
         helper.runAtTickTime(STEEP / 2, () -> {
             assertHalfShown(helper, survival.getMainHandItem());
             assertHalfShown(helper, adventure.getOffhandItem());
@@ -81,8 +86,12 @@ final class NightbrandTests {
         helper.runAtTickTime(STEEP + MARGIN, () -> {
             assertNightbrand(helper, survival.getMainHandItem());
             assertNightbrand(helper, adventure.getOffhandItem());
+            assertNightbrand(helper, twoHanded.getMainHandItem());
+            var other = twoHanded.getOffhandItem();
+            helper.assertTrue(other.is(Light.SPENT_TORCH) && !other.has(Nightbrand.STEEPING), "the Spent Torch in the other hand became " + other);
             leave(survival);
             leave(adventure);
+            leave(twoHanded);
             helper.succeed();
         });
     }
@@ -131,19 +140,19 @@ final class NightbrandTests {
         var first = caged(helper, new BlockPos(2, 1, 2), 0);
         first.setItemInHand(InteractionHand.MAIN_HAND, Light.SPENT_TORCH.toStack());
         var second = caged(helper, new BlockPos(6, 1, 2), 0);
-        helper.runAtTickTime(SET_STEEP + MARGIN, () -> {
+        helper.runAtTickTime(SHORT_STEEP + MARGIN, () -> {
             assertNightbrand(helper, first.getMainHandItem());
             first.setItemInHand(InteractionHand.MAIN_HAND, Light.SPENT_TORCH.toStack());
             second.setItemInHand(InteractionHand.MAIN_HAND, Light.SPENT_TORCH.toStack());
         });
-        helper.runAtTickTime(2 * SET_STEEP + 2 * MARGIN, () -> {
+        helper.runAtTickTime(2 * SHORT_STEEP + 2 * MARGIN, () -> {
             assertNightbrand(helper, second.getMainHandItem());
             var again = first.getMainHandItem();
             helper.assertTrue(again.is(Light.SPENT_TORCH) && !again.has(Nightbrand.STEEPING), "a second Spent Torch the same day became " + again);
             long now = helper.getLevel().getOverworldClockTime();
             KeepsClock.advance(helper, DAY - Math.floorMod(now, DAY));
         });
-        helper.runAtTickTime(3 * SET_STEEP + 3 * MARGIN, () -> {
+        helper.runAtTickTime(3 * SHORT_STEEP + 3 * MARGIN, () -> {
             assertNightbrand(helper, first.getMainHandItem());
             leave(first);
             leave(second);

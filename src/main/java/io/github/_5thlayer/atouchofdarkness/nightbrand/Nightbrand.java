@@ -28,8 +28,8 @@ import net.neoforged.neoforge.registries.NeoForgeRegistries;
 
 /**
  * The Nightbrand (GLOSSARY.md): every game tick, a single Spent Torch in either hand of a player in the
- * Dark soaks it up, its {@link Steeping} kept between dips, until it has steeped for the light config's
- * Grace Periods and is a Nightbrand. Each player darkens one a day: once they have, no torch of theirs
+ * Dark soaks it up, the main hand's alone if both hold one, its {@link Steeping} kept between dips, until
+ * it has steeped for the light config's Grace Periods and is a Nightbrand. Each player darkens one a day: once they have, no torch of theirs
  * steeps until the next dawn. A Nightbrand keeps forever and gives no light: it is no Light Source.
  */
 public final class Nightbrand {
@@ -86,7 +86,7 @@ public final class Nightbrand {
             }
             for (var hand : InteractionHand.values()) {
                 var stack = player.getItemInHand(hand);
-                // One alone, so only one torch at a time is ever darkened.
+                // One alone, in one hand, so only one torch at a time is ever darkened.
                 if (!stack.is(Light.SPENT_TORCH) || stack.getCount() != 1) {
                     continue;
                 }
@@ -94,11 +94,11 @@ public final class Nightbrand {
                 if (steeping.done()) {
                     player.setItemInHand(hand, NIGHTBRAND.toStack());
                     player.setData(DARKENED_ON, today);
-                    // One a day, so a torch in the other hand waits for the dawn.
-                    break;
                 } else {
                     stack.set(STEEPING, steeping);
                 }
+                // The main hand's first: one in the other hand waits until it is put away.
+                break;
             }
         }
     }
