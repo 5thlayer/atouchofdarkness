@@ -19,11 +19,12 @@ import org.jspecify.annotations.Nullable;
 /**
  * A hurt Lampad's retreat: to the nearest spot in her Votive's range where she would stand in the Dark,
  * not Lit, and there she heals 1 health every 40 ticks until she is whole, soul sparks rising from her
- * at each. Once in the Dark she heals where she is. With no such spot in range she waits where she
+ * at each. Once in the Dark within her range she heals where she is. With no such spot in range she waits where she
  * stands, healing none, until one is. It holds her still, so she tends nothing meanwhile.
  */
 final class HealGoal extends Goal {
 
+    /** Ticks in the Dark to each health she heals. */
     private static final int HEAL_INTERVAL = 40;
 
     /** Ticks between her looks for a spot in the Dark while she is Lit. */
@@ -68,7 +69,10 @@ final class HealGoal extends Goal {
     @Override
     public void tick() {
         var level = (ServerLevel) lampad.level();
-        if (!Dark.isLit(level, BlockPos.containing(lampad.getEyePosition()))) {
+        var votive = lampad.votive();
+        boolean inTheDark = votive != null && TendedLamps.inRange(votive, lampad.blockPosition())
+                && !Dark.isLit(level, BlockPos.containing(lampad.getEyePosition()));
+        if (inTheDark) {
             // Counted from the tick she is in the Dark, so each health comes a whole 40 ticks after.
             if (!lampad.isHealing()) {
                 lampad.getNavigation().stop();
@@ -82,8 +86,8 @@ final class HealGoal extends Goal {
             return;
         }
         lampad.setHealing(false);
-        boolean lost = spot == null || lampad.getNavigation().isDone() || Dark.isLit(level, spot.above());
-        if (lost && lampad.tickCount >= nextLook) {
+        boolean needsSpot = spot == null || lampad.getNavigation().isDone() || Dark.isLit(level, spot.above());
+        if (needsSpot && lampad.tickCount >= nextLook) {
             nextLook = lampad.tickCount + LOOK_INTERVAL;
             spot = walkToTheDark(level);
         }
@@ -96,9 +100,7 @@ final class HealGoal extends Goal {
             return null;
         }
         var spots = new ArrayList<BlockPos>();
-        var from = votive.offset(-TendedLamps.ACROSS, -TendedLamps.UP_DOWN, -TendedLamps.ACROSS);
-        var to = votive.offset(TendedLamps.ACROSS, TendedLamps.UP_DOWN, TendedLamps.ACROSS);
-        for (var pos : BlockPos.betweenClosed(from, to)) {
+        for (var pos : TendedLamps.range(votive)) {
             if (level.isLoaded(pos) && standsOn(level, pos) && !Dark.isLit(level, pos.above())) {
                 spots.add(pos.immutable());
             }

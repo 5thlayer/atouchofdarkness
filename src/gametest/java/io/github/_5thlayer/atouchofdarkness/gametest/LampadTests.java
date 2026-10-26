@@ -401,12 +401,12 @@ final class LampadTests {
 
     /**
      * At night under a waning moon, where all the open sky is in the Dark, with a binding of 5 s. On the
-     * platform a Lampad, stands Lit by a light block beside it, a dry
-     * Lamp and coal by her Votive, and is hurt by 2: she goes into the Dark, out of the light block's
-     * reach, and heals there, 1 health 40 ticks after she gets there and another 40 ticks later, feeding
-     * the Lamp only once she is whole. Her Votive holds Nightbrands enough that her binding outlasts it. High above, on a ledge a light block lights end to end, another
-     * with one Nightbrand, hurt the same, waits where she stands, healing none and feeding her dry Lamp
-     * nothing, until her binding fades and she stands dormant.
+     * platform a Lampad stands Lit by a light block beside her Votive, which holds coal and Nightbrands
+     * enough to outlast the test, a dry Lamp by it, and is hurt by 2: she goes into the Dark, out of the
+     * light block's reach, and heals there, 1 health 40 ticks after she gets there and another 40 ticks
+     * later, feeding the Lamp only once she is whole. High above, on a ledge a light block lights end to
+     * end, another with one Nightbrand, hurt the same, waits where she stands, healing none and feeding
+     * her dry Lamp nothing, until her binding fades and she stands dormant.
      */
     private static void heals(GameTestHelper helper) {
         var player = survivalPlayer(helper);
@@ -422,9 +422,9 @@ final class LampadTests {
         var ledgeLamp = ledge.east().above();
         helper.setBlock(ledgeLamp, Light.LAMP.get());
         settleLight(helper, ledge.above(2));
-        settleLight(helper, votive.above(2));
         var healer = summon(helper, player, votive);
         helper.setBlock(lamp, Light.LAMP.get());
+        settleLight(helper, votive.above(2));
         var waiter = summon(helper, player, ledge);
         leave(player);
         var lampad = helper.getEntities(Lampad.LAMPAD.get(), votive.above(), 1.0).getFirst();
@@ -557,11 +557,7 @@ final class LampadTests {
 
     /** A Lampad summoned by the player from a Lamp on a gold block at {@code at}; her Votive. */
     static VotiveBlockEntity summon(GameTestHelper helper, ServerPlayer player, BlockPos at) {
-        helper.setBlock(at, Blocks.GOLD_BLOCK);
-        LampTests.lamp(helper, Light.LAMP.get(), at.above(), 0);
-        LampTests.useOn(helper, player, Light.TORCH.toStack(), at.above());
-        player.setItemInHand(InteractionHand.MAIN_HAND, ItemStack.EMPTY);
-        return helper.getBlockEntity(at, VotiveBlockEntity.class);
+        return summonFrom(helper, player, at, Light.LAMP.get(), 0);
     }
 
     /** The Votive's slot holds so many of the item. */

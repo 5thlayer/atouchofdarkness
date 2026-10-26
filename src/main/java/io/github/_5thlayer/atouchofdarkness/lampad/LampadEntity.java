@@ -39,11 +39,11 @@ import org.jspecify.annotations.Nullable;
  * takes a gold nugget from her Votive for each so many Lamps in range, rounded up, at its start and again
  * whenever more Lamps come into range than it has paid for, and tends only as many Lamps as its gold paid
  * for, nearest the Votive first. With no Nightbrand there, or no Votive, she stands dormant, a statue,
- * until one comes. She holds the Nightbrand of her binding and the Lamp she was summoned from, and drops
- * both, with the fuel she carries, when she dies; the gold is lost. Dormant, she is a statue that a player's
- * blow breaks, as if she had died. Mobs treat her as a passive mob, and fire never harms her. Hurt, she heals in the Dark by her
- * {@link HealGoal} and tends nothing until she is whole, her binding fading all the while. She gives no
- * light, and the Babau strikes only players.
+ * until one comes. She holds the Nightbrand of her binding, spent once it fades, and the Lamp she was
+ * summoned from, and drops both, with the fuel she carries, when she dies; the gold is lost. Dormant,
+ * she is a statue that a player's blow breaks, as if she had died. Mobs treat her as a passive mob, and
+ * fire never harms her. Hurt, she heals in the Dark by her {@link HealGoal} and tends nothing until
+ * she is whole, her binding fading all the while. She gives no light, and the Babau strikes only players.
  */
 public final class LampadEntity extends PathfinderMob {
 
@@ -208,11 +208,12 @@ public final class LampadEntity extends PathfinderMob {
         }
     }
 
-    /** The next Nightbrand, and the gold its Lamps owe. */
+    /** The next Nightbrand, and the gold its Lamps owe; with none, the faded one is spent and she stands dormant. */
     private void renew(ServerLevel level, VotiveBlockEntity votiveEntity) {
         nuggets = 0;
         var next = votiveEntity.takeNightbrand();
         if (next.isEmpty()) {
+            nightbrand = ItemStack.EMPTY;
             setDormant(true);
             return;
         }
@@ -239,6 +240,7 @@ public final class LampadEntity extends PathfinderMob {
         return super.hurtServer(level, source, isDormant() && source.getEntity() instanceof Player ? Float.MAX_VALUE : damage);
     }
 
+    /** A statue breaks as a copper golem's does. */
     @Override
     protected @Nullable SoundEvent getDeathSound() {
         return isDormant() ? SoundEvents.COPPER_GOLEM_STATUE_BREAK : super.getDeathSound();

@@ -38,7 +38,13 @@ final class TendedLamps {
                 .toList();
     }
 
-    private static boolean inRange(BlockPos votive, BlockPos pos) {
+    /** Every position in the Votive's range. */
+    static Iterable<BlockPos> range(BlockPos votive) {
+        return BlockPos.betweenClosed(votive.offset(-ACROSS, -UP_DOWN, -ACROSS), votive.offset(ACROSS, UP_DOWN, ACROSS));
+    }
+
+    /** Whether the position is in the Votive's range: 16 blocks either way across and 8 up or down. */
+    static boolean inRange(BlockPos votive, BlockPos pos) {
         return within(votive, pos, ACROSS, UP_DOWN);
     }
 
