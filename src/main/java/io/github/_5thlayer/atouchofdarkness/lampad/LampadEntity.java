@@ -7,6 +7,7 @@ import java.util.List;
 
 import io.github._5thlayer.atouchofdarkness.light.LightConfig;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
@@ -131,10 +132,18 @@ public final class LampadEntity extends PathfinderMob {
         var lamps = TendedLamps.of(server, votive);
         int perNugget = LightConfig.LAMPAD_LAMPS_PER_NUGGET.getAsInt();
         int owed = Gold.owed(lamps.size(), perNugget) - nuggets;
-        if (owed > 0) {
-            nuggets += votiveEntity.takeGold(owed);
+        int taken = owed > 0 ? votiveEntity.takeGold(owed) : 0;
+        if (taken > 0) {
+            nuggets += taken;
+            goldTakenCues(server);
         }
         return lamps.subList(0, Math.min(Gold.paidFor(nuggets, perNugget), lamps.size()));
+    }
+
+    /** A clink of gold, and golden sparks over her Votive. */
+    private void goldTakenCues(ServerLevel level) {
+        level.playSound(null, votive, SoundEvents.ARMOR_EQUIP_GOLD.value(), getSoundSource(), 1F, 1.2F);
+        level.sendParticles(ParticleTypes.WAX_ON, votive.getX() + 0.5, votive.getY() + 1.1, votive.getZ() + 0.5, 10, 0.3, 0.15, 0.3, 0.5);
     }
 
     @Override

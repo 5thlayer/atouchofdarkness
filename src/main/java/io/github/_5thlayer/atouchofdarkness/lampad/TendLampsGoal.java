@@ -7,8 +7,10 @@ import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Map;
 
+import io.github._5thlayer.atouchofdarkness.light.Light;
 import io.github._5thlayer.atouchofdarkness.light.PlacedFuel;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.InteractionHand;
@@ -19,7 +21,8 @@ import org.jspecify.annotations.Nullable;
 
 /**
  * A Lampad's round, as a copper golem carries items between chests: to her Votive for one fuel item,
- * then to the nearest Lamp she tends that the whole of it fits, and in with it. She sets out only when
+ * then to the nearest Lamp she tends that the whole of it fits, and in with it, a sound at each end and
+ * a burst of flame at the Lamp. She sets out only when
  * some Lamp has room for what her Votive holds, or for what she still carries.
  */
 final class TendLampsGoal extends Goal {
@@ -122,6 +125,7 @@ final class TendLampsGoal extends Goal {
         }
         lampad.setItemInHand(InteractionHand.MAIN_HAND, votive.takeFuel());
         lampad.swing(InteractionHand.MAIN_HAND);
+        lampad.playSound(SoundEvents.ALLAY_ITEM_TAKEN, 1F, 1F);
         tries = 0;
         moveTo(lamp);
     }
@@ -143,8 +147,21 @@ final class TendLampsGoal extends Goal {
         PlacedFuel.take(level, lamp, fuel);
         fuel.shrink(1);
         lampad.swing(InteractionHand.MAIN_HAND);
-        level.playSound(null, lamp, SoundEvents.FIRECHARGE_USE, lampad.getSoundSource(), 0.5F, 1F);
+        fedCues(level, lamp);
         done = true;
+    }
+
+    /**
+     * What a player sees and hears of a Lamp fed: the allay's chime of an item given and the crackle of
+     * fuel taking, with a burst of flame, a soul Lamp's blue, rising from the Lamp.
+     */
+    private void fedCues(ServerLevel level, BlockPos lamp) {
+        lampad.playSound(SoundEvents.ALLAY_ITEM_GIVEN, 1F, 1F);
+        level.playSound(null, lamp, SoundEvents.FIRECHARGE_USE, lampad.getSoundSource(), 0.8F, 1.2F);
+        var flame = level.getBlockState(lamp).is(Light.SOUL_LAMP) ? ParticleTypes.SOUL_FIRE_FLAME : ParticleTypes.FLAME;
+        var centre = Vec3.atCenterOf(lamp);
+        level.sendParticles(flame, centre.x, centre.y + 0.2, centre.z, 12, 0.2, 0.25, 0.2, 0.02);
+        level.sendParticles(ParticleTypes.SMOKE, centre.x, centre.y + 0.5, centre.z, 4, 0.1, 0.1, 0.1, 0.01);
     }
 
     /** The nearest Lamp she tends that has room for the whole of this, but those she couldn't reach of late. */
