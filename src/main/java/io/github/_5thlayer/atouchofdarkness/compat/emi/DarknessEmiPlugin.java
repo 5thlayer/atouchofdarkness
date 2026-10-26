@@ -28,8 +28,8 @@ import net.minecraft.world.level.ItemLike;
 /**
  * The Pillar in EMI: its recipes are vanilla's crafting, which EMI shows unaided, so the plugin adds
  * only information pages for what no recipe shows: fuelling a placed light by hand, relighting a Spent
- * Torch, vanilla's lights becoming the Pillar's own, the Nightbrand darkened and the Votive summoned
- * rather than crafted, and vanilla's cheap light having no recipe.
+ * Torch, vanilla's lights becoming the Pillar's own, the Nightbrand darkened and the Votive made by
+ * summoning a Lampad rather than crafted, and vanilla's cheap light having no recipe.
  *
  * <p>Found by EMI's entrypoint scan and named nowhere else, so EMI stays a soft dependency.
  */
