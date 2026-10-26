@@ -3,6 +3,10 @@
 
 package io.github._5thlayer.atouchofdarkness.light;
 
+import java.util.function.Consumer;
+
+import net.minecraft.ChatFormatting;
+import net.minecraft.network.chat.Component;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
@@ -12,8 +16,11 @@ import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.ItemUtils;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.item.TooltipFlag;
+import net.minecraft.world.item.component.TooltipDisplay;
 import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.CampfireBlock;
@@ -44,6 +51,13 @@ public final class SpentTorchItem extends Item {
         var torch = Light.TORCH.toStack();
         torch.set(Light.BURNING, Burning.relit(LightConfig.TORCH_BURN_TIME.getAsInt()));
         return InteractionResult.SUCCESS.heldItemTransformedTo(ItemUtils.createFilledResult(player.getItemInHand(hand), player, torch));
+    }
+
+    /** How to relight it, which nothing in the world shows. */
+    @Override
+    @SuppressWarnings("deprecation")
+    public void appendHoverText(ItemStack stack, TooltipContext context, TooltipDisplay display, Consumer<Component> builder, TooltipFlag flag) {
+        builder.accept(Component.translatable("item.atouchofdarkness.spent_torch.hint").withStyle(ChatFormatting.GRAY));
     }
 
     /**

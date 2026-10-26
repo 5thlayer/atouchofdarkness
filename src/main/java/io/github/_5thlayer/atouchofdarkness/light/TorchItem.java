@@ -3,22 +3,33 @@
 
 package io.github._5thlayer.atouchofdarkness.light;
 
+import java.util.Locale;
+import java.util.function.Consumer;
+
+import net.minecraft.ChatFormatting;
+import net.minecraft.SharedConstants;
 import net.minecraft.core.BlockPos;
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.tags.FluidTags;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.TooltipFlag;
+import net.minecraft.world.item.component.TooltipDisplay;
 import org.jspecify.annotations.Nullable;
 
 /**
  * The Torch (GLOSSARY.md), and the soul Torch: crafted burning, never placed, and burning only while
  * held, by the time of day, twice as fast in rain under the open sky. Underwater, or burnt out, it
  * becomes a Spent Torch, unless it was a Spent Torch relit, which is gone. Its burn shows
- * as an item bar once it has started.
+ * as an item bar once it has started, and as a countdown in its advanced tooltip.
  */
 public final class TorchItem extends Item implements HeldLightSource {
+
+    private static final String HINT = "item.atouchofdarkness.torch.hint";
+    private static final String BURN_LEFT = "item.atouchofdarkness.torch.burn_left";
 
     private final int light;
 
@@ -72,6 +83,20 @@ public final class TorchItem extends Item implements HeldLightSource {
         var eyes = BlockPos.containing(player.getEyePosition());
         var fluid = level.getFluidState(eyes);
         return fluid.is(FluidTags.WATER) && player.getEyeY() < eyes.getY() + fluid.getHeight(level, eyes);
+    }
+
+    /** That it burns only while held, and with advanced tooltips (F3+H) the time of day it has left, as m:ss. */
+    @Override
+    @SuppressWarnings("deprecation")
+    public void appendHoverText(ItemStack stack, TooltipContext context, TooltipDisplay display, Consumer<Component> builder, TooltipFlag flag) {
+        builder.accept(Component.translatable(HINT).withStyle(ChatFormatting.GRAY));
+        if (flag.isAdvanced()) {
+            var burning = stack.get(Light.BURNING);
+            int left = burning == null ? LightConfig.TORCH_BURN_TIME.getAsInt() * burnFactor : burning.left();
+            int seconds = Mth.positiveCeilDiv(left, SharedConstants.TICKS_PER_SECOND);
+            builder.accept(Component.translatable(BURN_LEFT, String.format(Locale.ROOT, "%d:%02d", seconds / 60, seconds % 60))
+                    .withStyle(ChatFormatting.DARK_GRAY));
+        }
     }
 
     @Override

@@ -27,6 +27,7 @@ import net.minecraft.world.entity.monster.Monster;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.item.crafting.CraftingInput;
 import net.minecraft.world.item.crafting.CraftingRecipe;
 import net.minecraft.world.level.GameType;
@@ -37,6 +38,7 @@ import net.minecraft.world.level.block.WallTorchBlock;
 import net.minecraft.world.level.block.entity.ChestBlockEntity;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
+import org.jspecify.annotations.Nullable;
 
 /**
  * The Torch: crafted burning, carried and never placed, burning by the time of day only while held, and
@@ -64,6 +66,7 @@ final class TorchTests {
         tests.test("torch_light_goes_into_water_never_into_a_solid_block_and_keeps_monsters_away", 40, TorchTests::whereTheLightGoes);
         tests.test("torch_dropped_gives_no_light_and_an_orphaned_light_removes_itself", 60, TorchTests::orphans);
         tests.test("torch_neither_torch_nor_spent_torch_can_be_placed", 5, TorchTests::neverPlaced);
+        tests.test("torch_tooltips_hint_and_count_down_with_advanced_tooltips", 1, TorchTests::tooltips);
         tests.test("torch_vanilla_torches_become_torches_and_broken_ones_drop_a_spent_torch", 10, TorchTests::vanillaTorches);
         tests.in("torch_burns_out", KeepsClock.INSTANCE)
                 .test("torch_burns_out_over_5_min_held_soul_twice_as_long_and_never_elsewhere", 20, TorchTests::burnsOut);
@@ -246,6 +249,31 @@ final class TorchTests {
         }
         leave(player);
         helper.succeed();
+    }
+
+    /**
+     * A Torch's tooltip says it burns only while held, and with advanced tooltips (F3+H) how long it has
+     * left: a fresh one its full 5 min, one burnt down 2 min 30 s, a fresh soul Torch 10 min. A Spent
+     * Torch's says how to relight it.
+     */
+    private static void tooltips(GameTestHelper helper) {
+        var burnt = Light.TORCH.toStack();
+        burnt.set(Light.BURNING, new Burning(BURN / 2, BURN, false));
+        assertTooltip(helper, Light.TORCH.toStack(), TooltipFlag.NORMAL, "Burns only while held", null);
+        assertTooltip(helper, Light.TORCH.toStack(), TooltipFlag.ADVANCED, "Burns only while held", "5:00 of burn left");
+        assertTooltip(helper, burnt, TooltipFlag.ADVANCED, "Burns only while held", "2:30 of burn left");
+        assertTooltip(helper, Light.SOUL_TORCH.toStack(), TooltipFlag.ADVANCED, "Burns only while held", "10:00 of burn left");
+        assertTooltip(helper, Light.SPENT_TORCH.toStack(), TooltipFlag.ADVANCED,
+                "Relight with flint and steel, a fire charge, fire, lava or a Torch", null);
+        helper.succeed();
+    }
+
+    /** The tooltip has the hint, and the countdown or, given none, no countdown at all. */
+    private static void assertTooltip(GameTestHelper helper, ItemStack stack, TooltipFlag flag, String hint, @Nullable String countdown) {
+        var lines = stack.getTooltipLines(Item.TooltipContext.of(helper.getLevel()), null, flag).stream().map(Component::getString).toList();
+        helper.assertTrue(lines.contains(hint), stack + "'s tooltip " + lines + " lacks \"" + hint + "\"");
+        boolean counted = lines.stream().anyMatch(line -> line.endsWith("of burn left"));
+        helper.assertTrue(countdown == null ? !counted : lines.contains(countdown), stack + "'s tooltip " + lines + " with " + flag + " should read " + countdown);
     }
 
     /**

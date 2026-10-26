@@ -14,5 +14,8 @@
   "item.atouchofdarkness.torch": "Torch",
   "item.atouchofdarkness.soul_torch": "Soul Torch",
   "item.atouchofdarkness.spent_torch": "Spent Torch",
-  "block.atouchofdarkness.carried_light": "Carried Light"
+  "block.atouchofdarkness.carried_light": "Carried Light",
+  "item.atouchofdarkness.torch.hint": "Burns only while held",
+  "item.atouchofdarkness.torch.burn_left": "%s of burn left",
+  "item.atouchofdarkness.spent_torch.hint": "Relight with flint and steel, a fire charge, fire, lava or a Torch"
 }
