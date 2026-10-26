@@ -26,13 +26,17 @@ _Avoid_: client (collides with the game's client side), dependent, integration
 A player is lit when the light at their eyes, vanilla's light with the sky dimmed for the hour and the weather, is enough. They are also lit under the open sky of a dimension whose sky never darkens, such as the End, and on the surface at night under a full moon when it isn't raining. A burning Light Source a player carries lights the world around them as a placed one would.
 _Avoid_: bright, safe
 
+**Babau**:
+The one being of Italian folklore that lives in the Dark and strikes whoever stays there too long; never seen, only felt.
+_Avoid_: Bogeyman, Charlie (Klei's name), grue, the Dark (the state it lives in), monster
+
 **Grace Period**:
 How long a player can be in the Dark before the first Strike. It refills only after the player has been lit for a moment without a break.
 _Avoid_: timer, countdown
 
 **Strike**:
-One blow from what lives in the Dark: heavy damage that armour, enchantments and effects soften as they do any other, scaled by difficulty to nothing on Peaceful, and repeated while the player stays in the Dark. Where A Touch of Madness is loaded it also costs Sanity, on Peaceful too. It never touches anything but players, nor players in Creative or Spectator.
-_Avoid_: attack, Charlie (Klei's name), grue
+One blow from the Babau: heavy damage that armour, enchantments and effects soften as they do any other, scaled by difficulty to nothing on Peaceful, and repeated while the player stays in the Dark. Where A Touch of Madness is loaded it also costs Sanity, on Peaceful too. It never touches anything but players, nor players in Creative or Spectator.
+_Avoid_: attack, hit
 
 ### Light
 

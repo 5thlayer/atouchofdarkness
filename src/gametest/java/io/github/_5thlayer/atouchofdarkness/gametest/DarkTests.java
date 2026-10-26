@@ -8,16 +8,20 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import com.mojang.authlib.GameProfile;
 import io.github._5thlayer.atouchofdarkness.dark.Dark;
+import io.github._5thlayer.atouchofdarkness.dark.StrikeDeathMessage;
 import io.netty.channel.embedded.EmbeddedChannel;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.core.SectionPos;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.network.Connection;
+import net.minecraft.network.chat.Component;
 import net.minecraft.network.protocol.PacketFlow;
 import net.minecraft.network.protocol.game.ServerboundClientCommandPacket;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.network.CommonListenerCookie;
 import net.minecraft.world.Difficulty;
+import net.minecraft.world.damagesource.CombatEntry;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.EntityType;
@@ -46,7 +50,7 @@ final class DarkTests {
 
     private static final float HEALTH = 100F;
 
-    /** When the first Strike lands at the defaults, a tick or two after the 10 s Grace Period, give or take the light settling. */
+    /** When the first Strike lands at the defaults, a tick or two after the 10 s Grace Period. */
     private static final int BEFORE_FIRST = 195;
     private static final int AFTER_FIRST = 210;
 
@@ -200,17 +204,34 @@ final class DarkTests {
         });
     }
 
+    /** The Strike that kills reads one of the death messages, and every one of them, fleeing or not, names the Babau. */
     private static void deathMessage(GameTestHelper helper) {
         var player = caged(helper, 0);
         player.setHealth(5F);
-        helper.succeedWhen(() -> {
-            helper.assertTrue(player.isDeadOrDying(), "the player is alive");
+        helper.startSequence().thenWaitUntil(() -> helper.assertTrue(player.isDeadOrDying(), "the player is alive")).thenExecute(() -> {
             var source = player.getLastDamageSource();
             helper.assertTrue(source != null && source.is(Dark.STRIKE), "the player died of " + source + ", not a Strike");
-            String message = source.getLocalizedDeathMessage(player).getString();
-            helper.assertTrue(message.contains("struck by the Dark"), "the death message reads \"" + message + "\"");
+            // The player's combat log is cleared as they die, so the damage type's message is asked again.
+            assertNamesTheBabau(helper, source.type().deathMessageType().getMessageFunction()
+                    .getDeathMessage(player, new CombatEntry(source, 10F, null, 0F), null));
+            for (int variant = 1; variant <= StrikeDeathMessage.VARIANTS; variant++) {
+                assertNamesTheBabau(helper, StrikeDeathMessage.message(player, variant));
+            }
+            var zombie = helper.spawn(EntityType.ZOMBIE, STAND.east(3));
+            player.setLastHurtByMob(zombie);
+            for (int variant = 1; variant <= StrikeDeathMessage.VARIANTS; variant++) {
+                var fleeing = StrikeDeathMessage.message(player, variant).getString();
+                assertNamesTheBabau(helper, StrikeDeathMessage.message(player, variant));
+                helper.assertTrue(fleeing.contains("Zombie"), "the fleeing death message reads \"" + fleeing + "\"");
+            }
+            zombie.discard();
             leave(player);
-        });
+        }).thenSucceed();
+    }
+
+    private static void assertNamesTheBabau(GameTestHelper helper, Component message) {
+        String text = message.getString();
+        helper.assertTrue(text.contains("the Babau") || text.startsWith("The Babau"), "the death message reads \"" + text + "\"");
     }
 
     /**
@@ -227,8 +248,7 @@ final class DarkTests {
 
     /**
      * 30 ticks in the Dark, 25 Lit, then 30 more: the configured 10-tick refill delay refilled it, where
-     * the default 40 would not have. Lit for well over the delay, since the light engine settles a block
-     * a varying few ticks after it is placed.
+     * the default 40 would not have.
      */
     private static void configuredRefill(GameTestHelper helper) {
         var player = caged(helper, 0);
@@ -259,6 +279,7 @@ final class DarkTests {
             helper.setBlock(stand.above().relative(side), Blocks.STONE);
         }
         helper.setBlock(stand.above(2), Blocks.STONE);
+        settleLight(helper, stand);
     }
 
     private static void light(GameTestHelper helper, int level) {
@@ -267,6 +288,23 @@ final class DarkTests {
 
     private static void light(GameTestHelper helper, BlockPos eyes, int level) {
         helper.setBlock(eyes, level == 0 ? Blocks.AIR.defaultBlockState() : Blocks.LIGHT.defaultBlockState().setValue(LightBlock.LEVEL, level));
+        settleLight(helper, eyes);
+    }
+
+    /**
+     * Waits for the light engine to light what was just placed. It runs on a thread of its own, and the
+     * game-test server ticks faster than 20 a second, so a block's light would otherwise show a varying
+     * number of ticks late, and a test of the refill delay would read a shorter spell of light.
+     */
+    private static void settleLight(GameTestHelper helper, BlockPos pos) {
+        var engine = helper.getLevel().getChunkSource().getLightEngine();
+        var at = helper.absolutePos(pos);
+        var settled = engine.waitForPendingTasks(SectionPos.blockToSectionCoord(at.getX()), SectionPos.blockToSectionCoord(at.getZ()));
+        // The engine updates in batches, each scheduled from here.
+        while (!settled.isDone()) {
+            engine.tryScheduleUpdate();
+            Thread.onSpinWait();
+        }
     }
 
     private static void standAt(GameTestHelper helper, BlockPos stand, ServerPlayer player) {

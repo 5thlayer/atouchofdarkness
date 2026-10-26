@@ -8,6 +8,15 @@
         "class": "io/github/_5thlayer/atouchofdarkness/dark/StrikeScaling$Proxy",
         "field": "STRIKE"
       }
+    },
+    {
+      "enum": "net/minecraft/world/damagesource/DeathMessageType",
+      "name": "ATOUCHOFDARKNESS_STRIKE",
+      "constructor": "(Ljava/lang/String;Lnet/neoforged/neoforge/common/damagesource/IDeathMessageProvider;)V",
+      "parameters": {
+        "class": "io/github/_5thlayer/atouchofdarkness/dark/StrikeDeathMessage$Proxy",
+        "field": "STRIKE"
+      }
     }
   ]
 }

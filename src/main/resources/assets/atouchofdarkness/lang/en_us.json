@@ -1,5 +1,11 @@
 {
   "itemGroup.atouchofdarkness": "A Touch of Darkness",
-  "death.attack.atouchofdarkness.strike": "%1$s was struck by the Dark",
-  "death.attack.atouchofdarkness.strike.player": "%1$s was struck by the Dark while fleeing %2$s"
+  "death.attack.atouchofdarkness.strike.1": "%1$s was taken by the Babau",
+  "death.attack.atouchofdarkness.strike.1.player": "%1$s was taken by the Babau while fleeing %2$s",
+  "death.attack.atouchofdarkness.strike.2": "%1$s lingered too long in the dark, and the Babau came",
+  "death.attack.atouchofdarkness.strike.2.player": "%1$s fled %2$s and lingered too long in the dark, and the Babau came",
+  "death.attack.atouchofdarkness.strike.3": "%1$s was found by the Babau",
+  "death.attack.atouchofdarkness.strike.3.player": "%1$s was found by the Babau while fleeing %2$s",
+  "death.attack.atouchofdarkness.strike.4": "The Babau took %1$s in the dark",
+  "death.attack.atouchofdarkness.strike.4.player": "The Babau took %1$s in the dark while they fled %2$s"
 }

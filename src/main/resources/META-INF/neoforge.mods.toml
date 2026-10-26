@@ -13,7 +13,7 @@ authors = "5thlayer"
 description = '''
 ${mod_description}
 '''
-# Adds the Strike's difficulty scaling to vanilla's DamageScaling.
+# Adds the Strike's difficulty scaling and death messages to vanilla's DamageScaling and DeathMessageType.
 enumExtensions = "META-INF/enumextensions.json"
 
 [[dependencies.${mod_id}]]
