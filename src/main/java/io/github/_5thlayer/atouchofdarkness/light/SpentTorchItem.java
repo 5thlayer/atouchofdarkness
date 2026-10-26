@@ -38,6 +38,7 @@ import org.jspecify.annotations.Nullable;
 public final class SpentTorchItem extends Item {
 
     private static final String HINT = "item.atouchofdarkness.spent_torch.hint";
+    private static final String STEEP_LEFT = "item.atouchofdarkness.spent_torch.steep_left";
 
     /** The steep's item bar, the violet of the night sky. */
     private static final int STEEP_BAR_COLOR = 0x7A4FC8;
@@ -61,11 +62,18 @@ public final class SpentTorchItem extends Item {
         return InteractionResult.SUCCESS.heldItemTransformedTo(ItemUtils.createFilledResult(player.getItemInHand(hand), player, torch));
     }
 
-    /** How to relight it, which nothing in the world shows. */
+    /**
+     * How to relight it, which nothing in the world shows, and with advanced tooltips (F3+H), once it has
+     * started to steep, the time in the Dark it has left before it is a Nightbrand, as m:ss.
+     */
     @Override
     @SuppressWarnings("deprecation")
     public void appendHoverText(ItemStack stack, TooltipContext context, TooltipDisplay display, Consumer<Component> builder, TooltipFlag flag) {
         builder.accept(Component.translatable(HINT).withStyle(ChatFormatting.GRAY));
+        var steeping = stack.get(Nightbrand.STEEPING);
+        if (flag.isAdvanced() && steeping != null) {
+            builder.accept(TimeLeft.line(STEEP_LEFT, Math.max(steeping.full() - steeping.steeped(), 0)));
+        }
     }
 
     /** Its steep, once it has started, toward a Nightbrand. */

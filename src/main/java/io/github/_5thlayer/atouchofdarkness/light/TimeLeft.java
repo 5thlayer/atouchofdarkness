@@ -10,7 +10,7 @@ import net.minecraft.SharedConstants;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.Mth;
 
-/** A carried Light Source's countdown in its advanced tooltip (F3+H): the time of day it has left, as m:ss. */
+/** A countdown in an advanced tooltip (F3+H), a carried Light Source's or a Spent Torch's steep: the ticks it has left, as m:ss. */
 final class TimeLeft {
 
     private TimeLeft() {

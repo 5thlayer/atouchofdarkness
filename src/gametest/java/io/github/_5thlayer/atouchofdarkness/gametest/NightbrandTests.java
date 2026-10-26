@@ -11,17 +11,21 @@ import java.util.UUID;
 import com.mojang.authlib.GameProfile;
 import io.github._5thlayer.atouchofdarkness.light.Light;
 import io.github._5thlayer.atouchofdarkness.nightbrand.Nightbrand;
+import io.github._5thlayer.atouchofdarkness.nightbrand.Steeping;
 import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTestHelper;
+import net.minecraft.network.chat.Component;
 import net.minecraft.world.Difficulty;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.level.GameType;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.ChestBlockEntity;
 import net.neoforged.neoforge.common.util.FakePlayer;
+import org.jspecify.annotations.Nullable;
 
 /**
  * The Nightbrand: a single Spent Torch in a real player's hand soaks the Dark up while they are in it,
@@ -56,6 +60,7 @@ final class NightbrandTests {
                 .test("nightbrand_steeps_on_peaceful", STEEP + MARGIN, NightbrandTests::onPeaceful);
         tests.in("nightbrand_daily", KeepsClock.INSTANCE, WithDarkConfig.INSTANCE)
                 .test("nightbrand_one_a_day_per_player_and_the_count_resets_at_dawn", 4 * SHORT_STEEP, NightbrandTests::oneADay);
+        tests.test("nightbrand_advanced_tooltip_counts_the_steep_down", 1, NightbrandTests::tooltip);
         tests.test("nightbrand_never_steeps_a_stack_nor_out_of_an_unlit_players_hand_and_gives_no_light", STEEP + 2 * MARGIN, NightbrandTests::neverSteeps);
     }
 
@@ -218,6 +223,25 @@ final class NightbrandTests {
             }
             helper.succeed();
         });
+    }
+
+    /**
+     * A Spent Torch halfway through its steep tells, with advanced tooltips (F3+H), the time in the Dark it
+     * has left, as m:ss; without them, or before it has started, it tells nothing of it.
+     */
+    private static void tooltip(GameTestHelper helper) {
+        var half = Light.SPENT_TORCH.toStack();
+        half.set(Nightbrand.STEEPING, new Steeping(STEEP / 2, STEEP));
+        assertSteepLine(helper, half, TooltipFlag.ADVANCED, "0:15 in the Dark to a Nightbrand");
+        assertSteepLine(helper, half, TooltipFlag.NORMAL, null);
+        assertSteepLine(helper, Light.SPENT_TORCH.toStack(), TooltipFlag.ADVANCED, null);
+        helper.succeed();
+    }
+
+    private static void assertSteepLine(GameTestHelper helper, ItemStack stack, TooltipFlag flag, @Nullable String line) {
+        var lines = stack.getTooltipLines(Item.TooltipContext.of(helper.getLevel()), null, flag).stream().map(Component::getString).toList();
+        boolean told = lines.stream().anyMatch(text -> text.endsWith("to a Nightbrand"));
+        helper.assertTrue(line == null ? !told : lines.contains(line), stack + "'s tooltip " + lines + " with " + flag + " should read " + line);
     }
 
     /** A Spent Torch most of the way steeped, which its item bar shows. */
