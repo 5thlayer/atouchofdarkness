@@ -33,15 +33,15 @@ import org.jspecify.annotations.Nullable;
  * The Spent Torch, what a Torch burns out into, which is never placed. Used in the hand with flint and
  * steel or a fire charge in the other, or a burning Light Source, or while looking at fire, lava or a lit
  * campfire, it is relit into a Torch that burns a quarter as long as a fresh one, then is gone. Held
- * alone in the Dark it steeps toward a Nightbrand, which its item bar shows.
+ * alone in the Dark it darkens toward a Nightbrand, which its item bar shows.
  */
 public final class SpentTorchItem extends Item {
 
     private static final String HINT = "item.atouchofdarkness.spent_torch.hint";
-    private static final String STEEP_LEFT = "item.atouchofdarkness.spent_torch.steep_left";
+    private static final String DARKEN_LEFT = "item.atouchofdarkness.spent_torch.darken_left";
 
-    /** The steep's item bar, the violet of the night sky. */
-    private static final int STEEP_BAR_COLOR = 0x7A4FC8;
+    /** The darkening's item bar, the violet of the night sky. */
+    private static final int DARKENING_BAR_COLOR = 0x7A4FC8;
 
     public SpentTorchItem(Properties properties) {
         super(properties);
@@ -64,38 +64,38 @@ public final class SpentTorchItem extends Item {
 
     /**
      * How to relight it, which nothing in the world shows, and with advanced tooltips (F3+H), once it has
-     * started to steep, the time in the Dark it has left before it is a Nightbrand, as m:ss.
+     * started to darken, the time in the Dark it has left before it is a Nightbrand, as m:ss.
      */
     @Override
     @SuppressWarnings("deprecation")
     public void appendHoverText(ItemStack stack, TooltipContext context, TooltipDisplay display, Consumer<Component> builder, TooltipFlag flag) {
         builder.accept(Component.translatable(HINT).withStyle(ChatFormatting.GRAY));
         if (flag.isAdvanced()) {
-            var steeping = stack.get(Nightbrand.STEEPING);
-            if (steeping != null) {
-                builder.accept(TimeLeft.line(STEEP_LEFT, steeping.left()));
+            var darkening = stack.get(Nightbrand.DARKENING);
+            if (darkening != null) {
+                builder.accept(TimeLeft.line(DARKEN_LEFT, darkening.left()));
             }
         }
     }
 
-    /** Its steep, once it has started, toward a Nightbrand. */
+    /** Its darkening, once it has started, toward a Nightbrand. */
     @Override
     public boolean isBarVisible(ItemStack stack) {
-        return stack.has(Nightbrand.STEEPING);
+        return stack.has(Nightbrand.DARKENING);
     }
 
     @Override
     public int getBarWidth(ItemStack stack) {
-        var steeping = stack.get(Nightbrand.STEEPING);
-        return steeping == null ? 0 : Mth.clamp(Math.round((float) MAX_BAR_WIDTH * steeping.steeped() / steeping.full()), 0, MAX_BAR_WIDTH);
+        var darkening = stack.get(Nightbrand.DARKENING);
+        return darkening == null ? 0 : Mth.clamp(Math.round((float) MAX_BAR_WIDTH * darkening.darkened() / darkening.full()), 0, MAX_BAR_WIDTH);
     }
 
     @Override
     public int getBarColor(ItemStack stack) {
-        return STEEP_BAR_COLOR;
+        return DARKENING_BAR_COLOR;
     }
 
-    /** Not each tick its steep changes. */
+    /** Not each tick its darkening changes. */
     @Override
     public boolean shouldCauseReequipAnimation(ItemStack oldStack, ItemStack newStack, boolean slotChanged) {
         return slotChanged || !ItemStack.isSameItem(oldStack, newStack);

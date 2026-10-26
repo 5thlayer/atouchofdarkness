@@ -28,9 +28,9 @@ import net.neoforged.neoforge.registries.NeoForgeRegistries;
 
 /**
  * The Nightbrand (GLOSSARY.md): every game tick, a single Spent Torch in either hand of a player in the
- * Dark soaks it up, the main hand's alone if both hold one, its {@link Steeping} kept between dips, until
- * it has steeped for the light config's Grace Periods and is a Nightbrand. Each player darkens one a day: once they have, no torch of theirs
- * steeps until the next dawn. A Nightbrand keeps forever and gives no light: it is no Light Source.
+ * Dark soaks it up, the main hand's alone if both hold one, its {@link Darkening} kept between dips, until
+ * it has darkened for the light config's Grace Periods and is a Nightbrand. Each player darkens one a
+ * day: once they have, no torch of theirs darkens until the next dawn. A Nightbrand keeps forever and gives no light: it is no Light Source.
  */
 public final class Nightbrand {
 
@@ -40,8 +40,8 @@ public final class Nightbrand {
     private static final DeferredRegister.DataComponents COMPONENTS =
             DeferredRegister.createDataComponents(Registries.DATA_COMPONENT_TYPE, ATouchOfDarkness.MOD_ID);
 
-    public static final DeferredHolder<DataComponentType<?>, DataComponentType<Steeping>> STEEPING = COMPONENTS.registerComponentType("steeping",
-            builder -> builder.persistent(Steeping.CODEC).networkSynchronized(Steeping.STREAM_CODEC));
+    public static final DeferredHolder<DataComponentType<?>, DataComponentType<Darkening>> DARKENING = COMPONENTS.registerComponentType("darkening",
+            builder -> builder.persistent(Darkening.CODEC).networkSynchronized(Darkening.STREAM_CODEC));
 
     public static final DeferredItem<Item> NIGHTBRAND = ITEMS.registerSimpleItem("nightbrand");
 
@@ -68,16 +68,16 @@ public final class Nightbrand {
         NeoForge.EVENT_BUS.addListener(Nightbrand::tick);
     }
 
-    /** The full steep the config sets now, so many Grace Periods. */
-    public static int fullSteep() {
-        return Steep.full(LightConfig.NIGHTBRAND_STEEP.getAsInt(), DarkConfig.GRACE_PERIOD.getAsInt());
+    /** The full darkening the config sets now, so many Grace Periods. */
+    public static int fullDarkening() {
+        return Darken.full(LightConfig.NIGHTBRAND_GRACE_PERIODS.getAsInt(), DarkConfig.GRACE_PERIOD.getAsInt());
     }
 
     private static void tick(LevelTickEvent.Post event) {
         if (!(event.getLevel() instanceof ServerLevel level) || level.players().isEmpty()) {
             return;
         }
-        int full = fullSteep();
+        int full = fullDarkening();
         long today = Math.floorDiv(level.getOverworldClockTime(), DAY);
         for (ServerPlayer player : level.players()) {
             // A machine's fake player in the world is no one who took the risk.
@@ -90,12 +90,12 @@ public final class Nightbrand {
                 if (!stack.is(Light.SPENT_TORCH) || stack.getCount() != 1) {
                     continue;
                 }
-                var steeping = stack.getOrDefault(STEEPING, new Steeping(0, full)).steep(1, full);
-                if (steeping.done()) {
+                var darkening = stack.getOrDefault(DARKENING, new Darkening(0, full)).darken(1, full);
+                if (darkening.done()) {
                     player.setItemInHand(hand, NIGHTBRAND.toStack());
                     player.setData(DARKENED_ON, today);
                 } else {
-                    stack.set(STEEPING, steeping);
+                    stack.set(DARKENING, darkening);
                 }
                 // The main hand's first: one in the other hand waits until it is put away.
                 break;

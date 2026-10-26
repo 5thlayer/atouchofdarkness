@@ -19,7 +19,7 @@
   "item.atouchofdarkness.torch.hint": "Burns only while held",
   "item.atouchofdarkness.torch.burn_left": "%s of burn left",
   "item.atouchofdarkness.spent_torch.hint": "Relight with flint and steel, a fire charge, fire, lava or a Torch",
-  "item.atouchofdarkness.spent_torch.steep_left": "%s in the Dark to a Nightbrand",
+  "item.atouchofdarkness.spent_torch.darken_left": "%s in the Dark to a Nightbrand",
   "block.atouchofdarkness.campfire": "Campfire",
   "block.atouchofdarkness.soul_campfire": "Soul Campfire",
   "block.atouchofdarkness.lamp": "Lamp",
