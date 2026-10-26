@@ -35,9 +35,10 @@ import org.jspecify.annotations.Nullable;
  * in vanilla's block entity, with its {@link Fuel} attached. Placed, it holds half its cap. It burns by
  * the time of day while lit, twice as fast in rain under the open sky, and its light falls a step at each
  * quarter of its cap its fuel falls below, until it goes out dry. Any furnace fuel used on it adds ten
- * times its burn time, up to the cap, and lights it again. A comparator reads how full it is.
+ * times its burn time, up to the cap, through {@link PlacedFuel}, and lights it again. A comparator
+ * reads how full it is.
  */
-public final class FuelledCampfireBlock extends CampfireBlock {
+public final class FuelledCampfireBlock extends CampfireBlock implements FuelledLight {
 
     public static final MapCodec<CampfireBlock> CODEC = RecordCodecBuilder.mapCodec(instance -> instance.group(
             Codec.BOOL.fieldOf("soul").forGetter(block -> ((FuelledCampfireBlock) block).soul),
@@ -79,7 +80,8 @@ public final class FuelledCampfireBlock extends CampfireBlock {
     }
 
     /** The fuel it holds at most, from the config: the soul Campfire's is twice the Campfire's. */
-    int cap() {
+    @Override
+    public int cap() {
         return LightConfig.CAMPFIRE_CAP.getAsInt() * (soul ? 2 : 1);
     }
 
@@ -104,21 +106,16 @@ public final class FuelledCampfireBlock extends CampfireBlock {
      */
     @Override
     protected InteractionResult useItemOn(ItemStack stack, BlockState state, Level level, BlockPos pos, Player player, InteractionHand hand, BlockHitResult hit) {
-        int burnTime = HandFuel.burnTime(stack, level);
-        if (burnTime <= 0 || !(level.getBlockEntity(pos) instanceof CampfireBlockEntity campfire)) {
+        if (HandFuel.burnTime(stack, level) <= 0 || !(level.getBlockEntity(pos) instanceof CampfireBlockEntity)) {
             return super.useItemOn(stack, state, level, pos, player, hand, hit);
         }
         // The client doesn't know the fuel.
         if (level.isClientSide()) {
             return InteractionResult.SUCCESS;
         }
-        var fuel = upToDate((ServerLevel) level, pos, state, campfire);
-        if (fuel.left() >= cap()) {
+        if (!PlacedFuel.take((ServerLevel) level, pos, stack)) {
             return InteractionResult.CONSUME;
         }
-        fuel.refuel(burnTime, cap());
-        campfire.setChanged();
-        level.setBlockAndUpdate(pos, shown(state.setValue(LIT, !state.getValue(WATERLOGGED)), fuel));
         HandFuel.feed(stack, level, pos, player, hand);
         return InteractionResult.SUCCESS_SERVER;
     }
@@ -147,6 +144,20 @@ public final class FuelledCampfireBlock extends CampfireBlock {
             }
             burn((ServerLevel) tickLevel, pos, tickState, (CampfireBlockEntity) entity);
         };
+    }
+
+    @Override
+    public @Nullable Fuel upToDate(ServerLevel level, BlockPos pos, BlockState state) {
+        return level.getBlockEntity(pos) instanceof CampfireBlockEntity campfire ? upToDate(level, pos, state, campfire) : null;
+    }
+
+    /** Lit again, unless it is underwater, and its light shown. */
+    @Override
+    public void fuelled(ServerLevel level, BlockPos pos, BlockState state, Fuel fuel) {
+        if (level.getBlockEntity(pos) instanceof CampfireBlockEntity campfire) {
+            campfire.setChanged();
+        }
+        level.setBlockAndUpdate(pos, shown(state.setValue(LIT, !state.getValue(WATERLOGGED)), fuel));
     }
 
     /** Brings its fuel up to date with the time of day, and shows it. */

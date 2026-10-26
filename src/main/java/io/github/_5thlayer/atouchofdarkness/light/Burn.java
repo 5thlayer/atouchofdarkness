@@ -52,6 +52,11 @@ public final class Burn {
         return (int) Math.min((long) left + (long) burnTime * FUEL_FACTOR, cap);
     }
 
+    /** Whether the whole of an item of this vanilla burn time fits into the room the fuel leaves under the cap. */
+    public static boolean fits(int left, int burnTime, int cap) {
+        return (long) left + (long) burnTime * FUEL_FACTOR <= cap;
+    }
+
     /**
      * The light of a Light Source that dims as its fuel runs down: the first of the four levels above ¾
      * of its cap, the second above ½, the third above ¼, the fourth above nothing, and none once dry.

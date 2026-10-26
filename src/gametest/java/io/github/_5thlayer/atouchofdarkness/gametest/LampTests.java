@@ -70,6 +70,8 @@ final class LampTests {
         tests.test("lamp_vanilla_lanterns_become_full_lamps", 5, LampTests::vanillaLanterns);
         tests.test("lamp_tooltip_says_how_to_fuel_it_and_counts_its_fuel_down_with_advanced_tooltips", 1, LampTests::tooltips);
         tests.test("lamp_redstone_rise_turns_it_on_and_fall_off_and_a_hand_toggle_holds_till_the_next_change", 10, LampTests::redstone);
+        tests.test("lamp_fuel_never_switches_it_off_stays_off_and_on_dry_shines_again", 5, LampTests::fuelKeepsSwitch);
+        tests.test("lamp_placed_into_a_live_signal_is_placed_on", 5, LampTests::placedIntoSignal);
         tests.in("lamp_toggled", KeepsClock.INSTANCE)
                 .test("lamp_empty_hand_toggles_it_and_it_doesnt_burn_while_off", 10, LampTests::toggled);
         tests.in("lamp_goes_dark", KeepsClock.INSTANCE)
@@ -81,8 +83,8 @@ final class LampTests {
     }
 
     /**
-     * Each Lamp crafts from iron nuggets around its Torch, with no fuel. Placed empty, a stick, of 100
-     * ticks in a furnace, adds 1000 and lights it; a coal, of 1600, adds 16000, and the next fills it
+     * Each Lamp crafts from iron nuggets around its Torch, with no fuel. Placed empty and on, a stick, of
+     * 100 ticks in a furnace, adds 1000 and lights it; a coal, of 1600, adds 16000, and the next fills it
      * to a day, the rest lost. In the inventory, coal clicked onto a Lamp, as onto a bundle, does the same,
  * and the Lamp placed and broken again keeps its fuel.
      */
@@ -93,7 +95,7 @@ final class LampTests {
         var player = survivalPlayer(helper);
         standAt(helper, STAND, player);
         var lamp = new BlockPos(4, 1, 2);
-        helper.setBlock(lamp, Light.LAMP.get());
+        helper.setBlock(lamp, Light.LAMP.get().defaultBlockState().setValue(LampBlock.ON, true));
         useOn(helper, player, new ItemStack(Items.STICK), lamp);
         assertPlaced(helper, lamp, true, 1000);
         var coal = new ItemStack(Items.COAL, 3);
@@ -233,6 +235,54 @@ final class LampTests {
     }
 
     /**
+     * Fuel by hand leaves a placed Lamp on or off as it was: an empty one that's off stays off, dark, with
+     * the stick's 1000, and one that's on but dry shines again. Turned on, the first shines too.
+     */
+    private static void fuelKeepsSwitch(GameTestHelper helper) {
+        var player = survivalPlayer(helper);
+        standAt(helper, STAND, player);
+        var off = new BlockPos(2, 1, 2);
+        var onDry = new BlockPos(6, 1, 2);
+        helper.setBlock(off, Light.LAMP.get());
+        helper.setBlock(onDry, Light.LAMP.get().defaultBlockState().setValue(LampBlock.ON, true));
+        useOn(helper, player, new ItemStack(Items.STICK), off);
+        useOn(helper, player, new ItemStack(Items.STICK), onDry);
+        assertPlaced(helper, off, false, 1000);
+        assertLight(helper, off, 0);
+        assertPlaced(helper, onDry, true, 1000);
+        useOn(helper, player, ItemStack.EMPTY, off);
+        assertPlaced(helper, off, true, 1000);
+        leave(player);
+        helper.succeed();
+    }
+
+    /**
+     * A Lamp with fuel, off, placed by a player beside a powered block is placed on, as a vanilla door
+     * placed into a live signal opens; a dry one placed so stays dark, and shines once fuelled. The fall of
+     * the signal turns the first off.
+     */
+    private static void placedIntoSignal(GameTestHelper helper) {
+        var player = survivalPlayer(helper);
+        standAt(helper, STAND, player);
+        var lamp = new BlockPos(2, 1, 2);
+        var dry = new BlockPos(6, 1, 2);
+        helper.setBlock(lamp.east(), Blocks.REDSTONE_BLOCK);
+        helper.setBlock(dry.east(), Blocks.REDSTONE_BLOCK);
+        var fuelled = Light.LAMP_ITEM.toStack();
+        fuelled.set(Light.LAMP_FUEL, 1000);
+        useOn(helper, player, fuelled, lamp.below(), Direction.UP);
+        useOn(helper, player, Light.LAMP_ITEM.toStack(), dry.below(), Direction.UP);
+        assertPlaced(helper, lamp, true, 1000);
+        assertPlaced(helper, dry, false, 0);
+        useOn(helper, player, new ItemStack(Items.STICK), dry);
+        assertPlaced(helper, dry, true, 1000);
+        helper.setBlock(lamp.east(), Blocks.AIR);
+        assertPlaced(helper, lamp, false, 1000);
+        leave(player);
+        helper.succeed();
+    }
+
+    /**
      * A placed Lamp, off with fuel, beside a block that powers and unpowers it: a rise turns it on, an
      * empty hand turns it off again and it stays off while the signal holds, a fall leaves it off, the
      * hand turns it on and it stays on, and the next fall turns it off. A dry Lamp powered stays dark
@@ -295,7 +345,7 @@ final class LampTests {
         });
         helper.runAtTickTime(4, () -> {
             assertPlaced(helper, lamp, true, -1);
-            helper.setBlock(unloaded, Light.LAMP.get().defaultBlockState().setValue(LampBlock.LIT, true));
+            helper.setBlock(unloaded, Light.LAMP.get().defaultBlockState().setValue(LampBlock.ON, true).setValue(LampBlock.LIT, true));
             helper.getBlockEntity(unloaded, LampBlockEntity.class)
                     .loadWithComponents(TagValueInput.create(ProblemReporter.DISCARDING, registries, saved[0]));
             KeepsClock.advance(helper, 2 * MARGIN);
@@ -371,7 +421,7 @@ final class LampTests {
 
     /** A Lamp set at the block, on if it holds any fuel. */
     private static void lamp(GameTestHelper helper, Block lamp, BlockPos at, int fuel) {
-        helper.setBlock(at, lamp.defaultBlockState().setValue(LampBlock.LIT, fuel > 0));
+        helper.setBlock(at, lamp.defaultBlockState().setValue(LampBlock.ON, fuel > 0).setValue(LampBlock.LIT, fuel > 0));
         helper.getBlockEntity(at, LampBlockEntity.class).setFuel(fuel);
     }
 

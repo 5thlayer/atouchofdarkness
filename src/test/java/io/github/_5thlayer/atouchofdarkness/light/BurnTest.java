@@ -4,6 +4,8 @@
 package io.github._5thlayer.atouchofdarkness.light;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.junit.jupiter.api.Test;
 
@@ -53,6 +55,15 @@ class BurnTest {
         // Coal burns 1600 ticks in a furnace; a day is 24000.
         assertEquals(16_000, Burn.refuel(0, 1600, 24_000));
         assertEquals(24_000, Burn.refuel(10_000, 1600, 24_000));
+    }
+
+    @Test
+    void aWholeItemFitsOnlyIntoTheRoomLeft() {
+        // Coal adds 16000; a day is 24000.
+        assertTrue(Burn.fits(0, 1600, 24_000));
+        assertTrue(Burn.fits(8000, 1600, 24_000));
+        assertFalse(Burn.fits(8001, 1600, 24_000));
+        assertFalse(Burn.fits(24_000, 1, 24_000));
     }
 
     @Test

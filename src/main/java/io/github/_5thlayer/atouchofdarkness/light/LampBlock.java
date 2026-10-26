@@ -32,16 +32,20 @@ import org.jspecify.annotations.Nullable;
 /**
  * The Lamp, placed: vanilla's lantern, standing or hanging, lit while it is on with fuel, its
  * {@link Fuel} in a {@link LampBlockEntity}. Lit, it burns by the time of day, loaded or not, rain or
- * not, and goes dark once dry. An empty hand turns it off, or on if it has fuel, and so does redstone, as
- * a door's: a rise in the signal turns it on, a fall off, and a hand toggle in between holds until the
- * next change. Any furnace fuel used on it adds ten times its burn time, up to its cap, and lights a dry
- * one. A comparator reads how full it is.
+ * not, and goes dark once dry, on still. An empty hand turns it off, or on if it has fuel, and so does
+ * redstone, as a door's: a rise in the signal turns it on, a fall off, and a hand toggle in between holds
+ * until the next change; placed into a live signal, it is placed on. Any furnace fuel used on it adds ten
+ * times its burn time, up to its cap, through {@link PlacedFuel}, which never turns it on or off: one on
+ * and dry shines again, one off stays off. A comparator reads how full it is.
  */
-public final class LampBlock extends LanternBlock implements EntityBlock {
+public final class LampBlock extends LanternBlock implements EntityBlock, FuelledLight {
 
     public static final MapCodec<LampBlock> CODEC = simpleCodec(LampBlock::new);
 
-    /** On, with fuel. */
+    /** Switched on, by hand or by redstone, with fuel or dry. */
+    public static final BooleanProperty ON = BooleanProperty.create("on");
+
+    /** On, with fuel: the one it shines in. */
     public static final BooleanProperty LIT = BlockStateProperties.LIT;
 
     /** The signal it last saw, so only a change in it switches the Lamp. */
@@ -49,7 +53,7 @@ public final class LampBlock extends LanternBlock implements EntityBlock {
 
     public LampBlock(Properties properties) {
         super(properties);
-        registerDefaultState(defaultBlockState().setValue(LIT, false).setValue(POWERED, false));
+        registerDefaultState(defaultBlockState().setValue(ON, false).setValue(LIT, false).setValue(POWERED, false));
     }
 
     @Override
@@ -60,24 +64,29 @@ public final class LampBlock extends LanternBlock implements EntityBlock {
     @Override
     protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
         super.createBlockStateDefinition(builder);
-        builder.add(LIT, POWERED);
+        builder.add(ON, LIT, POWERED);
     }
 
     /** Its cap, the item's. */
-    private int cap() {
+    @Override
+    public int cap() {
         return ((LampItem) asItem()).cap();
     }
 
-    /** Lit if the Lamp placed was, whatever the signal, which only switches it once it changes. */
+    /** On if the Lamp placed was, or if it is placed into a live signal, as a door placed so opens; lit if it is on with fuel. */
     @Override
     public @Nullable BlockState getStateForPlacement(BlockPlaceContext context) {
         var state = super.getStateForPlacement(context);
-        return state == null ? null : state
-                .setValue(LIT, LampItem.lit(context.getItemInHand()))
-                .setValue(POWERED, context.getLevel().hasNeighborSignal(context.getClickedPos()));
+        if (state == null) {
+            return null;
+        }
+        var stack = context.getItemInHand();
+        boolean powered = context.getLevel().hasNeighborSignal(context.getClickedPos());
+        boolean on = LampItem.lit(stack) || powered;
+        return state.setValue(ON, on).setValue(LIT, on && LampItem.fuel(stack) > 0).setValue(POWERED, powered);
     }
 
-    /** A change in the signal turns it on, if it has fuel, or off. */
+    /** A change in the signal turns it on, lit if it has fuel, or off. */
     @Override
     protected void neighborChanged(BlockState state, Level level, BlockPos pos, Block block, @Nullable Orientation orientation, boolean movedByPiston) {
         super.neighborChanged(state, level, pos, block, orientation, movedByPiston);
@@ -87,11 +96,11 @@ public final class LampBlock extends LanternBlock implements EntityBlock {
             return;
         }
         // Burnt up to now, as by a hand, so turning it off charges what it owed.
-        boolean on = upToDate(server, state, lamp).left() > 0 && signal;
-        if (on != state.getValue(LIT)) {
-            playSwitchSound(level, pos, on);
+        boolean lit = signal && upToDate(server, state, lamp).left() > 0;
+        if (lit != state.getValue(LIT)) {
+            playSwitchSound(level, pos, lit);
         }
-        level.setBlockAndUpdate(pos, state.setValue(POWERED, signal).setValue(LIT, on));
+        level.setBlockAndUpdate(pos, state.setValue(POWERED, signal).setValue(ON, signal).setValue(LIT, lit));
     }
 
     @Override
@@ -110,6 +119,22 @@ public final class LampBlock extends LanternBlock implements EntityBlock {
                 tickLevel.setBlockAndUpdate(pos, tickState.setValue(LIT, false));
             }
         };
+    }
+
+    @Override
+    public @Nullable Fuel upToDate(ServerLevel level, BlockPos pos, BlockState state) {
+        return level.getBlockEntity(pos) instanceof LampBlockEntity lamp ? upToDate(level, state, lamp) : null;
+    }
+
+    /** Lit again if it is on. */
+    @Override
+    public void fuelled(ServerLevel level, BlockPos pos, BlockState state, Fuel fuel) {
+        if (level.getBlockEntity(pos) instanceof LampBlockEntity lamp) {
+            lamp.setChanged();
+        }
+        if (state.getValue(ON) && !state.getValue(LIT)) {
+            level.setBlockAndUpdate(pos, state.setValue(LIT, true));
+        }
     }
 
     /** Its fuel, burnt by the time of day while lit since it was last brought up to date. */
@@ -138,23 +163,15 @@ public final class LampBlock extends LanternBlock implements EntityBlock {
         if (stack.isEmpty()) {
             return InteractionResult.TRY_WITH_EMPTY_HAND;
         }
-        int burnTime = HandFuel.burnTime(stack, level);
-        if (burnTime <= 0 || !(level.getBlockEntity(pos) instanceof LampBlockEntity lamp)) {
+        if (HandFuel.burnTime(stack, level) <= 0 || !(level.getBlockEntity(pos) instanceof LampBlockEntity)) {
             return InteractionResult.PASS;
         }
         // The client doesn't know the fuel.
         if (level.isClientSide()) {
             return InteractionResult.SUCCESS;
         }
-        var fuel = upToDate((ServerLevel) level, state, lamp);
-        int left = fuel.left();
-        if (left >= cap()) {
+        if (!PlacedFuel.take((ServerLevel) level, pos, stack)) {
             return InteractionResult.CONSUME;
-        }
-        fuel.refuel(burnTime, cap());
-        lamp.setChanged();
-        if (left == 0 && !state.getValue(LIT)) {
-            level.setBlockAndUpdate(pos, state.setValue(LIT, true));
         }
         HandFuel.feed(stack, level, pos, player, hand);
         return InteractionResult.SUCCESS_SERVER;
@@ -169,12 +186,12 @@ public final class LampBlock extends LanternBlock implements EntityBlock {
         if (level.isClientSide()) {
             return InteractionResult.SUCCESS;
         }
-        boolean on = !state.getValue(LIT);
+        boolean on = !state.getValue(ON);
         // Burnt up to now, so turning it off charges what it owed and turning it on none of the time it was off.
         if (upToDate((ServerLevel) level, state, lamp).left() == 0 && on) {
             return InteractionResult.PASS;
         }
-        level.setBlockAndUpdate(pos, state.setValue(LIT, on));
+        level.setBlockAndUpdate(pos, state.setValue(ON, on).setValue(LIT, on));
         playSwitchSound(level, pos, on);
         return InteractionResult.SUCCESS_SERVER;
     }
