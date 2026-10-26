@@ -1,0 +1,15 @@
+{
+  "model": {
+    "type": "minecraft:condition",
+    "property": "minecraft:has_component",
+    "component": "atouchofdarkness:lamp_on",
+    "on_true": {
+      "type": "minecraft:model",
+      "model": "minecraft:item/soul_lantern"
+    },
+    "on_false": {
+      "type": "minecraft:model",
+      "model": "atouchofdarkness:item/soul_lamp_off"
+    }
+  }
+}

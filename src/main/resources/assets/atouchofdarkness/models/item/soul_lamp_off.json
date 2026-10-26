@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:item/generated",
+  "textures": {
+    "layer0": "atouchofdarkness:item/soul_lamp_off"
+  }
+}

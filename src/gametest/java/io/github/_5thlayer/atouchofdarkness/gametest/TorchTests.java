@@ -211,6 +211,8 @@ final class TorchTests {
      */
     private static void orphans(GameTestHelper helper) {
         var dropped = new BlockPos(4, 1, 4);
+        // Caged, so no neighbouring test's light reaches it.
+        cage(helper, dropped);
         helper.spawnItem(Light.TORCH.get(), dropped);
         var inAir = new BlockPos(2, 2, 2);
         helper.setBlock(inAir, Light.CARRIED_LIGHT.get().defaultBlockState().setValue(CarriedLightBlock.LEVEL, Light.TORCH_LIGHT));

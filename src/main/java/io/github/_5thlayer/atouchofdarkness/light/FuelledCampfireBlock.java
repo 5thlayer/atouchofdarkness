@@ -14,9 +14,7 @@ import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.ItemUtils;
 import net.minecraft.world.item.context.BlockPlaceContext;
-import net.minecraft.world.item.crafting.RecipeType;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.CampfireBlock;
@@ -105,7 +103,7 @@ public final class FuelledCampfireBlock extends CampfireBlock {
      */
     @Override
     protected InteractionResult useItemOn(ItemStack stack, BlockState state, Level level, BlockPos pos, Player player, InteractionHand hand, BlockHitResult hit) {
-        int burnTime = stack.isDamageableItem() ? 0 : stack.getBurnTime(RecipeType.SMELTING, level.fuelValues());
+        int burnTime = HandFuel.burnTime(stack, level);
         if (burnTime <= 0 || !(level.getBlockEntity(pos) instanceof CampfireBlockEntity campfire)) {
             return super.useItemOn(stack, state, level, pos, player, hand, hit);
         }
@@ -120,14 +118,7 @@ public final class FuelledCampfireBlock extends CampfireBlock {
         fuel.refuel(burnTime, cap());
         campfire.setChanged();
         level.setBlockAndUpdate(pos, shown(state.setValue(LIT, !state.getValue(WATERLOGGED)), fuel));
-        // A bucket of lava leaves its bucket.
-        var remainder = stack.getCraftingRemainder();
-        if (remainder == null) {
-            stack.consume(1, player);
-        } else {
-            player.setItemInHand(hand, ItemUtils.createFilledResult(stack, player, remainder.create()));
-        }
-        level.playSound(null, pos, SoundEvents.FIRECHARGE_USE, SoundSource.BLOCKS, 0.5F, 1F);
+        HandFuel.feed(stack, level, pos, player, hand);
         return InteractionResult.SUCCESS_SERVER;
     }
 

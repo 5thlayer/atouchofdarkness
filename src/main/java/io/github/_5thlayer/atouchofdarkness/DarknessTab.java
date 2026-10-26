@@ -50,5 +50,7 @@ public final class DarknessTab {
         output.accept(Light.SPENT_TORCH);
         output.accept(Light.CAMPFIRE_ITEM);
         output.accept(Light.SOUL_CAMPFIRE_ITEM);
+        output.accept(Light.LAMP_ITEM);
+        output.accept(Light.SOUL_LAMP_ITEM);
     }
 }

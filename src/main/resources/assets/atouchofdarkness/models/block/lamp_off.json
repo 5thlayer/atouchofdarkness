@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:block/template_lantern",
+  "textures": {
+    "lantern": "atouchofdarkness:block/lamp_off"
+  }
+}

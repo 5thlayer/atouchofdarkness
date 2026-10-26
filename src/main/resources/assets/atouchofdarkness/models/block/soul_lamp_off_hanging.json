@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:block/template_hanging_lantern",
+  "textures": {
+    "lantern": "atouchofdarkness:block/soul_lamp_off"
+  }
+}

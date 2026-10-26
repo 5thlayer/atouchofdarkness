@@ -19,6 +19,7 @@ public final class LightConfig {
 
     public static final ModConfigSpec.IntValue TORCH_BURN_TIME;
     public static final ModConfigSpec.IntValue CAMPFIRE_CAP;
+    public static final ModConfigSpec.IntValue LAMP_CAP;
 
     static {
         var builder = new ModConfigSpec.Builder();
@@ -31,6 +32,11 @@ public final class LightConfig {
         CAMPFIRE_CAP = builder
                 .comment("Ticks of fuel a Campfire holds, half a day; it is placed with half of it. The soul Campfire holds twice as much.")
                 .defineInRange("cap", 12000, 2, Integer.MAX_VALUE);
+        builder.pop();
+        builder.push("lamp");
+        LAMP_CAP = builder
+                .comment("Ticks of fuel a Lamp holds, a day. The soul Lamp holds twice as much.")
+                .defineInRange("cap", 24000, 1, Integer.MAX_VALUE);
         builder.pop();
         SPEC = builder.build();
     }

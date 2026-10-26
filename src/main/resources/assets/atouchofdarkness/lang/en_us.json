@@ -19,5 +19,7 @@
   "item.atouchofdarkness.torch.burn_left": "%s of burn left",
   "item.atouchofdarkness.spent_torch.hint": "Relight with flint and steel, a fire charge, fire, lava or a Torch",
   "block.atouchofdarkness.campfire": "Campfire",
-  "block.atouchofdarkness.soul_campfire": "Soul Campfire"
+  "block.atouchofdarkness.soul_campfire": "Soul Campfire",
+  "block.atouchofdarkness.lamp": "Lamp",
+  "block.atouchofdarkness.soul_lamp": "Soul Lamp"
 }
