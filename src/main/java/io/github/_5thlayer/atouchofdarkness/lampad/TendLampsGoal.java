@@ -22,8 +22,8 @@ import org.jspecify.annotations.Nullable;
 /**
  * A Lampad's round, as a copper golem carries items between chests: to her Votive for one fuel item,
  * then to the nearest Lamp she tends that the whole of it fits, and in with it, a sound at each end and
- * a burst of flame at the Lamp. She sets out only when
- * some Lamp has room for what her Votive holds, or for what she still carries.
+ * a burst of flame at the Lamp. She sets out only when some Lamp has room for what her Votive holds,
+ * or for what she still carries.
  */
 final class TendLampsGoal extends Goal {
 

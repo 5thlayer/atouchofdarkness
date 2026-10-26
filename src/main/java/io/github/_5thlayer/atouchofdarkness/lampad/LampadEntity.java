@@ -47,6 +47,9 @@ public final class LampadEntity extends PathfinderMob {
     private static final String VOTIVE = "votive";
     private static final String BINDING = "binding";
     private static final String NUGGETS = "nuggets";
+
+    /** Ticks between her looks for Lamps come into range that her gold hasn't paid for yet. */
+    private static final int CHARGE_INTERVAL = 20;
     private static final String LAMP = "lamp";
     private static final String NIGHTBRAND = "nightbrand";
 
@@ -120,24 +123,23 @@ public final class LampadEntity extends PathfinderMob {
                 && entity.isBoundTo(getUUID()) ? entity : null;
     }
 
-    /**
-     * The Lamps she tends: those her Votive tends that this binding's gold paid for, nearest it first.
-     * More of them than it has paid for take the nuggets they owe from her Votive, as far as it has them.
-     */
+    /** The Lamps she tends: those her Votive tends that this binding's gold paid for, nearest it first. */
     List<BlockPos> tended() {
-        var votiveEntity = votiveEntity();
-        if (votiveEntity == null || !(level() instanceof ServerLevel server)) {
+        if (votive == null || !(level() instanceof ServerLevel server)) {
             return List.of();
         }
         var lamps = TendedLamps.of(server, votive);
-        int perNugget = LightConfig.LAMPAD_LAMPS_PER_NUGGET.getAsInt();
-        int owed = Gold.owed(lamps.size(), perNugget) - nuggets;
+        return lamps.subList(0, Math.min(Gold.paidFor(nuggets, LightConfig.LAMPAD_LAMPS_PER_NUGGET.getAsInt()), lamps.size()));
+    }
+
+    /** Takes from her Votive the nuggets owed for more Lamps in range than this binding has paid for, as far as it has them. */
+    private void charge(ServerLevel level, VotiveBlockEntity votiveEntity) {
+        int owed = Gold.owed(TendedLamps.of(level, votive).size(), LightConfig.LAMPAD_LAMPS_PER_NUGGET.getAsInt()) - nuggets;
         int taken = owed > 0 ? votiveEntity.takeGold(owed) : 0;
         if (taken > 0) {
             nuggets += taken;
-            goldTakenCues(server);
+            goldTakenCues(level);
         }
-        return lamps.subList(0, Math.min(Gold.paidFor(nuggets, perNugget), lamps.size()));
     }
 
     /** A clink of gold, and golden sparks over her Votive. */
@@ -177,12 +179,14 @@ public final class LampadEntity extends PathfinderMob {
             binding--;
         }
         if (binding == 0) {
-            renew(votiveEntity);
+            renew(level, votiveEntity);
+        } else if (tickCount % CHARGE_INTERVAL == 0) {
+            charge(level, votiveEntity);
         }
     }
 
     /** The next Nightbrand, and the gold its Lamps owe. */
-    private void renew(VotiveBlockEntity votiveEntity) {
+    private void renew(ServerLevel level, VotiveBlockEntity votiveEntity) {
         nuggets = 0;
         var next = votiveEntity.takeNightbrand();
         if (next.isEmpty()) {
@@ -191,7 +195,7 @@ public final class LampadEntity extends PathfinderMob {
         }
         nightbrand = next;
         binding = LightConfig.LAMPAD_BINDING.getAsInt();
-        tended();
+        charge(level, votiveEntity);
         setDormant(false);
     }
 
