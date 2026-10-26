@@ -8,27 +8,34 @@ import static io.github._5thlayer.atouchofdarkness.gametest.DarkFixture.*;
 import java.util.ArrayList;
 import java.util.List;
 
+import io.github._5thlayer.atouchofdarkness.dark.Dark;
 import io.github._5thlayer.atouchofdarkness.lampad.Lampad;
 import io.github._5thlayer.atouchofdarkness.lampad.LampadEntity;
 import io.github._5thlayer.atouchofdarkness.lampad.VotiveBlockEntity;
 import io.github._5thlayer.atouchofdarkness.light.Fuel;
 import io.github._5thlayer.atouchofdarkness.light.LampBlock;
 import io.github._5thlayer.atouchofdarkness.light.LampBlockEntity;
+import io.github._5thlayer.atouchofdarkness.light.LampItem;
 import io.github._5thlayer.atouchofdarkness.light.Light;
 import io.github._5thlayer.atouchofdarkness.nightbrand.Nightbrand;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.gametest.framework.GameTestHelper;
+import net.minecraft.gametest.framework.TestEnvironmentDefinition.Weather;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.ProblemReporter;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntitySpawnReason;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.ChunkPos;
+import net.minecraft.world.level.MoonPhase;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.HopperBlock;
 import net.minecraft.world.level.block.entity.CampfireBlockEntity;
@@ -57,6 +64,11 @@ final class LampadTests {
         tests.in("lampad_binding", WithLampadConfig.INSTANCE)
                 .test("lampad_binding_fades_to_a_statue_and_each_nightbrand_from_her_votive_renews_it", 260, LampadTests::binding);
         tests.test("lampad_feeds_the_paid_lamps_nearest_her_votive_a_whole_item_each_never_a_campfire_nor_a_carried_lamp", 2000, LampadTests::tends);
+        tests.test("lampad_has_12_health_and_mobs_treat_her_as_a_passive_mob", 80, LampadTests::passive);
+        tests.in("lampad_healing", new AtNight(MoonPhase.WANING_GIBBOUS, Weather.Type.CLEAR), WithLampadConfig.INSTANCE)
+                .test("lampad_hurt_heals_in_the_dark_tending_nothing_till_whole_or_waits_where_lit_her_binding_fading", 1200, LampadTests::heals);
+        tests.test("lampad_a_broken_votive_spills_and_leaves_a_statue_for_good_and_death_or_a_broken_statue_drops_her_lamp_and_nightbrand",
+                60, LampadTests::lost);
     }
 
     /**
@@ -362,6 +374,185 @@ final class LampadTests {
             leave(player);
             helper.succeed();
         });
+    }
+
+    /**
+     * A Lampad bound by a Nightbrand, a husk beside her and no player: the husk never takes her for its
+     * target, as it would a villager, and she keeps her 12 health. Its blow still hurts her.
+     */
+    private static void passive(GameTestHelper helper) {
+        var player = survivalPlayer(helper);
+        standAt(helper, STAND, player);
+        var votiveEntity = summon(helper, player, new BlockPos(2, 1, 2));
+        votiveEntity.setItem(VotiveBlockEntity.NIGHTBRAND, Nightbrand.NIGHTBRAND.toStack());
+        leave(player);
+        var lampad = helper.getEntities(Lampad.LAMPAD.get()).getFirst();
+        var husk = helper.spawn(EntityType.HUSK, new BlockPos(4, 1, 2));
+        helper.onEachTick(() -> helper.assertFalse(husk.getTarget() == lampad, "the husk took the Lampad for its target"));
+        helper.runAtTickTime(60, () -> {
+            helper.assertTrue(lampad.getMaxHealth() == 12F && lampad.getHealth() == 12F,
+                    "the Lampad has " + lampad.getHealth() + " of " + lampad.getMaxHealth() + " health, not 12");
+            husk.doHurtTarget(helper.getLevel(), lampad);
+            helper.assertTrue(lampad.getHealth() < 12F, "the husk's blow didn't hurt the Lampad");
+            husk.discard();
+            helper.succeed();
+        });
+    }
+
+    /**
+     * At night under a waning moon, where all the open sky is in the Dark, with a binding of 5 s. On the
+     * platform a Lampad, stands Lit by a light block beside it, a dry
+     * Lamp and coal by her Votive, and is hurt by 2: she goes into the Dark, out of the light block's
+     * reach, and heals there, 1 health 40 ticks after she gets there and another 40 ticks later, feeding
+     * the Lamp only once she is whole. Her Votive holds Nightbrands enough that her binding outlasts it. High above, on a ledge a light block lights end to end, another
+     * with one Nightbrand, hurt the same, waits where she stands, healing none and feeding her dry Lamp
+     * nothing, until her binding fades and she stands dormant.
+     */
+    private static void heals(GameTestHelper helper) {
+        var player = survivalPlayer(helper);
+        standAt(helper, new BlockPos(4, 1, 0), player);
+        var votive = new BlockPos(1, 1, 1);
+        var lamp = new BlockPos(0, 1, 2);
+        helper.setBlock(new BlockPos(0, 2, 0), Blocks.LIGHT);
+        var ledge = new BlockPos(4, 40, 4);
+        for (var side : Direction.Plane.HORIZONTAL) {
+            helper.setBlock(ledge.relative(side), Blocks.STONE);
+        }
+        helper.setBlock(ledge.above(3), Blocks.LIGHT);
+        var ledgeLamp = ledge.east().above();
+        helper.setBlock(ledgeLamp, Light.LAMP.get());
+        settleLight(helper, ledge.above(2));
+        settleLight(helper, votive.above(2));
+        var healer = summon(helper, player, votive);
+        helper.setBlock(lamp, Light.LAMP.get());
+        var waiter = summon(helper, player, ledge);
+        leave(player);
+        var lampad = helper.getEntities(Lampad.LAMPAD.get(), votive.above(), 1.0).getFirst();
+        var waiting = helper.getEntities(Lampad.LAMPAD.get(), ledge.above(), 1.0).getFirst();
+        var waitingAt = waiting.position();
+        var level = helper.getLevel();
+        for (var hurt : List.of(lampad, waiting)) {
+            hurt.hurtServer(level, level.damageSources().generic(), 2F);
+        }
+        // A binding to outlast her walk to the Dark and back, however long it takes.
+        healer.setItem(VotiveBlockEntity.NIGHTBRAND, new ItemStack(Nightbrand.NIGHTBRAND.get(), 10));
+        healer.setItem(VotiveBlockEntity.GOLD, new ItemStack(Items.GOLD_NUGGET, 10));
+        healer.setItem(VotiveBlockEntity.FUEL, new ItemStack(Items.COAL));
+        waiter.setItem(VotiveBlockEntity.NIGHTBRAND, Nightbrand.NIGHTBRAND.toStack());
+        waiter.setItem(VotiveBlockEntity.GOLD, new ItemStack(Items.GOLD_NUGGET));
+        waiter.setItem(VotiveBlockEntity.FUEL, new ItemStack(Items.COAL));
+
+        // Read as events, each heal against the one before, so no check hangs on the tick she gets there.
+        var healedAt = new long[] {-1};
+        var health = new float[] {lampad.getHealth()};
+        var wasHealing = new boolean[1];
+        var waited = new boolean[1];
+        helper.onEachTick(() -> {
+            long tick = helper.getTick();
+            int fed = helper.getBlockEntity(lamp, LampBlockEntity.class).fuelLeft();
+            helper.assertTrue(fed == 0 || !lampad.isHurt(), "the Lampad fed a Lamp while hurt, " + lampad.getHealth() + " health");
+            if (lampad.isHealing()) {
+                helper.assertFalse(Dark.isLit(level, BlockPos.containing(lampad.getEyePosition())), "the Lampad heals where it is Lit");
+                if (!wasHealing[0]) {
+                    healedAt[0] = tick;
+                }
+            }
+            wasHealing[0] = lampad.isHealing();
+            if (lampad.getHealth() != health[0]) {
+                helper.assertTrue(lampad.getHealth() == health[0] + 1F, "the Lampad went from " + health[0] + " to " + lampad.getHealth() + " health");
+                helper.assertTrue(healedAt[0] >= 0 && tick - healedAt[0] == 40,
+                        "the Lampad healed " + (tick - healedAt[0]) + " ticks after she came into the Dark or last healed, not 40");
+                health[0] = lampad.getHealth();
+                healedAt[0] = tick;
+            }
+            if (!waited[0]) {
+                helper.assertTrue(waiting.getHealth() == 10F, "the Lampad with no Dark in range healed to " + waiting.getHealth());
+                helper.assertTrue(waiting.position().distanceTo(waitingAt) < 0.5, "the Lampad with no Dark in range walked off");
+                LampTests.assertPlaced(helper, ledgeLamp, false, 0);
+                waited[0] = waiting.isDormant() && tick > 50;
+            }
+            if (waited[0] && fed == 16_000) {
+                helper.succeed();
+            }
+        });
+    }
+
+    /**
+     * Two Lampads, each with a Nightbrand: one summoned from a Lamp with 5000 fuel, her Votive given coal,
+     * Nightbrands and gold, of which she takes a nugget for a full Lamp in her range, and the other from a
+     * soul Lamp with 3000. The first's Votive, broken with a pickaxe, drops itself and spills the coal, the
+     * Nightbrand and the gold left in it, and she stands dormant, nor wakes when a Votive with a
+     * Nightbrand is set there again. A player's blow breaks her statue, which drops the Lamp with its 5000
+     * and her Nightbrand, and no gold. The other, killed, drops the soul Lamp with its 3000 and her Nightbrand.
+     */
+    private static void lost(GameTestHelper helper) {
+        var player = survivalPlayer(helper);
+        standAt(helper, new BlockPos(8, 1, 0), player);
+        var votive = new BlockPos(2, 1, 2);
+        var soulVotive = new BlockPos(6, 1, 6);
+        helper.setBlock(new BlockPos(0, 1, 0), Light.LAMP.get());
+        helper.getBlockEntity(new BlockPos(0, 1, 0), LampBlockEntity.class).setFuel(LampTests.CAP);
+        var votiveEntity = summonFrom(helper, player, votive, Light.LAMP.get(), 5000);
+        var soulVotiveEntity = summonFrom(helper, player, soulVotive, Light.SOUL_LAMP.get(), 3000);
+        votiveEntity.setItem(VotiveBlockEntity.FUEL, new ItemStack(Items.COAL, 5));
+        votiveEntity.setItem(VotiveBlockEntity.NIGHTBRAND, new ItemStack(Nightbrand.NIGHTBRAND.get(), 2));
+        votiveEntity.setItem(VotiveBlockEntity.GOLD, new ItemStack(Items.GOLD_NUGGET, 3));
+        soulVotiveEntity.setItem(VotiveBlockEntity.NIGHTBRAND, Nightbrand.NIGHTBRAND.toStack());
+        var lampad = helper.getEntities(Lampad.LAMPAD.get(), votive.above(), 1.0).getFirst();
+        var soulLampad = helper.getEntities(Lampad.LAMPAD.get(), soulVotive.above(), 1.0).getFirst();
+        var level = helper.getLevel();
+        helper.runAtTickTime(5, () -> {
+            helper.assertFalse(lampad.isDormant() || soulLampad.isDormant(), "a Lampad with a Nightbrand is dormant");
+            assertHolds(helper, votiveEntity, VotiveBlockEntity.GOLD, Items.GOLD_NUGGET, 2);
+            player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(Items.IRON_PICKAXE));
+            player.gameMode.destroyBlock(helper.absolutePos(votive));
+            assertDropped(helper, Lampad.VOTIVE_ITEM.get(), 1, Items.COAL, 5, Nightbrand.NIGHTBRAND.get(), 1, Items.GOLD_NUGGET, 2);
+        });
+        helper.runAtTickTime(7, () -> {
+            helper.assertTrue(lampad.isDormant(), "the Lampad of a broken Votive isn't dormant");
+            helper.setBlock(votive, Lampad.VOTIVE.get());
+            helper.getBlockEntity(votive, VotiveBlockEntity.class).setItem(VotiveBlockEntity.NIGHTBRAND, Nightbrand.NIGHTBRAND.toStack());
+        });
+        helper.runAtTickTime(20, () -> {
+            helper.assertTrue(lampad.isDormant(), "a Votive set again woke the Lampad of the broken one");
+            player.setItemInHand(InteractionHand.MAIN_HAND, ItemStack.EMPTY);
+            player.attack(lampad);
+            helper.assertFalse(lampad.isAlive(), "a player's blow didn't break the Lampad's statue");
+            assertDropped(helper, Light.LAMP_ITEM.get(), 5000, Nightbrand.NIGHTBRAND.get(), 1, Items.GOLD_NUGGET, 0);
+            soulLampad.hurtServer(level, level.damageSources().generic(), 100F);
+            helper.assertFalse(soulLampad.isAlive(), "the soul Lampad survived");
+            assertDropped(helper, Light.SOUL_LAMP_ITEM.get(), 3000, Nightbrand.NIGHTBRAND.get(), 1, Items.GOLD_NUGGET, 0);
+            leave(player);
+            helper.succeed();
+        });
+    }
+
+    /**
+     * The items lying in the test are these, item then count in pairs, with a Lamp's count read as its
+     * fuel; they are taken up after.
+     */
+    private static void assertDropped(GameTestHelper helper, Object... expected) {
+        var items = helper.getEntities(EntityType.ITEM);
+        for (int i = 0; i < expected.length; i += 2) {
+            var item = (Item) expected[i];
+            int want = (int) expected[i + 1];
+            var of = items.stream().map(ItemEntity::getItem).filter(stack -> stack.is(item)).toList();
+            int got = item instanceof LampItem
+                    ? of.size() == 1 ? of.getFirst().getOrDefault(Light.LAMP_FUEL, 0) : -of.size()
+                    : of.stream().mapToInt(ItemStack::getCount).sum();
+            helper.assertTrue(got == want, "dropped " + of + ", not " + want + (item instanceof LampItem ? " fuel in one " : " ") + item);
+        }
+        items.forEach(Entity::discard);
+    }
+
+    /** A Lampad summoned by the player from a Lamp of this kind, off with this much fuel, on a gold block at {@code at}; her Votive. */
+    private static VotiveBlockEntity summonFrom(GameTestHelper helper, ServerPlayer player, BlockPos at, Block lamp, int fuel) {
+        helper.setBlock(at, Blocks.GOLD_BLOCK);
+        helper.setBlock(at.above(), lamp);
+        helper.getBlockEntity(at.above(), LampBlockEntity.class).setFuel(fuel);
+        LampTests.useOn(helper, player, Light.TORCH.toStack(), at.above());
+        player.setItemInHand(InteractionHand.MAIN_HAND, ItemStack.EMPTY);
+        return helper.getBlockEntity(at, VotiveBlockEntity.class);
     }
 
     /** A Lampad summoned by the player from a Lamp on a gold block at {@code at}; her Votive. */

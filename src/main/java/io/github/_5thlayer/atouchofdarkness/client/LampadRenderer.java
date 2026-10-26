@@ -44,5 +44,6 @@ public final class LampadRenderer extends MobRenderer<LampadEntity, LampadRender
         super.extractRenderState(entity, state, partialTicks);
         ArmedEntityRenderState.extractArmedEntityRenderState(entity, state, itemModelResolver, partialTicks);
         state.dormant = entity.isDormant();
+        state.healing = entity.isHealing();
     }
 }

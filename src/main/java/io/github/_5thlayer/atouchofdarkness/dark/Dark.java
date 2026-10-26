@@ -77,8 +77,11 @@ public final class Dark {
      * Night Vision changes nothing here.
      */
     public static boolean isLit(ServerPlayer player) {
-        ServerLevel level = player.level();
-        BlockPos eyes = BlockPos.containing(player.getEyePosition());
+        return isLit(player.level(), BlockPos.containing(player.getEyePosition()));
+    }
+
+    /** Whether eyes at this block would be Lit, as a player's are. */
+    public static boolean isLit(ServerLevel level, BlockPos eyes) {
         if (level.getMaxLocalRawBrightness(eyes) >= DarkConfig.LIT_THRESHOLD.getAsInt()) {
             return true;
         }
