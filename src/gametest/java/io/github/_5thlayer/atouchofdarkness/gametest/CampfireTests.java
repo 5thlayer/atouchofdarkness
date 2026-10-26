@@ -45,7 +45,7 @@ import net.minecraft.world.phys.Vec3;
 final class CampfireTests {
 
     /** A Campfire's cap at the defaults, half a day, and the soul Campfire's. */
-    private static final int CAP = 12_000;
+    static final int CAP = 12_000;
     private static final int SOUL_CAP = 2 * CAP;
 
     /** Ticks short of a burn the clock is moved, and then past it, as the clock also runs a tick a tick. */

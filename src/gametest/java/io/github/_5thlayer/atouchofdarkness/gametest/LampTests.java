@@ -8,6 +8,7 @@ import static io.github._5thlayer.atouchofdarkness.gametest.DarkFixture.*;
 import java.util.List;
 
 import io.github._5thlayer.atouchofdarkness.ATouchOfDarkness;
+import io.github._5thlayer.atouchofdarkness.light.Fuel;
 import io.github._5thlayer.atouchofdarkness.light.LampBlock;
 import io.github._5thlayer.atouchofdarkness.light.LampBlockEntity;
 import io.github._5thlayer.atouchofdarkness.light.Light;
@@ -36,14 +37,18 @@ import net.minecraft.world.item.crafting.CraftingRecipe;
 import net.minecraft.world.level.MoonPhase;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.ComparatorBlock;
+import net.minecraft.world.level.block.entity.CampfireBlockEntity;
+import net.minecraft.world.level.block.entity.ComparatorBlockEntity;
 import net.minecraft.world.level.storage.TagValueInput;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
 import org.jspecify.annotations.Nullable;
 
 /**
- * The Lamp: carried or placed, turned on and off by hand, fed fuel by hand up to a day, shining while
- * on with fuel and burning only then, rain or not, until it runs dry into a dark Lamp. Its carried light
+ * The Lamp: carried or placed, turned on and off by hand or, placed, by redstone, fed fuel by hand up
+ * to a day, shining while on with fuel and burning only then, rain or not, until it runs dry into a
+ * dark Lamp, a comparator reading its fuel, and the Campfire's. Its carried light
  * and its placed burn are the Torch's and the Campfire's, so only what is new to it is tested here. A
  * test that moves the clock runs in a batch of its own. Every test's name starts {@code lamp_}.
  */
@@ -64,10 +69,13 @@ final class LampTests {
         tests.test("lamp_held_on_keeps_its_carrier_from_being_struck", QUIET + 5, LampTests::carried);
         tests.test("lamp_vanilla_lanterns_become_full_lamps", 5, LampTests::vanillaLanterns);
         tests.test("lamp_tooltip_says_how_to_fuel_it_and_counts_its_fuel_down_with_advanced_tooltips", 1, LampTests::tooltips);
+        tests.test("lamp_redstone_rise_turns_it_on_and_fall_off_and_a_hand_toggle_holds_till_the_next_change", 10, LampTests::redstone);
         tests.in("lamp_toggled", KeepsClock.INSTANCE)
                 .test("lamp_empty_hand_toggles_it_and_it_doesnt_burn_while_off", 10, LampTests::toggled);
         tests.in("lamp_goes_dark", KeepsClock.INSTANCE)
                 .test("lamp_placed_on_gives_15_soul_10_and_goes_dark_when_dry_also_while_unloaded", 10, LampTests::goesDark);
+        tests.in("lamp_comparator", KeepsClock.INSTANCE)
+                .test("lamp_and_campfire_comparator_reads_fuel_0_only_dry_and_falls_as_it_burns", 10, LampTests::comparator);
         tests.in("lamp_rain", new AtNight(MoonPhase.FULL_MOON, Weather.Type.RAIN))
                 .test("lamp_rain_changes_nothing", 10, LampTests::rain);
     }
@@ -225,6 +233,46 @@ final class LampTests {
     }
 
     /**
+     * A placed Lamp, off with fuel, beside a block that powers and unpowers it: a rise turns it on, an
+     * empty hand turns it off again and it stays off while the signal holds, a fall leaves it off, the
+     * hand turns it on and it stays on, and the next fall turns it off. A dry Lamp powered stays dark
+     * until it is fuelled.
+     */
+    private static void redstone(GameTestHelper helper) {
+        var player = survivalPlayer(helper);
+        standAt(helper, STAND, player);
+        var lamp = new BlockPos(4, 1, 2);
+        var power = lamp.east();
+        lamp(helper, Light.LAMP.get(), lamp, 1000);
+        useOn(helper, player, ItemStack.EMPTY, lamp);
+        assertPlaced(helper, lamp, false, -1);
+        helper.setBlock(power, Blocks.REDSTONE_BLOCK);
+        assertPlaced(helper, lamp, true, -1);
+        useOn(helper, player, ItemStack.EMPTY, lamp);
+        var dry = new BlockPos(2, 1, 4);
+        lamp(helper, Light.LAMP.get(), dry, 0);
+        helper.setBlock(dry.east(), Blocks.REDSTONE_BLOCK);
+        assertPlaced(helper, dry, false, 0);
+        helper.runAtTickTime(3, () -> {
+            assertPlaced(helper, lamp, false, -1);
+            helper.setBlock(power, Blocks.AIR);
+            assertPlaced(helper, lamp, false, -1);
+            useOn(helper, player, ItemStack.EMPTY, lamp);
+            useOn(helper, player, new ItemStack(Items.STICK), dry);
+            assertPlaced(helper, dry, true, 1000);
+        });
+        helper.runAtTickTime(5, () -> {
+            assertPlaced(helper, lamp, true, -1);
+            helper.setBlock(power, Blocks.REDSTONE_BLOCK);
+            assertPlaced(helper, lamp, true, -1);
+            helper.setBlock(power, Blocks.AIR);
+            assertPlaced(helper, lamp, false, -1);
+            leave(player);
+            helper.succeed();
+        });
+    }
+
+    /**
      * A Lamp and a soul Lamp placed on, giving 15 and 10, and a third: the first two stay loaded while the
      * clock moves on past their fuel, the third is unloaded meanwhile, saved and taken away, then loaded
      * again from its save. Each is then a Lamp still, dark and dry.
@@ -259,6 +307,42 @@ final class LampTests {
             }
             helper.succeed();
         });
+    }
+
+    /**
+     * A comparator reading each of a full Lamp, a Lamp with 100 ticks of fuel and a full Campfire: 15, 1
+     * and 15. Once the clock has moved on short of half the Campfire's cap, 5900 ticks, they read 12, 0
+     * and 8.
+     */
+    private static void comparator(GameTestHelper helper) {
+        var full = new BlockPos(2, 1, 2);
+        var low = new BlockPos(4, 1, 2);
+        var campfire = new BlockPos(6, 1, 2);
+        lamp(helper, Light.LAMP.get(), full, CAP);
+        lamp(helper, Light.LAMP.get(), low, 100);
+        helper.setBlock(campfire, Light.CAMPFIRE.get());
+        helper.getBlockEntity(campfire, CampfireBlockEntity.class).setData(Light.FUEL, Fuel.unclocked(CampfireTests.CAP));
+        for (var light : List.of(full, low, campfire)) {
+            helper.setBlock(light.south(), Blocks.COMPARATOR.defaultBlockState().setValue(ComparatorBlock.FACING, Direction.NORTH));
+        }
+        helper.runAtTickTime(4, () -> {
+            assertReads(helper, full, 15);
+            assertReads(helper, low, 1);
+            assertReads(helper, campfire, 15);
+            KeepsClock.advance(helper, CampfireTests.CAP / 2 - MARGIN);
+        });
+        helper.runAtTickTime(8, () -> {
+            assertReads(helper, full, 12);
+            assertReads(helper, low, 0);
+            assertReads(helper, campfire, 8);
+            helper.succeed();
+        });
+    }
+
+    /** The comparator south of the light reads this from it. */
+    private static void assertReads(GameTestHelper helper, BlockPos light, int signal) {
+        int read = helper.getBlockEntity(light.south(), ComparatorBlockEntity.class).getOutputSignal();
+        helper.assertTrue(read == signal, "a comparator reads " + read + " from " + helper.getBlockState(light) + ", not " + signal);
     }
 
     /**

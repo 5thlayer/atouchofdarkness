@@ -7,6 +7,7 @@ import com.mojang.serialization.Codec;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
@@ -34,7 +35,7 @@ import org.jspecify.annotations.Nullable;
  * in vanilla's block entity, with its {@link Fuel} attached. Placed, it holds half its cap. It burns by
  * the time of day while lit, twice as fast in rain under the open sky, and its light falls a step at each
  * quarter of its cap its fuel falls below, until it goes out dry. Any furnace fuel used on it adds ten
- * times its burn time, up to the cap, and lights it again.
+ * times its burn time, up to the cap, and lights it again. A comparator reads how full it is.
  */
 public final class FuelledCampfireBlock extends CampfireBlock {
 
@@ -120,6 +121,17 @@ public final class FuelledCampfireBlock extends CampfireBlock {
         level.setBlockAndUpdate(pos, shown(state.setValue(LIT, !state.getValue(WATERLOGGED)), fuel));
         HandFuel.feed(stack, level, pos, player, hand);
         return InteractionResult.SUCCESS_SERVER;
+    }
+
+    @Override
+    protected boolean hasAnalogOutputSignal(BlockState state) {
+        return true;
+    }
+
+    /** How full it is, 0 only once dry. */
+    @Override
+    protected int getAnalogOutputSignal(BlockState state, Level level, BlockPos pos, Direction direction) {
+        return level.getBlockEntity(pos) instanceof CampfireBlockEntity campfire ? Burn.signal(campfire.getData(Light.FUEL).left(), cap()) : 0;
     }
 
     /** Vanilla's, which cooks while lit, then the burn. */

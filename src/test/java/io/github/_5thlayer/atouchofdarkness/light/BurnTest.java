@@ -86,4 +86,18 @@ class BurnTest {
         assertEquals(7, Burn.step(6001, 24_000, soul));
         assertEquals(5, Burn.step(1, 24_000, soul));
     }
+
+    /**
+     * A comparator's reading, from the spec: 15 full, 0 only dry, and any fuel left at least 1, each of
+     * the fifteen steps a fifteenth of the cap, so a full one still reads 15 once it has burned a little.
+     */
+    @Test
+    void comparatorReadsHowFullItIs() {
+        assertEquals(15, Burn.signal(24_000, 24_000));
+        assertEquals(15, Burn.signal(22_401, 24_000));
+        assertEquals(14, Burn.signal(22_400, 24_000));
+        assertEquals(8, Burn.signal(12_000, 24_000));
+        assertEquals(1, Burn.signal(1, 24_000));
+        assertEquals(0, Burn.signal(0, 24_000));
+    }
 }

@@ -70,4 +70,15 @@ public final class Burn {
         }
         return fourTimes > cap ? levels[2] : levels[3];
     }
+
+    /**
+     * A comparator's reading of a Light Source's fuel, 0 to 15 for how full it is: the fifteenths of its
+     * cap it holds, rounded up, so it reads 0 only once dry and 15 for its top fifteenth.
+     */
+    public static int signal(int left, int cap) {
+        if (left <= 0) {
+            return 0;
+        }
+        return (int) Math.min((15L * left + cap - 1) / cap, 15);
+    }
 }
