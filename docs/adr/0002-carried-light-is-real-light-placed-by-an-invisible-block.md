@@ -20,6 +20,10 @@ A client dynamic-lights mod is recommended for light that moves smoothly rather 
 time. The Pillar ships the data such a mod reads for its Light Sources, and tells it to skip a held
 one the Pillar already lights, so the light is never doubled and dropped items stay dark.
 
+**Amended.** The dynamic-lights integration was dropped (#11, closed as won't fix). The Pillar ships
+no data for such a mod and recommends none; carried light moves a block at a time, and a player who
+adds one may see a held Light Source's light doubled.
+
 **Considered.** Leaving carried light to a dynamic-lights mod alone, with a rule that only counts a carrier as lit: such a mod draws light on the client only, so the Dark would have its own idea of light
 apart from vanilla's, Madness would not see it, and mobs would spawn at a torch-bearer's feet. A
 mixin into vanilla's light engine so an entity emits light: deep, fragile across versions, and in
