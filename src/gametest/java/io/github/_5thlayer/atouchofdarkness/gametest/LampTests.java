@@ -18,6 +18,7 @@ import net.minecraft.core.registries.Registries;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.gametest.framework.TestEnvironmentDefinition.Weather;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerPlayer;
@@ -29,6 +30,7 @@ import net.minecraft.world.inventory.ContainerInput;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.item.crafting.CraftingInput;
 import net.minecraft.world.item.crafting.CraftingRecipe;
 import net.minecraft.world.level.MoonPhase;
@@ -37,6 +39,7 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.storage.TagValueInput;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
+import org.jspecify.annotations.Nullable;
 
 /**
  * The Lamp: carried or placed, turned on and off by hand, fed fuel by hand up to a day, shining while
@@ -60,6 +63,7 @@ final class LampTests {
         tests.test("lamp_crafted_empty_and_fuel_by_use_or_bundle_click_adds_x10_up_to_a_day", 5, LampTests::fuel);
         tests.test("lamp_held_on_keeps_its_carrier_from_being_struck", QUIET + 5, LampTests::carried);
         tests.test("lamp_vanilla_lanterns_become_full_lamps", 5, LampTests::vanillaLanterns);
+        tests.test("lamp_tooltip_says_how_to_fuel_it_and_counts_its_fuel_down_with_advanced_tooltips", 1, LampTests::tooltips);
         tests.in("lamp_toggled", KeepsClock.INSTANCE)
                 .test("lamp_empty_hand_toggles_it_and_it_doesnt_burn_while_off", 10, LampTests::toggled);
         tests.in("lamp_goes_dark", KeepsClock.INSTANCE)
@@ -71,7 +75,7 @@ final class LampTests {
     /**
      * Each Lamp crafts from iron nuggets around its Torch, with no fuel. Placed empty, a stick, of 100
      * ticks in a furnace, adds 1000 and lights it; a coal, of 1600, adds 16000, and the next fills it
-     * to a day, the rest lost. In the inventory, coal clicked onto a Lamp with the right button does the same,
+     * to a day, the rest lost. In the inventory, coal clicked onto a Lamp, as onto a bundle, does the same,
  * and the Lamp placed and broken again keeps its fuel.
      */
     private static void fuel(GameTestHelper helper) {
@@ -93,10 +97,10 @@ final class LampTests {
 
         player.setItemInHand(InteractionHand.MAIN_HAND, Light.LAMP_ITEM.toStack());
         player.containerMenu.setCarried(new ItemStack(Items.COAL, 2));
-        // The first hotbar slot, in the inventory's own menu.
-        player.containerMenu.clicked(36, 1, ContainerInput.PICKUP, player);
+        // A left click on the first hotbar slot, in the inventory's own menu.
+        player.containerMenu.clicked(36, 0, ContainerInput.PICKUP, player);
         assertCarried(helper, player.getMainHandItem(), true, 16_000);
-        player.containerMenu.clicked(36, 1, ContainerInput.PICKUP, player);
+        player.containerMenu.clicked(36, 0, ContainerInput.PICKUP, player);
         assertCarried(helper, player.getMainHandItem(), true, CAP);
         helper.assertTrue(player.containerMenu.getCarried().isEmpty(), "clicking fuel on left " + player.containerMenu.getCarried());
 
@@ -129,6 +133,32 @@ final class LampTests {
         var player = caged(helper, 0);
         player.setItemInHand(InteractionHand.MAIN_HAND, Light.LAMP_ITEM.get().full());
         finishAt(helper, player, QUIET, 0F);
+    }
+
+    /**
+     * A Lamp's tooltip says how to fuel it and turn it on or off placed, and with advanced tooltips (F3+H) how long its fuel lasts: a
+     * crafted one none, a full one a day, 20 min, one half full 10 min, a full soul Lamp 40 min.
+     */
+    private static void tooltips(GameTestHelper helper) {
+        var half = Light.LAMP_ITEM.get().full();
+        half.set(Light.LAMP_FUEL, CAP / 2);
+        String hint = "Click fuel onto it to fill it";
+        assertTooltip(helper, Light.LAMP_ITEM.get().full(), TooltipFlag.NORMAL, hint, null);
+        assertTooltip(helper, Light.LAMP_ITEM.toStack(), TooltipFlag.ADVANCED, hint, "0:00 of fuel left");
+        assertTooltip(helper, Light.LAMP_ITEM.get().full(), TooltipFlag.ADVANCED, hint, "20:00 of fuel left");
+        assertTooltip(helper, half, TooltipFlag.ADVANCED, hint, "10:00 of fuel left");
+        assertTooltip(helper, Light.SOUL_LAMP_ITEM.get().full(), TooltipFlag.ADVANCED, hint, "40:00 of fuel left");
+        helper.succeed();
+    }
+
+    /** The tooltip has the hint, and the countdown or, given none, no countdown at all. */
+    private static void assertTooltip(GameTestHelper helper, ItemStack stack, TooltipFlag flag, String hint, @Nullable String countdown) {
+        var lines = stack.getTooltipLines(Item.TooltipContext.of(helper.getLevel()), null, flag).stream().map(Component::getString).toList();
+        for (var line : List.of(hint, "Right-click it placed to turn it on or off")) {
+            helper.assertTrue(lines.contains(line), stack + "'s tooltip " + lines + " lacks \"" + line + "\"");
+        }
+        boolean counted = lines.stream().anyMatch(line -> line.endsWith("of fuel left"));
+        helper.assertTrue(countdown == null ? !counted : lines.contains(countdown), stack + "'s tooltip " + lines + " with " + flag + " should read " + countdown);
     }
 
     /**

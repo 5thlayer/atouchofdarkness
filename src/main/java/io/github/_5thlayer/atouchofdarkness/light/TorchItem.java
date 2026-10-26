@@ -3,11 +3,9 @@
 
 package io.github._5thlayer.atouchofdarkness.light;
 
-import java.util.Locale;
 import java.util.function.Consumer;
 
 import net.minecraft.ChatFormatting;
-import net.minecraft.SharedConstants;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
@@ -106,10 +104,7 @@ public final class TorchItem extends Item implements HeldLightSource {
         builder.accept(Component.translatable(HINT).withStyle(ChatFormatting.GRAY));
         if (flag.isAdvanced()) {
             var burning = stack.get(Light.BURNING);
-            int left = burning == null ? freshBurn() : burning.left();
-            int seconds = Mth.positiveCeilDiv(left, SharedConstants.TICKS_PER_SECOND);
-            builder.accept(Component.translatable(BURN_LEFT, String.format(Locale.ROOT, "%d:%02d", seconds / 60, seconds % 60))
-                    .withStyle(ChatFormatting.DARK_GRAY));
+            builder.accept(TimeLeft.line(BURN_LEFT, burning == null ? freshBurn() : burning.left()));
         }
     }
 

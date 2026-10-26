@@ -3,7 +3,12 @@
 
 package io.github._5thlayer.atouchofdarkness.light;
 
+import java.util.function.Consumer;
+
+import net.minecraft.ChatFormatting;
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvents;
 import net.minecraft.util.Mth;
 import net.minecraft.util.Unit;
 import net.minecraft.world.InteractionHand;
@@ -14,6 +19,8 @@ import net.minecraft.world.inventory.ClickAction;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.TooltipFlag;
+import net.minecraft.world.item.component.TooltipDisplay;
 import net.minecraft.world.level.Level;
 
 /**
@@ -21,10 +28,14 @@ import net.minecraft.world.level.Level;
  * {@code atouchofdarkness:lamp_fuel}, and the marker {@code atouchofdarkness:lamp_on} while it is on with fuel. It
  * burns only while held and on, by the time of day, rain or not, and runs dry into a dark Lamp until
  * fuelled. Used in the air it turns on or off; placed, its block keeps its fuel. Fuel clicked onto it in
- * an inventory with the right button adds ten times its burn time, up to its cap. Its fuel shows as an
+ * an inventory, as onto a bundle, adds ten times its burn time, up to its cap. Its fuel shows as an
  * item bar. One crafted has none.
  */
 public final class LampItem extends BlockItem implements HeldLightSource {
+
+    private static final String HINT = "item.atouchofdarkness.lamp.hint";
+    private static final String TOGGLE_HINT = "item.atouchofdarkness.lamp.toggle_hint";
+    private static final String FUEL_LEFT = "item.atouchofdarkness.lamp.fuel_left";
 
     private final int light;
 
@@ -99,20 +110,22 @@ public final class LampItem extends BlockItem implements HeldLightSource {
     }
 
     /**
-     * Fuel clicked onto it with the right button, as onto a bundle, one at a time: it adds ten times its
-     * burn time, up to the cap, the rest lost, and lights a dry Lamp. A full one takes none. Tools, which a
-     * furnace burns too, are never fuel here.
+     * Fuel clicked onto it, as an item onto a bundle, one at a time: it adds ten times its burn time, up
+     * to the cap, the rest lost, and lights a dry Lamp. A full one takes none, with the bundle's sound of
+     * an item that won't go in. Tools, which a furnace burns too, are never fuel here.
      */
     @Override
     public boolean overrideOtherStackedOnMe(ItemStack stack, ItemStack other, Slot slot, ClickAction action, Player player, SlotAccess carried) {
-        int burnTime = action == ClickAction.SECONDARY ? HandFuel.burnTime(other, player.level()) : 0;
+        int burnTime = action == ClickAction.PRIMARY ? HandFuel.burnTime(other, player.level()) : 0;
         if (burnTime <= 0) {
             return false;
         }
         int left = fuel(stack);
-        if (left >= cap()) {
+        if (left >= cap() || !slot.allowModification(player)) {
+            player.playSound(SoundEvents.BUNDLE_INSERT_FAIL, 1F, 1F);
             return true;
         }
+        player.playSound(SoundEvents.BUNDLE_INSERT, 0.8F, 0.8F + player.level().getRandom().nextFloat() * 0.4F);
         stack.set(Light.LAMP_FUEL, Burn.refuel(left, burnTime, cap()));
         if (left == 0) {
             stack.set(Light.LAMP_ON, Unit.INSTANCE);
@@ -128,6 +141,17 @@ public final class LampItem extends BlockItem implements HeldLightSource {
             }
         }
         return true;
+    }
+
+    /** How to fuel it and turn it on or off, which nothing on screen shows, and with advanced tooltips (F3+H) the time of day its fuel lasts, as m:ss. */
+    @Override
+    @SuppressWarnings("deprecation")
+    public void appendHoverText(ItemStack stack, TooltipContext context, TooltipDisplay display, Consumer<Component> builder, TooltipFlag flag) {
+        builder.accept(Component.translatable(HINT).withStyle(ChatFormatting.GRAY));
+        builder.accept(Component.translatable(TOGGLE_HINT).withStyle(ChatFormatting.GRAY));
+        if (flag.isAdvanced()) {
+            builder.accept(TimeLeft.line(FUEL_LEFT, fuel(stack)));
+        }
     }
 
     @Override

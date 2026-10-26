@@ -21,5 +21,8 @@
   "block.atouchofdarkness.campfire": "Campfire",
   "block.atouchofdarkness.soul_campfire": "Soul Campfire",
   "block.atouchofdarkness.lamp": "Lamp",
-  "block.atouchofdarkness.soul_lamp": "Soul Lamp"
+  "block.atouchofdarkness.soul_lamp": "Soul Lamp",
+  "item.atouchofdarkness.lamp.hint": "Click fuel onto it to fill it",
+  "item.atouchofdarkness.lamp.fuel_left": "%s of fuel left",
+  "item.atouchofdarkness.lamp.toggle_hint": "Right-click it placed to turn it on or off"
 }
