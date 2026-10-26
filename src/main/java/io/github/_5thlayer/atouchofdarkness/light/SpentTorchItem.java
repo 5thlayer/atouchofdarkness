@@ -5,6 +5,7 @@ package io.github._5thlayer.atouchofdarkness.light;
 
 import java.util.function.Consumer;
 
+import io.github._5thlayer.atouchofdarkness.nightbrand.Nightbrand;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
 import net.minecraft.sounds.SoundEvent;
@@ -12,6 +13,7 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.tags.FluidTags;
+import net.minecraft.util.Mth;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
@@ -30,11 +32,15 @@ import org.jspecify.annotations.Nullable;
 /**
  * The Spent Torch, what a Torch burns out into, which is never placed. Used in the hand with flint and
  * steel or a fire charge in the other, or a burning Light Source, or while looking at fire, lava or a lit
- * campfire, it is relit into a Torch that burns a quarter as long as a fresh one, then is gone.
+ * campfire, it is relit into a Torch that burns a quarter as long as a fresh one, then is gone. Held
+ * alone in the Dark it steeps toward a Nightbrand, which its item bar shows.
  */
 public final class SpentTorchItem extends Item {
 
     private static final String HINT = "item.atouchofdarkness.spent_torch.hint";
+
+    /** The steep's item bar, the violet of the night sky. */
+    private static final int STEEP_BAR_COLOR = 0x7A4FC8;
 
     public SpentTorchItem(Properties properties) {
         super(properties);
@@ -60,6 +66,35 @@ public final class SpentTorchItem extends Item {
     @SuppressWarnings("deprecation")
     public void appendHoverText(ItemStack stack, TooltipContext context, TooltipDisplay display, Consumer<Component> builder, TooltipFlag flag) {
         builder.accept(Component.translatable(HINT).withStyle(ChatFormatting.GRAY));
+    }
+
+    /** Its steep, once it has started, toward a Nightbrand. */
+    @Override
+    public boolean isBarVisible(ItemStack stack) {
+        return stack.has(Nightbrand.STEEPING);
+    }
+
+    @Override
+    public int getBarWidth(ItemStack stack) {
+        var steeping = stack.get(Nightbrand.STEEPING);
+        return steeping == null ? 0 : Mth.clamp(Math.round((float) MAX_BAR_WIDTH * steeping.steeped() / steeping.full()), 0, MAX_BAR_WIDTH);
+    }
+
+    @Override
+    public int getBarColor(ItemStack stack) {
+        return STEEP_BAR_COLOR;
+    }
+
+    /** Not each tick its steep changes. */
+    @Override
+    public boolean shouldCauseReequipAnimation(ItemStack oldStack, ItemStack newStack, boolean slotChanged) {
+        return slotChanged || !ItemStack.isSameItem(oldStack, newStack);
+    }
+
+    /** Nor does mining with one in hand start over. */
+    @Override
+    public boolean shouldCauseBlockBreakReset(ItemStack oldStack, ItemStack newStack) {
+        return !ItemStack.isSameItem(oldStack, newStack);
     }
 
     /**

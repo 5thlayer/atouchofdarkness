@@ -21,6 +21,7 @@ public final class LightConfig {
     public static final ModConfigSpec.IntValue CAMPFIRE_CAP;
     public static final ModConfigSpec.IntValue LAMP_CAP;
     public static final ModConfigSpec.BooleanValue VANILLA_LIGHT;
+    public static final ModConfigSpec.IntValue NIGHTBRAND_STEEP;
 
     static {
         var builder = new ModConfigSpec.Builder();
@@ -42,6 +43,11 @@ public final class LightConfig {
         LAMP_CAP = builder
                 .comment("Ticks of fuel a Lamp holds, a day. The soul Lamp holds twice as much.")
                 .defineInRange("cap", 24000, 1, Integer.MAX_VALUE);
+        builder.pop();
+        builder.push("nightbrand");
+        NIGHTBRAND_STEEP = builder
+                .comment("Grace Periods a single Spent Torch held in the Dark takes to steep into a Nightbrand, its progress kept between dips.")
+                .defineInRange("steep", 3, 1, 1000);
         builder.pop();
         SPEC = builder.build();
     }

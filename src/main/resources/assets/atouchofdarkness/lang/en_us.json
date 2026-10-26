@@ -14,6 +14,7 @@
   "item.atouchofdarkness.torch": "Torch",
   "item.atouchofdarkness.soul_torch": "Soul Torch",
   "item.atouchofdarkness.spent_torch": "Spent Torch",
+  "item.atouchofdarkness.nightbrand": "Nightbrand",
   "block.atouchofdarkness.carried_light": "Carried Light",
   "item.atouchofdarkness.torch.hint": "Burns only while held",
   "item.atouchofdarkness.torch.burn_left": "%s of burn left",

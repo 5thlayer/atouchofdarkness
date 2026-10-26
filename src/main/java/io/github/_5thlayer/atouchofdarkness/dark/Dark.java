@@ -95,6 +95,14 @@ public final class Dark {
                 && level.environmentAttributes().getValue(EnvironmentAttributes.MOON_PHASE, eyes) == MoonPhase.FULL_MOON;
     }
 
+    /**
+     * Whether the player is in the Dark: in a dimension tagged {@link #DIMENSIONS}, neither in Creative
+     * nor in Spectator, and not Lit. The Pillar's one meaning of it, which everything the Dark does reads.
+     */
+    public static boolean inTheDark(ServerPlayer player) {
+        return player.level().dimensionTypeRegistration().is(DIMENSIONS) && !player.isCreative() && !player.isSpectator() && !isLit(player);
+    }
+
     /** Ticks the player could still spend in the Dark before the next Strike lands. */
     public static int ticksToStrike(ServerPlayer player) {
         return player.getData(GRACE_PERIOD).ticksToStrike(DarkConfig.gracePeriodSettings());
@@ -104,14 +112,13 @@ public final class Dark {
         if (!(event.getLevel() instanceof ServerLevel level) || level.players().isEmpty()) {
             return;
         }
-        boolean darkHere = level.dimensionTypeRegistration().is(DIMENSIONS);
         var settings = DarkConfig.gracePeriodSettings();
         // A copy, since a Strike can kill and so change the list.
         for (ServerPlayer player : level.players().toArray(ServerPlayer[]::new)) {
             if (!player.isAlive()) {
                 continue;
             }
-            boolean inTheDark = darkHere && !player.isCreative() && !player.isSpectator() && !isLit(player);
+            boolean inTheDark = inTheDark(player);
             var gracePeriod = player.getData(GRACE_PERIOD);
             var cues = gracePeriod.tick(inTheDark, settings);
             cues.forEach(cue -> DarkCues.play(player, cue));

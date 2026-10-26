@@ -82,6 +82,7 @@ public final class ATouchOfDarknessGameTests {
         CampfireTests.register(tests);
         LampTests.register(tests);
         UnlitTests.register(tests);
+        NightbrandTests.register(tests);
     }
 
     private static Identifier id(String path) {
