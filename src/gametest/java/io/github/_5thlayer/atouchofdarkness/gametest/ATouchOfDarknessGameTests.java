@@ -48,6 +48,7 @@ public final class ATouchOfDarknessGameTests {
         ENVIRONMENT_TYPES.register("with_difficulty", () -> WithDifficulty.CODEC);
         ENVIRONMENT_TYPES.register("with_dark_config", () -> WithDarkConfig.CODEC);
         ENVIRONMENT_TYPES.register("at_night", () -> AtNight.CODEC);
+        ENVIRONMENT_TYPES.register("keeps_clock", () -> KeepsClock.CODEC);
     }
 
     private ATouchOfDarknessGameTests() {
@@ -76,6 +77,7 @@ public final class ATouchOfDarknessGameTests {
         DarkTests.register(tests);
         SkyTests.register(tests);
         CueTests.register(tests);
+        TorchTests.register(tests);
     }
 
     private static Identifier id(String path) {

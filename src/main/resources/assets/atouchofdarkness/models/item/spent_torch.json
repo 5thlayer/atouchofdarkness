@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:item/handheld",
+  "textures": {
+    "layer0": "atouchofdarkness:item/spent_torch"
+  }
+}

@@ -5,13 +5,15 @@ package io.github._5thlayer.atouchofdarkness;
 
 import io.github._5thlayer.atouchofdarkness.dark.Dark;
 import io.github._5thlayer.atouchofdarkness.dark.DarkConfig;
+import io.github._5thlayer.atouchofdarkness.light.Light;
+import io.github._5thlayer.atouchofdarkness.light.LightConfig;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.fml.config.ModConfig;
 
 /**
- * The Pillar's entry point. It registers the Pillar's own creative tab, the Dark and its config. The game tests hook
+ * The Pillar's entry point. It registers the Pillar's own creative tab, the Dark, the Light Sources and their configs. The game tests hook
  * themselves in from the {@code gametest} source set, which never ships (libworks ADR 0011).
  */
 @Mod(ATouchOfDarkness.MOD_ID)
@@ -23,6 +25,8 @@ public final class ATouchOfDarkness {
     public ATouchOfDarkness(IEventBus modBus, ModContainer container) {
         DarknessTab.register(modBus);
         Dark.register(modBus);
+        Light.register(modBus);
         container.registerConfig(ModConfig.Type.COMMON, DarkConfig.SPEC);
+        container.registerConfig(ModConfig.Type.COMMON, LightConfig.SPEC, LightConfig.FILE);
     }
 }

@@ -32,6 +32,7 @@ path = [
     "**/src/gametest/resources/**/*.mcmeta",
     "**/src/main/resources/**/*.nbt",
     "**/src/gametest/resources/**/*.nbt",
+    "**/src/main/resources/**/*.png",
     "LICENSE",
     "NOTICE",
 ]

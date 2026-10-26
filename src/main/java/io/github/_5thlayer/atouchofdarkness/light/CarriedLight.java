@@ -1,0 +1,153 @@
+// SPDX-FileCopyrightText: 2026 5thlayer
+// SPDX-License-Identifier: LGPL-3.0-only
+
+package io.github._5thlayer.atouchofdarkness.light;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.function.Supplier;
+
+import io.github._5thlayer.atouchofdarkness.ATouchOfDarkness;
+import net.minecraft.core.BlockPos;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.level.block.Blocks;
+import net.neoforged.bus.api.IEventBus;
+import net.neoforged.neoforge.attachment.AttachmentType;
+import net.neoforged.neoforge.common.NeoForge;
+import net.neoforged.neoforge.event.tick.LevelTickEvent;
+import net.neoforged.neoforge.registries.DeferredRegister;
+import net.neoforged.neoforge.registries.NeoForgeRegistries;
+import org.jspecify.annotations.Nullable;
+
+/**
+ * Carried light (ADR 0002): every game tick, each player's held Light Sources burn by the time of day
+ * that passed, and a player holding one that burns has its light at their eye block, in a
+ * {@link CarriedLightBlock} that follows their block position and is removed behind them. With one in
+ * each hand the brighter wins, and two carriers at one block share the brighter light. Nothing else
+ * carries light: not an item on the ground, nor a mob.
+ */
+public final class CarriedLight {
+
+    private static final long NO_CLOCK = Long.MIN_VALUE;
+
+    private static final DeferredRegister<AttachmentType<?>> ATTACHMENTS =
+            DeferredRegister.create(NeoForgeRegistries.ATTACHMENT_TYPES, ATouchOfDarkness.MOD_ID);
+
+    /** Never saved nor copied: a player who joins or respawns starts the clock afresh, with no light placed. */
+    private static final Supplier<AttachmentType<Carrier>> CARRIER = ATTACHMENTS.register("carrier",
+            () -> AttachmentType.builder(Carrier::new).build());
+
+    private static final class Carrier {
+        /** The time of day the player's held Light Sources last burned to. */
+        long clock = NO_CLOCK;
+        /** Where the player's light was placed last tick, if anywhere. */
+        @Nullable BlockPos lit;
+    }
+
+    private CarriedLight() {
+    }
+
+    static void register(IEventBus modBus) {
+        ATTACHMENTS.register(modBus);
+        NeoForge.EVENT_BUS.addListener(CarriedLight::tick);
+    }
+
+    /** Whether a player in the level carries light to this block now, which keeps a {@link CarriedLightBlock} there. */
+    static boolean carriedTo(ServerLevel level, BlockPos pos) {
+        return level.players().stream().anyMatch(player -> heldLight(player) > 0 && eyes(player).equals(pos));
+    }
+
+    private static void tick(LevelTickEvent.Post event) {
+        if (!(event.getLevel() instanceof ServerLevel level) || level.players().isEmpty()) {
+            return;
+        }
+        long now = level.getOverworldClockTime();
+        Map<BlockPos, Integer> wanted = new HashMap<>();
+        for (ServerPlayer player : level.players()) {
+            var carrier = player.getData(CARRIER);
+            long elapsed = carrier.clock == NO_CLOCK ? 0 : Burn.elapsed(carrier.clock, now);
+            carrier.clock = now;
+            if (!player.isAlive()) {
+                continue;
+            }
+            VanillaTorches.convert(player);
+            burnHeld(player, elapsed);
+            int light = heldLight(player);
+            if (light > 0) {
+                wanted.merge(eyes(player), light, Math::max);
+            }
+        }
+        for (ServerPlayer player : level.players()) {
+            var carrier = player.getData(CARRIER);
+            if (carrier.lit != null && !wanted.containsKey(carrier.lit)) {
+                remove(level, carrier.lit);
+            }
+            carrier.lit = null;
+        }
+        wanted.forEach((pos, light) -> {
+            if (place(level, pos, light)) {
+                level.players().stream().filter(player -> heldLight(player) > 0 && eyes(player).equals(pos))
+                        .forEach(player -> player.getData(CARRIER).lit = pos);
+            }
+        });
+    }
+
+    private static void burnHeld(ServerPlayer player, long elapsed) {
+        for (var hand : InteractionHand.values()) {
+            var stack = player.getItemInHand(hand);
+            if (stack.getItem() instanceof HeldLightSource source) {
+                var after = source.burnHeld(stack, player, elapsed);
+                if (after != stack) {
+                    player.setItemInHand(hand, after);
+                }
+            }
+        }
+    }
+
+    /** The light the player carries: the brighter of their hands', and none for a Spectator or the dead. */
+    private static int heldLight(ServerPlayer player) {
+        if (!player.isAlive() || player.isSpectator()) {
+            return 0;
+        }
+        int light = 0;
+        for (var hand : InteractionHand.values()) {
+            var stack = player.getItemInHand(hand);
+            if (stack.getItem() instanceof HeldLightSource source) {
+                light = Math.max(light, source.heldLight(stack));
+            }
+        }
+        return light;
+    }
+
+    /** The block at the player's eyes, which the Dark reads too. */
+    private static BlockPos eyes(ServerPlayer player) {
+        return BlockPos.containing(player.getEyePosition());
+    }
+
+    /** Puts the light at the block, into air or a water source only; true if it is there. */
+    private static boolean place(ServerLevel level, BlockPos pos, int light) {
+        var state = level.getBlockState(pos);
+        var block = Light.CARRIED_LIGHT.get();
+        if (state.is(block)) {
+            if (state.getValue(CarriedLightBlock.LEVEL) != light) {
+                level.setBlockAndUpdate(pos, state.setValue(CarriedLightBlock.LEVEL, light));
+            }
+            return true;
+        }
+        boolean water = state.is(Blocks.WATER) && state.getFluidState().isSource();
+        if (!state.isAir() && !water) {
+            return false;
+        }
+        level.setBlockAndUpdate(pos, block.defaultBlockState().setValue(CarriedLightBlock.LEVEL, light).setValue(CarriedLightBlock.WATERLOGGED, water));
+        return true;
+    }
+
+    private static void remove(ServerLevel level, BlockPos pos) {
+        var state = level.getBlockState(pos);
+        if (state.is(Light.CARRIED_LIGHT)) {
+            level.setBlockAndUpdate(pos, CarriedLightBlock.emptied(state));
+        }
+    }
+}

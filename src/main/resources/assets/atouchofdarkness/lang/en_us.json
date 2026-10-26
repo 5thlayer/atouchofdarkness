@@ -10,5 +10,9 @@
   "death.attack.atouchofdarkness.strike.4.player": "The Babau took %1$s in the dark while they fled %2$s",
   "subtitles.atouchofdarkness.dark.enter": "The dark closes in",
   "subtitles.atouchofdarkness.dark.warning": "Something stirs in the dark",
-  "subtitles.atouchofdarkness.dark.strike": "The Babau strikes"
+  "subtitles.atouchofdarkness.dark.strike": "The Babau strikes",
+  "item.atouchofdarkness.torch": "Torch",
+  "item.atouchofdarkness.soul_torch": "Soul Torch",
+  "item.atouchofdarkness.spent_torch": "Spent Torch",
+  "block.atouchofdarkness.carried_light": "Carried Light"
 }

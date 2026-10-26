@@ -3,13 +3,12 @@
 
 package io.github._5thlayer.atouchofdarkness;
 
+import io.github._5thlayer.atouchofdarkness.light.Light;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.item.CreativeModeTab;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.Items;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.registries.DeferredRegister;
 
@@ -31,10 +30,9 @@ public final class DarknessTab {
             DeferredRegister.create(Registries.CREATIVE_MODE_TAB, ATouchOfDarkness.MOD_ID);
 
     static {
-        // A vanilla item until the Pillar has one of its own. An empty tab is hidden from the creative screen.
         TABS.register(KEY.identifier().getPath(), () -> CreativeModeTab.builder()
                 .title(Component.translatable(TITLE_KEY))
-                .icon(() -> new ItemStack(Items.TORCH))
+                .icon(Light.TORCH::toStack)
                 .displayItems(DarknessTab::displayItems)
                 .build());
     }
@@ -47,6 +45,8 @@ public final class DarknessTab {
     }
 
     private static void displayItems(CreativeModeTab.ItemDisplayParameters parameters, CreativeModeTab.Output output) {
-        // output.accept(MyItems.FIRST.get()), one line per item, in order.
+        output.accept(Light.TORCH);
+        output.accept(Light.SOUL_TORCH);
+        output.accept(Light.SPENT_TORCH);
     }
 }
