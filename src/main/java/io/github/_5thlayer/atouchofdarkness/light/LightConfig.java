@@ -18,6 +18,7 @@ public final class LightConfig {
     public static final ModConfigSpec SPEC;
 
     public static final ModConfigSpec.IntValue TORCH_BURN_TIME;
+    public static final ModConfigSpec.IntValue CAMPFIRE_CAP;
 
     static {
         var builder = new ModConfigSpec.Builder();
@@ -25,6 +26,11 @@ public final class LightConfig {
         TORCH_BURN_TIME = builder
                 .comment("Ticks a fresh Torch burns while held. The soul Torch burns twice as long, and a relit Spent Torch a quarter as long.")
                 .defineInRange("burnTime", 6000, 1, Integer.MAX_VALUE);
+        builder.pop();
+        builder.push("campfire");
+        CAMPFIRE_CAP = builder
+                .comment("Ticks of fuel a Campfire holds, half a day; it is placed with half of it. The soul Campfire holds twice as much.")
+                .defineInRange("cap", 12000, 2, Integer.MAX_VALUE);
         builder.pop();
         SPEC = builder.build();
     }

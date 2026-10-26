@@ -17,5 +17,7 @@
   "block.atouchofdarkness.carried_light": "Carried Light",
   "item.atouchofdarkness.torch.hint": "Burns only while held",
   "item.atouchofdarkness.torch.burn_left": "%s of burn left",
-  "item.atouchofdarkness.spent_torch.hint": "Relight with flint and steel, a fire charge, fire, lava or a Torch"
+  "item.atouchofdarkness.spent_torch.hint": "Relight with flint and steel, a fire charge, fire, lava or a Torch",
+  "block.atouchofdarkness.campfire": "Campfire",
+  "block.atouchofdarkness.soul_campfire": "Soul Campfire"
 }

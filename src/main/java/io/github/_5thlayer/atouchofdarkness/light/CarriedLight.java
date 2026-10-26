@@ -89,7 +89,7 @@ public final class CarriedLight {
                 carrier.unburnt = 0;
                 continue;
             }
-            VanillaTorches.convert(player);
+            VanillaLights.convert(player);
             carrier.unburnt += elapsed;
             settleSwappedOut(player, carrier);
             long toBurn = carrier.unburnt >= BURN_STEP ? carrier.unburnt : 0;
