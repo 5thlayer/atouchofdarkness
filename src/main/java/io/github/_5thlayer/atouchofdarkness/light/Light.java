@@ -122,6 +122,7 @@ public final class Light {
         ITEMS.register(modBus);
         BLOCKS.register(modBus);
         CarriedLight.register(modBus);
+        Unlit.register();
         // Vanilla's block entity, so the Campfires cook and render as vanilla's do.
         modBus.addListener((BlockEntityTypeAddBlocksEvent event) -> event.modify(BlockEntityType.CAMPFIRE, CAMPFIRE.get(), SOUL_CAMPFIRE.get()));
     }

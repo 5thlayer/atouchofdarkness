@@ -29,3 +29,7 @@ type = "required"
 versionRange = "[${minecraft_version}]"
 ordering = "NONE"
 side = "BOTH"
+
+# Puts out the Unlit blocks' light and empties their tag while vanilla's light is back (ADR 0003).
+[[mixins]]
+config = "${mod_id}.mixins.json"

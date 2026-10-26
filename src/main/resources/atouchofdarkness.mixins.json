@@ -1,0 +1,14 @@
+{
+  "required": true,
+  "package": "io.github._5thlayer.atouchofdarkness.mixin",
+  "compatibilityLevel": "JAVA_25",
+  "minVersion": "0.8",
+  "mixins": [
+    "BlockStateBaseMixin",
+    "BlockStateMixin",
+    "TagLoaderMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

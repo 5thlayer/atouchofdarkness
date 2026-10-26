@@ -20,9 +20,14 @@ public final class LightConfig {
     public static final ModConfigSpec.IntValue TORCH_BURN_TIME;
     public static final ModConfigSpec.IntValue CAMPFIRE_CAP;
     public static final ModConfigSpec.IntValue LAMP_CAP;
+    public static final ModConfigSpec.BooleanValue VANILLA_LIGHT;
 
     static {
         var builder = new ModConfigSpec.Builder();
+        VANILLA_LIGHT = builder
+                .comment("Brings vanilla's light back: the recipes of its torches, lanterns, candles, campfires and other cheap light, and the light of every block in atouchofdarkness:unlit, whose tag it empties.",
+                        "Takes hold as the world's data loads or reloads; a block lit before, or in a chunk saved before the Pillar was added, keeps the light it had until a block beside it changes.")
+                .define("vanillaLight", false);
         builder.push("torch");
         TORCH_BURN_TIME = builder
                 .comment("Ticks a fresh Torch burns while held. The soul Torch burns twice as long, and a relit Spent Torch a quarter as long.")

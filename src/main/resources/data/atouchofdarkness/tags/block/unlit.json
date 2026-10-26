@@ -1,0 +1,31 @@
+{
+  "values": [
+    "minecraft:redstone_torch",
+    "minecraft:redstone_wall_torch",
+    "minecraft:redstone_ore",
+    "minecraft:deepslate_redstone_ore",
+    "minecraft:enchanting_table",
+    "minecraft:ender_chest",
+    "minecraft:magma_block",
+    "minecraft:glow_lichen",
+    "#minecraft:cave_vines",
+    "minecraft:sea_pickle",
+    "minecraft:amethyst_cluster",
+    "minecraft:large_amethyst_bud",
+    "minecraft:medium_amethyst_bud",
+    "minecraft:small_amethyst_bud",
+    "minecraft:sculk_catalyst",
+    "minecraft:firefly_bush",
+    "minecraft:redstone_lamp",
+    "minecraft:copper_bulb",
+    "minecraft:exposed_copper_bulb",
+    "minecraft:weathered_copper_bulb",
+    "minecraft:oxidized_copper_bulb",
+    "minecraft:waxed_copper_bulb",
+    "minecraft:waxed_exposed_copper_bulb",
+    "minecraft:waxed_weathered_copper_bulb",
+    "minecraft:waxed_oxidized_copper_bulb",
+    "#minecraft:candles",
+    "#minecraft:candle_cakes"
+  ]
+}
