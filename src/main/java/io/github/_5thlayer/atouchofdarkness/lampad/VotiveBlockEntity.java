@@ -38,10 +38,11 @@ public final class VotiveBlockEntity extends BaseContainerBlockEntity implements
     public static final int GOLD = 2;
 
     private static final int[] SLOTS = {FUEL, NIGHTBRAND, GOLD};
+    static final int SIZE = SLOTS.length;
     private static final String LAMPAD = "lampad";
     private static final String TITLE = "container.atouchofdarkness.votive";
 
-    private NonNullList<ItemStack> items = NonNullList.withSize(SLOTS.length, ItemStack.EMPTY);
+    private NonNullList<ItemStack> items = NonNullList.withSize(SIZE, ItemStack.EMPTY);
     private @Nullable UUID lampad;
 
     public VotiveBlockEntity(BlockPos pos, BlockState state) {
@@ -122,7 +123,7 @@ public final class VotiveBlockEntity extends BaseContainerBlockEntity implements
 
     @Override
     public int getContainerSize() {
-        return SLOTS.length;
+        return SIZE;
     }
 
     @Override

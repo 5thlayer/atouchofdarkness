@@ -20,21 +20,19 @@ public final class VotiveMenu extends AbstractContainerMenu {
     public static final int INVENTORY_X = 8;
     public static final int INVENTORY_Y = 51;
 
-    private static final int SIZE = 3;
-
     private final Container votive;
 
     /** The client's, which the server fills. */
     public VotiveMenu(int containerId, Inventory inventory) {
-        this(containerId, inventory, new SimpleContainer(SIZE));
+        this(containerId, inventory, new SimpleContainer(VotiveBlockEntity.SIZE));
     }
 
     VotiveMenu(int containerId, Inventory inventory, Container votive) {
         super(Lampad.VOTIVE_MENU.get(), containerId);
-        checkContainerSize(votive, SIZE);
+        checkContainerSize(votive, VotiveBlockEntity.SIZE);
         this.votive = votive;
         var level = inventory.player.level();
-        for (int slot = 0; slot < SIZE; slot++) {
+        for (int slot = 0; slot < VotiveBlockEntity.SIZE; slot++) {
             int index = slot;
             addSlot(new Slot(votive, slot, SLOTS_X + slot * 18, SLOTS_Y) {
                 @Override
@@ -60,7 +58,7 @@ public final class VotiveMenu extends AbstractContainerMenu {
         }
         var stack = slot.getItem();
         var moved = stack.copy();
-        boolean done = index < SIZE ? moveItemStackTo(stack, SIZE, slots.size(), true) : moveItemStackTo(stack, 0, SIZE, false);
+        boolean done = index < VotiveBlockEntity.SIZE ? moveItemStackTo(stack, VotiveBlockEntity.SIZE, slots.size(), true) : moveItemStackTo(stack, 0, VotiveBlockEntity.SIZE, false);
         if (!done) {
             return ItemStack.EMPTY;
         }

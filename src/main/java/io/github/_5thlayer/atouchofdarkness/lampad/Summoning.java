@@ -39,7 +39,8 @@ final class Summoning {
         var base = level.getBlockState(below);
         boolean gold = base.is(Blocks.GOLD_BLOCK);
         boolean freeVotive = level.getBlockEntity(below) instanceof VotiveBlockEntity votive && !votive.hasLampad();
-        if (!(state.getBlock() instanceof LampBlock) || !gold && !freeVotive) {
+        // Gold turned to a Votive is a block changed, which needs the right to build there.
+        if (!(state.getBlock() instanceof LampBlock) || !gold && !freeVotive || !event.getEntity().mayBuild()) {
             return;
         }
         summon(level, pos, state, below, gold, event.getEntity());

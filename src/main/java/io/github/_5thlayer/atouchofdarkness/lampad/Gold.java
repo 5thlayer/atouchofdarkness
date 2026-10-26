@@ -6,7 +6,7 @@ package io.github._5thlayer.atouchofdarkness.lampad;
 /**
  * What a Lampad's binding costs in gold at each renewal, with no Minecraft types so JUnit runs it on a
  * plain JVM: a nugget for each so many Lamps in her range, the count rounded up, and the Lamps that what
- * she took pays for if it fell short.
+ * she took pays for.
  */
 public final class Gold {
 
@@ -18,11 +18,8 @@ public final class Gold {
         return Math.ceilDiv(lamps, lampsPerNugget);
     }
 
-    /**
-     * The Lamps the nuggets taken pay for, of those owed: every Lamp, those placed later too, if she took
-     * all she was owed, or else so many for each nugget.
-     */
-    public static int paidFor(int taken, int owed, int lampsPerNugget) {
-        return taken >= owed ? Integer.MAX_VALUE : (int) Math.min((long) taken * lampsPerNugget, Integer.MAX_VALUE);
+    /** The Lamps these nuggets pay for. */
+    public static int paidFor(int nuggets, int lampsPerNugget) {
+        return (int) Math.min((long) nuggets * lampsPerNugget, Integer.MAX_VALUE);
     }
 }

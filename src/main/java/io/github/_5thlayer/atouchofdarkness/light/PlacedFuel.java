@@ -7,6 +7,8 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.state.BlockState;
+import org.jspecify.annotations.Nullable;
 
 /**
  * The one way fuel goes into a placed Light Source, a Lamp or a Campfire, whoever brings it: a player's
@@ -26,13 +28,8 @@ public final class PlacedFuel {
 
     /** Whether the block there is a placed light with room for the whole of one of these. */
     public static boolean fits(ServerLevel level, BlockPos pos, ItemStack stack) {
-        var state = level.getBlockState(pos);
-        int burnTime = HandFuel.burnTime(stack, level);
-        if (!(state.getBlock() instanceof FuelledLight light) || burnTime <= 0) {
-            return false;
-        }
-        var fuel = light.upToDate(level, pos, state);
-        return fuel != null && Burn.fits(fuel.left(), burnTime, light.cap());
+        var feeding = Feeding.of(level, pos, stack);
+        return feeding != null && Burn.fits(feeding.fuel.left(), feeding.burnTime, feeding.light.cap());
     }
 
     /**
@@ -40,17 +37,26 @@ public final class PlacedFuel {
      * took none. The stack is left as it was, for the one who fed it to use up.
      */
     public static boolean take(ServerLevel level, BlockPos pos, ItemStack stack) {
-        var state = level.getBlockState(pos);
-        int burnTime = HandFuel.burnTime(stack, level);
-        if (!(state.getBlock() instanceof FuelledLight light) || burnTime <= 0) {
+        var feeding = Feeding.of(level, pos, stack);
+        if (feeding == null || feeding.fuel.left() >= feeding.light.cap()) {
             return false;
         }
-        var fuel = light.upToDate(level, pos, state);
-        if (fuel == null || fuel.left() >= light.cap()) {
-            return false;
-        }
-        fuel.refuel(burnTime, light.cap());
-        light.fuelled(level, pos, state, fuel);
+        feeding.fuel.refuel(feeding.burnTime, feeding.light.cap());
+        feeding.light.fuelled(level, pos, feeding.state, feeding.fuel);
         return true;
+    }
+
+    /** A placed light there, its fuel burnt up to now, and the burn time of one of these. */
+    private record Feeding(FuelledLight light, BlockState state, Fuel fuel, int burnTime) {
+
+        static @Nullable Feeding of(ServerLevel level, BlockPos pos, ItemStack stack) {
+            var state = level.getBlockState(pos);
+            int burnTime = HandFuel.burnTime(stack, level);
+            if (!(state.getBlock() instanceof FuelledLight light) || burnTime <= 0) {
+                return null;
+            }
+            var fuel = light.upToDate(level, pos, state);
+            return fuel == null ? null : new Feeding(light, state, fuel, burnTime);
+        }
     }
 }

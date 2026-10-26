@@ -33,8 +33,8 @@ import org.jspecify.annotations.Nullable;
  * item at a time, while her binding holds. The binding is counted in ticks while she is loaded, so she
  * does nothing while her chunk is unloaded and catches nothing up after. Once it has faded she takes
  * the next Nightbrand from her Votive, which renews it to the light config's binding, and with it a gold
- * nugget for each so many Lamps in range; if the gold falls short, she tends only the Lamps it paid for,
- * nearest the Votive first, and else every Lamp in range, those placed since too. With no Nightbrand there, or no Votive, she stands dormant, a statue, until
+ * nugget for each so many Lamps in range, and tends only as many Lamps as that gold paid for, nearest
+ * the Votive first: fewer if it fell short, and Lamps placed since only as far as its rounding up allows. With no Nightbrand there, or no Votive, she stands dormant, a statue, until
  * one comes. She holds the Nightbrand of her binding and the Lamp she was summoned from. She gives no
  * light, and the Babau strikes only players.
  */
@@ -53,7 +53,7 @@ public final class LampadEntity extends PathfinderMob {
     /** Ticks of her binding left; none while dormant. */
     private int binding;
 
-    /** The Lamps her last renewal's gold paid for, every one unless it fell short. */
+    /** The Lamps her last renewal's gold paid for: those in range then, rounded up to a nugget's worth. */
     private int paid;
 
     private ItemStack lamp = ItemStack.EMPTY;
@@ -145,8 +145,8 @@ public final class LampadEntity extends PathfinderMob {
         if (!level.isLoaded(votive)) {
             return;
         }
-        var shrine = votiveEntity();
-        if (shrine == null) {
+        var votiveEntity = votiveEntity();
+        if (votiveEntity == null) {
             // Broken: she stands dormant for good.
             votive = null;
             binding = 0;
@@ -158,12 +158,12 @@ public final class LampadEntity extends PathfinderMob {
             binding--;
         }
         if (binding == 0) {
-            renew(level, shrine);
+            renew(level, votiveEntity);
         }
     }
 
-    private void renew(ServerLevel level, VotiveBlockEntity shrine) {
-        var next = shrine.takeNightbrand();
+    private void renew(ServerLevel level, VotiveBlockEntity votiveEntity) {
+        var next = votiveEntity.takeNightbrand();
         if (next.isEmpty()) {
             paid = 0;
             setDormant(true);
@@ -173,7 +173,7 @@ public final class LampadEntity extends PathfinderMob {
         binding = LightConfig.LAMPAD_BINDING.getAsInt();
         int perNugget = LightConfig.LAMPAD_LAMPS_PER_NUGGET.getAsInt();
         int owed = Gold.owed(TendedLamps.of(level, votive).size(), perNugget);
-        paid = Gold.paidFor(shrine.takeGold(owed), owed, perNugget);
+        paid = Gold.paidFor(votiveEntity.takeGold(owed), perNugget);
         setDormant(false);
     }
 
@@ -205,9 +205,9 @@ public final class LampadEntity extends PathfinderMob {
     }
 
     private void releaseVotive() {
-        var shrine = level().isClientSide() ? null : votiveEntity();
-        if (shrine != null) {
-            shrine.release(getUUID());
+        var votiveEntity = level().isClientSide() ? null : votiveEntity();
+        if (votiveEntity != null) {
+            votiveEntity.release(getUUID());
         }
     }
 

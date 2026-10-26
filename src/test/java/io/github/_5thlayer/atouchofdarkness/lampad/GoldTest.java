@@ -20,15 +20,13 @@ class GoldTest {
     }
 
     @Test
-    void aShortPaymentPaysForEightLampsANugget() {
-        assertEquals(0, Gold.paidFor(0, 2, 8));
-        assertEquals(8, Gold.paidFor(1, 2, 8));
-        assertEquals(16, Gold.paidFor(2, 3, 8));
+    void eachNuggetPaysForEightLamps() {
+        assertEquals(0, Gold.paidFor(0, 8));
+        assertEquals(16, Gold.paidFor(2, 8));
     }
 
     @Test
-    void aFullPaymentPaysForEveryLamp() {
-        assertEquals(Integer.MAX_VALUE, Gold.paidFor(2, 2, 8));
-        assertEquals(Integer.MAX_VALUE, Gold.paidFor(0, 0, 8));
+    void manyNuggetsPayForNoMoreThanEveryLamp() {
+        assertEquals(Integer.MAX_VALUE, Gold.paidFor(Integer.MAX_VALUE, 8));
     }
 }

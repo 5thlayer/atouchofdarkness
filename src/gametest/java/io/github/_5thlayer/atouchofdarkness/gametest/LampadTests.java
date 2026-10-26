@@ -160,10 +160,10 @@ final class LampadTests {
         helper.getBlockEntity(nearlyFull, LampBlockEntity.class).setFuel(LampTests.CAP - 1000);
         helper.setBlock(campfire, Light.SOUL_CAMPFIRE.get());
         helper.getBlockEntity(campfire, CampfireBlockEntity.class).setData(Light.FUEL, Fuel.unclocked(2000));
-        var shrine = summon(helper, player, votive);
-        shrine.setItem(VotiveBlockEntity.FUEL, new ItemStack(Items.COAL, 20));
-        shrine.setItem(VotiveBlockEntity.NIGHTBRAND, Nightbrand.NIGHTBRAND.toStack());
-        shrine.setItem(VotiveBlockEntity.GOLD, new ItemStack(Items.GOLD_NUGGET));
+        var votiveEntity = summon(helper, player, votive);
+        votiveEntity.setItem(VotiveBlockEntity.FUEL, new ItemStack(Items.COAL, 20));
+        votiveEntity.setItem(VotiveBlockEntity.NIGHTBRAND, Nightbrand.NIGHTBRAND.toStack());
+        votiveEntity.setItem(VotiveBlockEntity.GOLD, new ItemStack(Items.GOLD_NUGGET));
 
         var fedAt = new long[] {-1};
         helper.onEachTick(() -> {
@@ -184,8 +184,8 @@ final class LampadTests {
                 var fire = helper.getBlockEntity(campfire, CampfireBlockEntity.class).getData(Light.FUEL).left();
                 helper.assertTrue(fire <= 2000, "the Lampad fed the Campfire, to " + fire);
                 helper.assertTrue(player.getMainHandItem().getOrDefault(Light.LAMP_FUEL, 0) == 0, "the Lampad fed a carried Lamp");
-                assertHolds(helper, shrine, VotiveBlockEntity.FUEL, Items.COAL, 20 - fed.size());
-                assertHolds(helper, shrine, VotiveBlockEntity.GOLD, Items.GOLD_NUGGET, 0);
+                assertHolds(helper, votiveEntity, VotiveBlockEntity.FUEL, Items.COAL, 20 - fed.size());
+                assertHolds(helper, votiveEntity, VotiveBlockEntity.GOLD, Items.GOLD_NUGGET, 0);
                 leave(player);
                 helper.succeed();
             }
@@ -224,17 +224,17 @@ final class LampadTests {
         }
         helper.setBlock(votive.south(4), Light.CAMPFIRE.get());
         helper.setBlock(other.north(5), Light.SOUL_CAMPFIRE.get());
-        var shrines = List.of(summon(helper, player, votive), summon(helper, player, other));
-        for (var shrine : shrines) {
-            shrine.setItem(VotiveBlockEntity.NIGHTBRAND, Nightbrand.NIGHTBRAND.toStack());
-            shrine.setItem(VotiveBlockEntity.GOLD, new ItemStack(Items.GOLD_NUGGET, 5));
+        var votiveEntities = List.of(summon(helper, player, votive), summon(helper, player, other));
+        for (var votiveEntity : votiveEntities) {
+            votiveEntity.setItem(VotiveBlockEntity.NIGHTBRAND, Nightbrand.NIGHTBRAND.toStack());
+            votiveEntity.setItem(VotiveBlockEntity.GOLD, new ItemStack(Items.GOLD_NUGGET, 5));
         }
         // Once both chunks tick their Lampads, which a forced chunk may take a tick or two to.
         helper.succeedWhen(() -> {
-            assertHolds(helper, shrines.get(0), VotiveBlockEntity.NIGHTBRAND, Nightbrand.NIGHTBRAND.get(), 0);
-            assertHolds(helper, shrines.get(1), VotiveBlockEntity.NIGHTBRAND, Nightbrand.NIGHTBRAND.get(), 0);
-            assertHolds(helper, shrines.get(0), VotiveBlockEntity.GOLD, Items.GOLD_NUGGET, 3);
-            assertHolds(helper, shrines.get(1), VotiveBlockEntity.GOLD, Items.GOLD_NUGGET, 4);
+            assertHolds(helper, votiveEntities.get(0), VotiveBlockEntity.NIGHTBRAND, Nightbrand.NIGHTBRAND.get(), 0);
+            assertHolds(helper, votiveEntities.get(1), VotiveBlockEntity.NIGHTBRAND, Nightbrand.NIGHTBRAND.get(), 0);
+            assertHolds(helper, votiveEntities.get(0), VotiveBlockEntity.GOLD, Items.GOLD_NUGGET, 3);
+            assertHolds(helper, votiveEntities.get(1), VotiveBlockEntity.GOLD, Items.GOLD_NUGGET, 4);
             chunks.forEach(chunk -> helper.getLevel().setChunkForced(chunk.x(), chunk.z(), false));
             leave(player);
         });
@@ -264,8 +264,8 @@ final class LampadTests {
         var player = survivalPlayer(helper);
         standAt(helper, STAND.east(3), player);
         cage(helper, STAND);
-        var shrine = summon(helper, player, STAND.below());
-        shrine.setItem(VotiveBlockEntity.NIGHTBRAND, Nightbrand.NIGHTBRAND.toStack());
+        var votiveEntity = summon(helper, player, STAND.below());
+        votiveEntity.setItem(VotiveBlockEntity.NIGHTBRAND, Nightbrand.NIGHTBRAND.toStack());
         var lampad = helper.getEntities(Lampad.LAMPAD.get(), STAND, 1.0).getFirst();
         helper.runAtTickTime(QUIET, () -> {
             settleLight(helper, STAND);
@@ -280,9 +280,9 @@ final class LampadTests {
     }
 
     /**
-     * A Lampad bound by a Nightbrand, with coal in her Votive, is unloaded with her chunk, saved, while a
-     * dry Lamp is set beside her Votive and the clock moves on 8 days, past her week's binding, as a long
-     * absence would. She feeds nothing while away. Loaded again from her save, she isn't dormant, as she
+     * A Lampad bound by a Nightbrand, a full Lamp that's off beside her Votive, is unloaded with her
+     * chunk, saved, while the Lamp is emptied, coal put in her Votive, and the clock moves on 8 days, past
+     * her week's binding, as a long absence would. She feeds nothing while away. Loaded again from her save, she isn't dormant, as she
      * caught none of those days up, and she feeds the Lamp.
      */
     private static void unloaded(GameTestHelper helper) {
@@ -290,10 +290,11 @@ final class LampadTests {
         standAt(helper, STAND, player);
         var votive = new BlockPos(1, 1, 1);
         var lamp = new BlockPos(4, 1, 1);
-        var shrine = summon(helper, player, votive);
-        shrine.setItem(VotiveBlockEntity.FUEL, new ItemStack(Items.COAL, 4));
-        shrine.setItem(VotiveBlockEntity.NIGHTBRAND, Nightbrand.NIGHTBRAND.toStack());
-        shrine.setItem(VotiveBlockEntity.GOLD, new ItemStack(Items.GOLD_NUGGET));
+        helper.setBlock(lamp, Light.LAMP.get());
+        helper.getBlockEntity(lamp, LampBlockEntity.class).setFuel(LampTests.CAP);
+        var votiveEntity = summon(helper, player, votive);
+        votiveEntity.setItem(VotiveBlockEntity.NIGHTBRAND, Nightbrand.NIGHTBRAND.toStack());
+        votiveEntity.setItem(VotiveBlockEntity.GOLD, new ItemStack(Items.GOLD_NUGGET));
         var registries = helper.getLevel().registryAccess();
         var saved = new CompoundTag[1];
         helper.runAtTickTime(3, () -> {
@@ -303,7 +304,8 @@ final class LampadTests {
             lampad.saveWithoutId(output);
             saved[0] = output.buildResult();
             lampad.remove(Entity.RemovalReason.UNLOADED_TO_CHUNK);
-            LampTests.lamp(helper, Light.LAMP.get(), lamp, 0);
+            helper.getBlockEntity(lamp, LampBlockEntity.class).setFuel(0);
+            votiveEntity.setItem(VotiveBlockEntity.FUEL, new ItemStack(Items.COAL, 4));
             KeepsClock.advance(helper, 8 * 24_000);
         });
         var reloaded = new LampadEntity[1];
@@ -333,23 +335,23 @@ final class LampadTests {
     private static void binding(GameTestHelper helper) {
         var player = survivalPlayer(helper);
         standAt(helper, STAND, player);
-        var shrine = summon(helper, player, new BlockPos(2, 1, 2));
+        var votiveEntity = summon(helper, player, new BlockPos(2, 1, 2));
         var lampad = helper.getEntities(Lampad.LAMPAD.get()).getFirst();
         helper.runAtTickTime(3, () -> {
             helper.assertTrue(lampad.isDormant(), "a Lampad with no Nightbrand isn't dormant");
-            shrine.setItem(VotiveBlockEntity.NIGHTBRAND, new ItemStack(Nightbrand.NIGHTBRAND.get(), 2));
+            votiveEntity.setItem(VotiveBlockEntity.NIGHTBRAND, new ItemStack(Nightbrand.NIGHTBRAND.get(), 2));
         });
         helper.runAtTickTime(5, () -> {
             helper.assertFalse(lampad.isDormant(), "a Nightbrand didn't wake the Lampad");
-            assertHolds(helper, shrine, VotiveBlockEntity.NIGHTBRAND, Nightbrand.NIGHTBRAND.get(), 1);
+            assertHolds(helper, votiveEntity, VotiveBlockEntity.NIGHTBRAND, Nightbrand.NIGHTBRAND.get(), 1);
         });
         helper.runAtTickTime(5 + WithLampadConfig.BINDING + 20, () -> {
             helper.assertFalse(lampad.isDormant(), "the second Nightbrand didn't renew the Lampad's binding");
-            assertHolds(helper, shrine, VotiveBlockEntity.NIGHTBRAND, Nightbrand.NIGHTBRAND.get(), 0);
+            assertHolds(helper, votiveEntity, VotiveBlockEntity.NIGHTBRAND, Nightbrand.NIGHTBRAND.get(), 0);
         });
         helper.runAtTickTime(5 + 2 * WithLampadConfig.BINDING + 20, () -> {
             helper.assertTrue(lampad.isDormant(), "the Lampad's binding didn't fade");
-            shrine.setItem(VotiveBlockEntity.NIGHTBRAND, Nightbrand.NIGHTBRAND.toStack());
+            votiveEntity.setItem(VotiveBlockEntity.NIGHTBRAND, Nightbrand.NIGHTBRAND.toStack());
         });
         helper.runAtTickTime(5 + 2 * WithLampadConfig.BINDING + 22, () -> {
             helper.assertFalse(lampad.isDormant(), "a Nightbrand didn't wake the dormant Lampad");
