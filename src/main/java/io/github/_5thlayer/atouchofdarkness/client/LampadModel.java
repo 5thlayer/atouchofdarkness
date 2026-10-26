@@ -16,13 +16,14 @@ import net.minecraft.util.Mth;
 import net.minecraft.world.entity.HumanoidArm;
 
 /**
- * The Lampad: a small robed nymph, her hair down her back, her left arm raising a torch and her right
- * free for the fuel she carries. Walking, her right arm and her robe swing and her torch's flame bobs;
- * dormant, she holds her statue pose, head bowed, the torch still raised.
+ * The Lampad: a small robed nymph, her hair down her back, her left arm raising the Nightbrand of her
+ * binding, its dark flame giving no light, and her right free for the fuel she carries. Walking, her
+ * right arm and her robe swing and the dark flame bobs; dormant, she holds her statue pose, head bowed,
+ * the Nightbrand still raised.
  */
 public final class LampadModel extends EntityModel<LampadRenderState> implements ArmedModel<LampadRenderState> {
 
-    /** The left arm raised forward, holding the torch aloft. */
+    /** The left arm raised forward, holding the Nightbrand aloft. */
     private static final float TORCH_RAISE = -1.9F;
 
     private final ModelPart body;
