@@ -27,7 +27,6 @@ import net.minecraft.world.entity.ai.goal.WaterAvoidingRandomStrollGoal;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.pathfinder.PathType;
 import net.minecraft.world.level.storage.ValueInput;
 import net.minecraft.world.level.storage.ValueOutput;
 import org.jspecify.annotations.Nullable;
@@ -42,7 +41,7 @@ import org.jspecify.annotations.Nullable;
  * for, nearest the Votive first. With no Nightbrand there, or no Votive, she stands dormant, a statue,
  * until one comes. She holds the Nightbrand of her binding and the Lamp she was summoned from, and drops
  * both, with the fuel she carries, when she dies; the gold is lost. Dormant, she is a statue that a player's
- * blow breaks, as if she had died. Mobs treat her as a passive mob. Hurt, she heals in the Dark by her
+ * blow breaks, as if she had died. Mobs treat her as a passive mob, and fire never harms her. Hurt, she heals in the Dark by her
  * {@link HealGoal} and tends nothing until she is whole, her binding fading all the while. She gives no
  * light, and the Babau strikes only players.
  */
@@ -76,8 +75,6 @@ public final class LampadEntity extends PathfinderMob {
         setPersistenceRequired();
         getNavigation().setRequiredPathLength(48F);
         setGuaranteedDrop(EquipmentSlot.MAINHAND);
-        // Hurt, she would stop there to heal, so she never steps into a fire, such as a lit Campfire.
-        setPathfindingMalus(PathType.FIRE, -1F);
     }
 
     /** The copper golem's health and pace. */
