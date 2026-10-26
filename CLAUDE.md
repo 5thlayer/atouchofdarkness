@@ -21,6 +21,13 @@ Conventional commits: `<type>(<optional scope>): <summary>`, with the summary in
 - The `skillworks:gametest-loop` skill runs a subset, `--tests 'atouchofdarkness:<glob>' 1`, one glob a run, so a ticket's new game tests share a name prefix that selects them all.
 - CI (`.github/workflows/ci.yml`) runs both through libworks' `module-ci.yml` on every push and never publishes.
 
+### What to test
+
+- An acceptance criterion gets one game test at most, and one test may cover several criteria that share a setup.
+- JUnit only for the arithmetic a spec names, on a plain JVM.
+- A test never repeats one that exists: a Light Source that reuses carried light or the burn path tests only what is new to it.
+- Tests of a player in the Dark stand on the shared fixture: a survival player, the cage, and the light engine settled after each block placed.
+
 ### Game-test code
 
 - Everything that exists only for the Module's own runs lives in the `gametest` source set, which never ships (libworks ADRs 0004 and 0011): its game-test code, its test-only resources and its packs.
