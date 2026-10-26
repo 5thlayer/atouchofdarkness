@@ -21,4 +21,10 @@ public interface HeldLightSource {
      * what the hand holds after: the same stack, or what it burns out into.
      */
     ItemStack burnHeld(ItemStack stack, ServerPlayer player, long elapsed);
+
+    /**
+     * Writes the burn the stack owes for {@code elapsed} ticks it was held but not yet burned, once it
+     * has left the player's hand, wherever it went. It never burns out there: it goes out once held again.
+     */
+    void settle(ItemStack stack, ServerPlayer player, long elapsed);
 }

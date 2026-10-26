@@ -34,6 +34,8 @@ import org.jspecify.annotations.Nullable;
  */
 public final class SpentTorchItem extends Item {
 
+    private static final String HINT = "item.atouchofdarkness.spent_torch.hint";
+
     public SpentTorchItem(Properties properties) {
         super(properties);
     }
@@ -57,7 +59,7 @@ public final class SpentTorchItem extends Item {
     @Override
     @SuppressWarnings("deprecation")
     public void appendHoverText(ItemStack stack, TooltipContext context, TooltipDisplay display, Consumer<Component> builder, TooltipFlag flag) {
-        builder.accept(Component.translatable("item.atouchofdarkness.spent_torch.hint").withStyle(ChatFormatting.GRAY));
+        builder.accept(Component.translatable(HINT).withStyle(ChatFormatting.GRAY));
     }
 
     /**

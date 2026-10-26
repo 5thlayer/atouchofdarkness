@@ -70,6 +70,8 @@ final class TorchTests {
         tests.test("torch_vanilla_torches_become_torches_and_broken_ones_drop_a_spent_torch", 10, TorchTests::vanillaTorches);
         tests.in("torch_burns_out", KeepsClock.INSTANCE)
                 .test("torch_burns_out_over_5_min_held_soul_twice_as_long_and_never_elsewhere", 20, TorchTests::burnsOut);
+        tests.in("torch_swapped", KeepsClock.INSTANCE)
+                .test("torch_swapped_out_of_hand_keeps_the_burn_it_owed", 10, TorchTests::swappedOut);
         tests.in("torch_relit", KeepsClock.INSTANCE)
                 .test("torch_spent_relit_by_each_means_burns_a_quarter_as_long_then_is_gone", 20, TorchTests::relit);
         tests.in("torch_rain", new AtNight(MoonPhase.FULL_MOON, Weather.Type.RAIN))
@@ -350,6 +352,23 @@ final class TorchTests {
             leave(spectator);
             leave(holder);
             leave(soulHolder);
+            helper.succeed();
+        });
+    }
+
+    /**
+     * A Torch held while the clock moves on less than a second, then swapped out of hand for the next
+     * hotbar slot, still burned for that time: swapping it away never dodges its burn.
+     */
+    private static void swappedOut(GameTestHelper helper) {
+        var player = caged(helper, 0);
+        player.setItemInHand(InteractionHand.MAIN_HAND, Light.TORCH.toStack());
+        helper.runAtTickTime(2, () -> KeepsClock.advance(helper, 10));
+        helper.runAtTickTime(4, () -> player.getInventory().setSelectedSlot(1));
+        helper.runAtTickTime(6, () -> {
+            var burning = player.getInventory().getItem(0).get(Light.BURNING);
+            helper.assertTrue(burning != null && burning.left() <= BURN - 10, "the Torch swapped out of hand burned " + burning);
+            leave(player);
             helper.succeed();
         });
     }

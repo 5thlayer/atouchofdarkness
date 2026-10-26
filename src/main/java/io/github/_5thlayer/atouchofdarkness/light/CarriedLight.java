@@ -4,6 +4,7 @@
 package io.github._5thlayer.atouchofdarkness.light;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
 
@@ -13,6 +14,7 @@ import net.minecraft.core.GlobalPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Blocks;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.attachment.AttachmentType;
@@ -52,6 +54,9 @@ public final class CarriedLight {
         long clock = NO_CLOCK;
         /** Ticks of the clock since then that their held Light Sources haven't yet burned. */
         long unburnt;
+        /** What the player's hands held last tick, which owe the unburnt ticks if they have left them. */
+        ItemStack main = ItemStack.EMPTY;
+        ItemStack off = ItemStack.EMPTY;
         /** Where the player's light was placed last tick, if anywhere, in whichever level they were in. */
         @Nullable GlobalPos lit;
     }
@@ -86,9 +91,12 @@ public final class CarriedLight {
             }
             VanillaTorches.convert(player);
             carrier.unburnt += elapsed;
-            long burnt = carrier.unburnt >= BURN_STEP ? carrier.unburnt : 0;
-            carrier.unburnt -= burnt;
-            burnHeld(player, burnt);
+            settleSwappedOut(player, carrier);
+            long toBurn = carrier.unburnt >= BURN_STEP ? carrier.unburnt : 0;
+            carrier.unburnt -= toBurn;
+            burnHeld(player, toBurn);
+            carrier.main = player.getMainHandItem();
+            carrier.off = player.getOffhandItem();
             int light = heldLight(player);
             if (light > 0) {
                 wanted.merge(eyes(player), light, Math::max);
@@ -113,6 +121,25 @@ public final class CarriedLight {
                         .forEach(player -> player.getData(CARRIER).lit = GlobalPos.of(level.dimension(), pos));
             }
         });
+    }
+
+    /**
+     * Once a stack has left the player's hands since last tick, what they held then pays the burn it owes,
+     * wherever it went, and the count starts afresh for what they hold now: swapping a Light Source out
+     * before its burn is written never dodges it, nor does one swapped in pay for another's.
+     */
+    private static void settleSwappedOut(ServerPlayer player, Carrier carrier) {
+        var was = List.of(carrier.main, carrier.off);
+        boolean swapped = was.stream().anyMatch(stack -> stack != player.getMainHandItem() && stack != player.getOffhandItem());
+        if (!swapped || carrier.unburnt == 0) {
+            return;
+        }
+        for (var stack : was) {
+            if (stack.getItem() instanceof HeldLightSource source) {
+                source.settle(stack, player, carrier.unburnt);
+            }
+        }
+        carrier.unburnt = 0;
     }
 
     private static void burnHeld(ServerPlayer player, long elapsed) {

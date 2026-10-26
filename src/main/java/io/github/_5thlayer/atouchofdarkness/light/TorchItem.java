@@ -53,23 +53,37 @@ public final class TorchItem extends Item implements HeldLightSource {
     @Override
     public ItemStack burnHeld(ItemStack stack, ServerPlayer player, long elapsed) {
         var burning = stack.get(Light.BURNING);
-        if (eyesUnderWater(player)) {
+        // Burnt down to nothing out of hand, it goes out once held again.
+        if (eyesUnderWater(player) || burning != null && burning.left() == 0) {
             return goneOut(burning);
         }
         if (elapsed == 0) {
             return stack;
         }
-        if (burning == null) {
-            burning = Burning.fresh(LightConfig.TORCH_BURN_TIME.getAsInt() * burnFactor);
+        var burnt = burnt(stack, player, elapsed);
+        if (burnt.left() == 0) {
+            return goneOut(burnt);
         }
+        stack.set(Light.BURNING, burnt);
+        return stack;
+    }
+
+    @Override
+    public void settle(ItemStack stack, ServerPlayer player, long elapsed) {
+        stack.set(Light.BURNING, burnt(stack, player, elapsed));
+    }
+
+    /** Its burn once the clock has moved on this far in the player's hand, twice as fast in rain under the open sky. */
+    private Burning burnt(ItemStack stack, ServerPlayer player, long elapsed) {
+        var burning = stack.getOrDefault(Light.BURNING, Burning.fresh(freshBurn()));
         // Above the eyes, as the carried light there hides the sky from its own block.
         int rate = player.level().isRainingAt(BlockPos.containing(player.getEyePosition()).above()) ? Burn.IN_RAIN : Burn.STILL;
-        int left = Burn.burn(burning.left(), elapsed, rate);
-        if (left == 0) {
-            return goneOut(burning);
-        }
-        stack.set(Light.BURNING, burning.withLeft(left));
-        return stack;
+        return burning.withLeft(Burn.burn(burning.left(), elapsed, rate));
+    }
+
+    /** A fresh one's burn, from the config: on a client, its own. */
+    private int freshBurn() {
+        return LightConfig.TORCH_BURN_TIME.getAsInt() * burnFactor;
     }
 
     /** A Spent Torch, or nothing for one already relit, so relighting is never endless light. */
@@ -92,7 +106,7 @@ public final class TorchItem extends Item implements HeldLightSource {
         builder.accept(Component.translatable(HINT).withStyle(ChatFormatting.GRAY));
         if (flag.isAdvanced()) {
             var burning = stack.get(Light.BURNING);
-            int left = burning == null ? LightConfig.TORCH_BURN_TIME.getAsInt() * burnFactor : burning.left();
+            int left = burning == null ? freshBurn() : burning.left();
             int seconds = Mth.positiveCeilDiv(left, SharedConstants.TICKS_PER_SECOND);
             builder.accept(Component.translatable(BURN_LEFT, String.format(Locale.ROOT, "%d:%02d", seconds / 60, seconds % 60))
                     .withStyle(ChatFormatting.DARK_GRAY));
