@@ -38,8 +38,10 @@
   "atouchofdarkness.jade.off": "Off",
   "atouchofdarkness.jade.empty": "Empty",
   "config.jade.plugin_atouchofdarkness.fuel": "Placed Campfire's and Lamp's fuel",
-  "emi.atouchofdarkness.info.fuel": "Any furnace fuel but a tool, used on a placed Lamp or Campfire, or clicked onto a Lamp in an inventory, adds %s times its furnace burn time to its fuel, up to its cap; the rest is lost. Caps: Campfire %s, Soul Campfire %s, Lamp %s, Soul Lamp %s.",
-  "emi.atouchofdarkness.info.relight": "A Spent Torch relights into a Torch that burns a quarter as long as a fresh one: use it with flint and steel, a fire charge, a burning Torch or a Lamp that is on in the other hand, or while looking at fire, lava or a lit campfire.",
-  "emi.atouchofdarkness.info.vanilla_lights": "Vanilla's torches, lanterns and campfires become the Pillar's own in a player's inventory, soul to soul: a torch a Torch, a lantern a full Lamp that is on, a campfire a Campfire.",
-  "emi.atouchofdarkness.info.no_recipe": "Vanilla's cheap light has no recipe here: its torches, lanterns, candles, campfires and the rest. The light config's vanillaLight switch brings the recipes back."
+  "emi.atouchofdarkness.info.fuel": "Use any furnace fuel but a tool on a placed Lamp or Campfire, or click it onto a Lamp in your inventory: it adds %s times its furnace burn time. Holds at most: Campfire %s, Soul Campfire %s, Lamp %s, Soul Lamp %s.",
+  "emi.atouchofdarkness.info.relight": "Relight a Spent Torch with flint and steel, a fire charge, or a lit Torch or Lamp in your other hand, or by using it at fire, lava or a lit campfire. It burns a quarter as long as a fresh Torch.",
+  "emi.atouchofdarkness.info.vanilla_lights": "In your inventory, a vanilla torch, lantern or campfire turns into one that burns out: a Torch, a full Lamp switched on, or a Campfire.",
+  "emi.atouchofdarkness.info.nightbrand": "Hold a single Spent Torch in the Dark for %s and it becomes a Nightbrand. Time out of the Dark doesn't reset it. One a day per player.",
+  "emi.atouchofdarkness.info.votive": "Set a Lamp on a gold block and use a Torch on it: the Lamp becomes a Lampad, the gold her Votive. A Votive without a Lampad summons a new one the same way.",
+  "emi.atouchofdarkness.info.no_recipe": "Vanilla's torches, lanterns, candles, campfires and other cheap lights can't be crafted. The vanillaLight config option brings their recipes back."
 }

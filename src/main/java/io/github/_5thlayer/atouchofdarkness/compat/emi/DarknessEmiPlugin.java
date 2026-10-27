@@ -9,14 +9,15 @@ import java.util.stream.Stream;
 import dev.emi.emi.api.EmiEntrypoint;
 import dev.emi.emi.api.EmiPlugin;
 import dev.emi.emi.api.EmiRegistry;
-import dev.emi.emi.api.recipe.EmiInfoRecipe;
 import dev.emi.emi.api.stack.EmiIngredient;
 import dev.emi.emi.api.stack.EmiStack;
 import io.github._5thlayer.atouchofdarkness.ATouchOfDarkness;
+import io.github._5thlayer.atouchofdarkness.lampad.Lampad;
 import io.github._5thlayer.atouchofdarkness.light.Burn;
 import io.github._5thlayer.atouchofdarkness.light.Light;
 import io.github._5thlayer.atouchofdarkness.light.TimeLeft;
 import io.github._5thlayer.atouchofdarkness.light.Unlit;
+import io.github._5thlayer.atouchofdarkness.nightbrand.Nightbrand;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
@@ -27,7 +28,8 @@ import net.minecraft.world.level.ItemLike;
 /**
  * The Pillar in EMI: its recipes are vanilla's crafting, which EMI shows unaided, so the plugin adds
  * only information pages for what no recipe shows: fuelling a placed light by hand, relighting a Spent
- * Torch, vanilla's lights becoming the Pillar's own, and vanilla's cheap light having no recipe.
+ * Torch, vanilla's lights becoming the Pillar's own, the Nightbrand darkened and the Votive made by
+ * summoning a Lampad rather than crafted, and vanilla's cheap light having no recipe.
  *
  * <p>Found by EMI's entrypoint scan and named nowhere else, so EMI stays a soft dependency.
  */
@@ -45,6 +47,8 @@ public final class DarknessEmiPlugin implements EmiPlugin {
                 Stream.of(EmiIngredient.of(ItemTags.LANTERNS)),
                 stacks(Items.TORCH, Items.SOUL_TORCH, Items.CAMPFIRE, Items.SOUL_CAMPFIRE, Items.SOUL_LANTERN,
                         Light.TORCH, Light.SOUL_TORCH, Light.CAMPFIRE_ITEM, Light.SOUL_CAMPFIRE_ITEM, Light.LAMP_ITEM, Light.SOUL_LAMP_ITEM)));
+        info(registry, "nightbrand", stacks(Nightbrand.NIGHTBRAND, Light.SPENT_TORCH), TimeLeft.clock(Nightbrand.fullDarkening()));
+        info(registry, "votive", stacks(Lampad.VOTIVE_ITEM, Items.GOLD_BLOCK, Light.LAMP_ITEM, Light.SOUL_LAMP_ITEM));
         // Each gone recipe's item, which its id names, waxing from honeycomb too.
         info(registry, "no_recipe", Unlit.RECIPES.stream().map(id -> id.withPath(path -> path.replace("_from_honeycomb", ""))).distinct().sorted()
                 .flatMap(id -> BuiltInRegistries.ITEM.getOptional(id).stream()).map(EmiStack::of));
@@ -55,7 +59,7 @@ public final class DarknessEmiPlugin implements EmiPlugin {
         List<EmiIngredient> ingredients = stacks.map(EmiIngredient.class::cast).toList();
         // EMI's own ids start with a slash for a recipe no data pack holds.
         var id = Identifier.fromNamespaceAndPath(ATouchOfDarkness.MOD_ID, "/info/" + name);
-        registry.addRecipe(new EmiInfoRecipe(ingredients, List.of(Component.translatable("emi.atouchofdarkness.info." + name, args)), id));
+        registry.addRecipe(new InfoPage(ingredients, Component.translatable("emi.atouchofdarkness.info." + name, args), id));
     }
 
     private static Stream<EmiStack> stacks(ItemLike... items) {
