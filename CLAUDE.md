@@ -25,6 +25,7 @@ Conventional commits: `<type>(<optional scope>): <summary>`, with the summary in
 
 - An acceptance criterion gets one game test at most, and one test may cover several criteria that share a setup.
 - JUnit only for the arithmetic a spec names, on a plain JVM.
+- The one exception: data the Pillar ships for a third-party mod, such as entries in its tags, gets a JUnit test of that data. A third-party mod is never game-tested, and the rest is a human check in the dev client.
 - A test never repeats one that exists: a Light Source that reuses carried light or the burn path tests only what is new to it.
 - Tests of a player in the Dark stand on the shared fixture: a survival player, the cage, and the light engine settled after each block placed.
 

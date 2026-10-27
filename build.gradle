@@ -24,12 +24,18 @@ repositories {
         url = 'https://api.modrinth.com/maven'
         content { includeGroup 'maven.modrinth' }
     }
+    // Tough As Nails and GlitchCore, its library.
+    maven {
+        url = 'https://maven.minecraftforge.net'
+        content { includeGroup 'com.github.glitchfiend' }
+    }
 }
 
-// Mods the dev client loads alongside the Pillar, to read a placed light's fuel (Jade) and look up
-// recipes and information pages (EMI) while trying it by hand. 26.1 has no per-run classpath, so they
-// go into the client's mods folder, which holds only what is listed here; the game tests run from
-// run/gametest and never load them, so they still prove the Pillar plays alone in vanilla.
+// Mods the dev client loads alongside the Pillar, to read a placed light's fuel (Jade), look up
+// recipes and information pages (EMI) and feel a Campfire's heat (Tough As Nails) while trying it by
+// hand. 26.1 has no per-run classpath, so they go into the client's mods folder, which holds only what
+// is listed here; the game tests run from run/gametest and never load them, so they still prove the
+// Pillar plays alone in vanilla.
 configurations {
     clientMods { transitive = false }
 }
@@ -49,6 +55,10 @@ dependencies {
     // EMI for 26.1 is the unofficial port.
     compileOnly 'curse.maven:emi-unofficial-port-1544558:8630349'
     clientMods 'curse.maven:emi-unofficial-port-1544558:8630349'
+    // Tough As Nails, a beta for 26.1.2, reads the Campfires from the tags the Pillar ships for it, so
+    // the Pillar compiles against none of it (#13). GlitchCore is its library.
+    clientMods 'com.github.glitchfiend:ToughAsNails-neoforge:26.1.2-21.11.0.6'
+    clientMods 'com.github.glitchfiend:GlitchCore-neoforge:26.1.2-26.1.2.0.2'
 }
 
 neoForge {

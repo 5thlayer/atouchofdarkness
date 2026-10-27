@@ -48,6 +48,16 @@ versionRange = "[1.1.24,)"
 ordering = "NONE"
 side = "CLIENT"
 
+# A lit Campfire warms and a lit Soul Campfire cools where Tough As Nails is loaded, by the entries the
+# Pillar adds to its heating_blocks and cooling_blocks tags (#13). Not required: no code calls it, and
+# the tags name only the Pillar's blocks, so any version reads them.
+[[dependencies.${mod_id}]]
+modId = "toughasnails"
+type = "optional"
+versionRange = "*"
+ordering = "NONE"
+side = "BOTH"
+
 # Puts out the Unlit blocks' light and empties their tag while vanilla's light is back (ADR 0003).
 [[mixins]]
 config = "${mod_id}.mixins.json"
