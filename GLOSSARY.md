@@ -72,6 +72,10 @@ _Avoid_: shrine, chest, altar
 A Spent Torch that a player has carried in the Dark until it has soaked the Dark up, which renews a Lampad's binding. Each player can darken only one a day. It gives no light and is not a Light Source.
 _Avoid_: steeped torch, dark torch, Stygian Torch
 
+**Vesper Dial**:
+This Pillar's gold instrument set around a Nightbrand, which, while carried, shows its carrier the light at their eyes and whether they are Lit. It shows nothing of the Grace Period, which is only ever felt. It gives no light, is not a Light Source, and never wears out.
+_Avoid_: light meter (the row it shows), photometer, lux meter, compass
+
 **Unlit**:
 A block that would give light in vanilla but gives none at all here, for every player and every mob, because this Pillar or a pack has put it out. Cheap light that can't lose its recipe is closed this way.
 _Avoid_: dimmed, ignored, light-blocked
