@@ -44,3 +44,5 @@ None beyond NeoForge, on Minecraft 26.1.2.
 ## License
 
 Per file: the code is LGPL-3.0-only and the content, textures and docs CC BY 4.0, as [LICENSE](LICENSE) says. Source is on [GitHub](https://github.com/5thlayer/atouchofdarkness). The Votive's and the Lampad's textures are built from Malcolm Riley's [unused-textures](https://github.com/malcolmriley/unused-textures), under CC BY 4.0; [NOTICE](NOTICE) credits each.
+
+This is a hobby project: I’m not monetizing any part of *A touch of* mods suite. I’m building it for fun, to see how far I can take it.
