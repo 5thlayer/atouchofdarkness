@@ -1,8 +1,10 @@
 # SPDX-FileCopyrightText: 2026 5thlayer
 # SPDX-License-Identifier: MIT
 
-# Temporary cover and icon, in the -works suite's style (Voidworks' make-cover.py), until an in-game
-# screenshot or an artist's art replaces them. Run from the repo root with Pillow installed.
+# Temporary cover and icon, the Lampad on her Votive among the lights, in the -works suite's style
+# (Voidworks' make-cover.py), until an in-game screenshot or an artist's art replaces them. They carry
+# Malcolm Riley's art through the Votive and the Lampad (NOTICE). Run from the repo root with Pillow
+# installed.
 import math
 import os
 import random
@@ -22,6 +24,27 @@ LIGHTS = [('torch', FLAME), ('soul_torch', SOUL), ('lamp_off', None), ('soul_lam
 
 def sprite(name, px):
     return Image.open(f'{T}{name}.png').convert('RGBA').resize((px, px), Image.NEAREST)
+
+
+def lampad(u):
+    # the Lampad seen from the front, each part the front face of its LampadModel cube, u pixels to a
+    # model unit: skirt, body, head, the right arm hanging and the left raised forward, so only its
+    # top shows, holding the Torch upright with the Nightbrand's dark flame
+    tex = Image.open('src/main/resources/assets/atouchofdarkness/textures/entity/lampad/lampad.png').convert('RGBA')
+    im = Image.new('RGBA', (24, 46))
+    # (u, v, w, h) of the face in the texture, then x, y in model units, the feet at y = 0 and the middle
+    # at x = 0, drawn at half units since the head sits half a unit off the grid
+    for fu, fv, w, h, x, y in [(29, 1, 7, 8, -3.5, -19), (6, 34, 8, 6, -4, -6), (4, 20, 6, 6, -3, -12), (7, 7, 7, 7, -3.5, -19),
+                               (34, 18, 2, 7, -5, -12), (42, 18, 2, 3, 3, -14), (49, 17, 1, 6, 3.5, -20),
+                               (54, 18, 2, 2, 3, -22)]:
+        face = tex.crop((fu, fv, fu + w, fv + h)).resize((2 * w, 2 * h), Image.NEAREST)
+        im.alpha_composite(face, (int(2 * x + 12), int(2 * y + 46)))
+    return im.resize((12 * u, 23 * u), Image.NEAREST)
+
+
+def votive(px):
+    return Image.open('src/main/resources/assets/atouchofdarkness/textures/block/votive_side.png').convert(
+        'RGBA').resize((px, px), Image.NEAREST)
 
 
 def glow(rgb, r):
@@ -44,7 +67,7 @@ def field(W, H, px, seed):
         v = rng.randrange(10, 22)
         x, y = rng.randrange(W), rng.randrange(H)
         d.point((x, y), fill=(v, v, v + 4))
-    slots = [(x, y) for y in (0.18, 0.82) for x in (0.12, 0.31, 0.5, 0.69, 0.88)]
+    slots = [(x, y) for y in (0.18, 0.82) for x in (0.12, 0.31, 0.5, 0.69, 0.88)][:-1]
     rng.shuffle(slots)
     for (fx, fy), (name, rgb) in zip(slots, LIGHTS * 2):
         cx, cy = int(fx * W + rng.uniform(-0.04, 0.04) * W), int(fy * H)
@@ -53,6 +76,11 @@ def field(W, H, px, seed):
             img.alpha_composite(g, (cx - g.width // 2, cy - g.height // 2))
         s = sprite(name, px)
         img.alpha_composite(s, (cx - px // 2, cy - px // 2))
+    # the Lampad on her Votive, in the last slot, the Votive sunk into the bottom edge to give her room
+    v, l = votive(px), lampad(px * 6 // 80)
+    vx, vy = int(0.88 * W) - px // 2, H - px * 3 // 5
+    img.alpha_composite(v, (vx, vy))
+    img.alpha_composite(l, (vx + (px - l.width) // 2, vy - l.height))
     return img
 
 

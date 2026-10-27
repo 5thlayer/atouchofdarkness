@@ -36,7 +36,6 @@ path = [
     "LICENSE",
     "NOTICE",
     "publish/summary.txt",
-    "publish/*.png",
 ]
 SPDX-FileCopyrightText = "2026 5thlayer"
 SPDX-License-Identifier = "CC-BY-4.0"
@@ -69,6 +68,7 @@ path = [
     "src/main/resources/assets/atouchofdarkness/textures/block/votive_top.png",
     "src/main/resources/assets/atouchofdarkness/textures/entity/lampad/lampad.png",
     "src/main/resources/assets/atouchofdarkness/textures/entity/lampad/lampad_statue.png",
+    "publish/*.png",
 ]
 precedence = "override"
 SPDX-FileCopyrightText = ["Malcolm Riley", "2026 5thlayer"]
