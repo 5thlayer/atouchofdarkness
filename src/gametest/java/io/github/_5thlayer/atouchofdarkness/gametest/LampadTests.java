@@ -7,6 +7,9 @@ import static io.github._5thlayer.atouchofdarkness.gametest.DarkFixture.*;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.LockSupport;
+import java.util.function.BooleanSupplier;
 
 import io.github._5thlayer.atouchofdarkness.lampad.Lampad;
 import io.github._5thlayer.atouchofdarkness.lampad.LampadEntity;
@@ -233,7 +236,7 @@ final class LampadTests {
             votiveEntity.setItem(VotiveBlockEntity.NIGHTBRAND, Nightbrand.NIGHTBRAND.toStack());
             votiveEntity.setItem(VotiveBlockEntity.GOLD, new ItemStack(Items.GOLD_NUGGET, 5));
         }
-        // Once both chunks tick their Lampads, which a forced chunk may take a tick or two to.
+        // Once both Lampads have ticked.
         helper.succeedWhen(() -> {
             assertHolds(helper, votiveEntities.get(0), VotiveBlockEntity.NIGHTBRAND, Nightbrand.NIGHTBRAND.get(), 0);
             assertHolds(helper, votiveEntities.get(1), VotiveBlockEntity.NIGHTBRAND, Nightbrand.NIGHTBRAND.get(), 0);
@@ -244,7 +247,11 @@ final class LampadTests {
         });
     }
 
-    /** Forces the chunks from one corner to the other loaded; those it forced. */
+    /**
+     * Forces the chunks from one corner to the other loaded, and holds the server until each ticks its
+     * entities; those it forced. The game-test server ticks unthrottled while a forced chunk loads off its
+     * thread, so the hold is in wall time, as vanilla's own for a test's structure is, not in ticks.
+     */
     private static List<ChunkPos> forceLoaded(GameTestHelper helper, BlockPos from, BlockPos to) {
         var level = helper.getLevel();
         var low = ChunkPos.containing(helper.absolutePos(from));
@@ -257,6 +264,23 @@ final class LampadTests {
                 }
             }
         }
+        BooleanSupplier ticking = () -> {
+            for (int x = Math.min(low.x(), high.x()); x <= Math.max(low.x(), high.x()); x++) {
+                for (int z = Math.min(low.z(), high.z()); z <= Math.max(low.z(), high.z()); z++) {
+                    if (!level.isPositionEntityTicking(new ChunkPos(x, z).getWorldPosition())) {
+                        return false;
+                    }
+                }
+            }
+            return true;
+        };
+        var deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(10);
+        while (!ticking.getAsBoolean() && System.nanoTime() < deadline) {
+            if (!level.getChunkSource().pollTask()) {
+                LockSupport.parkNanos(100_000);
+            }
+        }
+        helper.assertTrue(ticking.getAsBoolean(), "the forced chunks tick no entities after 10 s");
         return forced;
     }
 
