@@ -1,9 +1,9 @@
 # SPDX-FileCopyrightText: 2026 5thlayer
 # SPDX-License-Identifier: MIT
 
-# Temporary cover and icon, the Lampad on her Votive among the lights, in the -works suite's style
+# Temporary cover and icon, the Lampad peering over the title among the lights, in the -works suite's style
 # (Voidworks' make-cover.py), until an in-game screenshot or an artist's art replaces them. They carry
-# Malcolm Riley's art through the Votive and the Lampad (NOTICE). Run from the repo root with Pillow
+# Malcolm Riley's art through the Lampad (NOTICE). Run from the repo root with Pillow
 # installed.
 import math
 import os
@@ -42,11 +42,6 @@ def lampad(u):
     return im.resize((12 * u, 23 * u), Image.NEAREST)
 
 
-def votive(px):
-    return Image.open('src/main/resources/assets/atouchofdarkness/textures/block/votive_side.png').convert(
-        'RGBA').resize((px, px), Image.NEAREST)
-
-
 def glow(rgb, r):
     # a pool of light that falls off to nothing, as the Dark closes in around it
     im = Image.new('RGBA', (2 * r, 2 * r))
@@ -58,8 +53,9 @@ def glow(rgb, r):
     return im
 
 
-def field(W, H, px, seed):
-    # the Dark, with a few lights scattered through it, kept clear of the title band
+def field(W, H, px, seed, clear):
+    # the Dark, with a few lights scattered through it, kept clear of the title band and, above it, of
+    # the Lampad between the fractions of the width in clear
     rng = random.Random(seed)
     img = Image.new('RGBA', (W, H), BG + (255,))
     d = ImageDraw.Draw(img)
@@ -67,7 +63,8 @@ def field(W, H, px, seed):
         v = rng.randrange(10, 22)
         x, y = rng.randrange(W), rng.randrange(H)
         d.point((x, y), fill=(v, v, v + 4))
-    slots = [(x, y) for y in (0.18, 0.82) for x in (0.12, 0.31, 0.5, 0.69, 0.88)][:-1]
+    slots = [(x, y) for y in (0.18, 0.82) for x in (0.12, 0.31, 0.5, 0.69, 0.88)
+             if y > 0.5 or not clear[0] <= x <= clear[1]]
     rng.shuffle(slots)
     for (fx, fy), (name, rgb) in zip(slots, LIGHTS * 2):
         cx, cy = int(fx * W + rng.uniform(-0.04, 0.04) * W), int(fy * H)
@@ -76,12 +73,15 @@ def field(W, H, px, seed):
             img.alpha_composite(g, (cx - g.width // 2, cy - g.height // 2))
         s = sprite(name, px)
         img.alpha_composite(s, (cx - px // 2, cy - px // 2))
-    # the Lampad on her Votive, in the last slot, the Votive sunk into the bottom edge to give her room
-    v, l = votive(px), lampad(px * 6 // 80)
-    vx, vy = int(0.88 * W) - px // 2, H - px * 3 // 5
-    img.alpha_composite(v, (vx, vy))
-    img.alpha_composite(l, (vx + (px - l.width) // 2, vy - l.height))
     return img
+
+
+def stand(img, cx, top, bottom, margin):
+    # the Lampad behind the band from top to bottom: as large as her head and raised Torch fit above
+    # it, the 10 units above her neck, so she peers over it, and no larger than the band hides the rest
+    u = min((top - margin) // 10, (bottom - top) // 12)
+    l = lampad(u)
+    img.alpha_composite(l, (cx - l.width // 2, top + 12 * u - l.height))
 
 
 def font(names, size):
@@ -91,9 +91,10 @@ def font(names, size):
     raise SystemExit('needs one of ' + ', '.join(names))
 
 
-def make(W, H, out, title_size, px, stacked=False):
-    # stacked puts the pill above the word, for the square icon
-    img = field(W, H, px, 7)
+def make(W, H, out, title_size, px, lampad_x, stacked=False):
+    # stacked puts "A touch of" above the word, for the square icon; lampad_x is where the Lampad
+    # stands, a fraction of the width
+    img = field(W, H, px, 7, (lampad_x - 0.2, lampad_x + 0.2))
     f1 = font(['/System/Library/Fonts/Supplemental/Impact.ttf', '/usr/share/fonts/TTF/impact.ttf',
                os.path.expanduser('~/.local/share/fonts/msfonts/impact.ttf'),
                '/usr/share/fonts/noto/NotoSans-Black.ttf'], title_size)
@@ -108,6 +109,7 @@ def make(W, H, out, title_size, px, stacked=False):
     bw, ph = w2 + 2 * gap, (h2 + 2 * pad if stacked else h1)
     th = ph + gap + h1 if stacked else h1
     cy, bh = H // 2, int(th + title_size * 0.6)
+    stand(img, int(lampad_x * W), cy - bh // 2, cy + bh // 2, H // 50)
     band = Image.new('RGBA', (W, H), (0, 0, 0, 0))
     ImageDraw.Draw(band).rectangle([0, cy - bh // 2, W, cy + bh // 2], fill=(4, 4, 6, 235))
     img = Image.alpha_composite(img, band)
@@ -130,5 +132,5 @@ def make(W, H, out, title_size, px, stacked=False):
     img.convert('RGB').save(out)
 
 
-make(1280, 640, 'publish/atouchofdarkness-cover.png', 150, 80)
-make(512, 512, 'publish/atouchofdarkness-icon.png', 84, 56, stacked=True)
+make(1280, 640, 'publish/atouchofdarkness-cover.png', 150, 80, 0.86)
+make(512, 512, 'publish/atouchofdarkness-icon.png', 84, 56, 0.5, stacked=True)
