@@ -2,11 +2,13 @@
 
 ![A Touch of Darkness](https://raw.githubusercontent.com/5thlayer/atouchofdarkness/main/publish/atouchofdarkness-cover.png)
 
-<!-- For players, written by the maintainer and never by an agent: what A Touch of Darkness is, why it exists
-and how it feels to play. It is also the Modrinth and CurseForge description
-(docs/agents/publishing.md). The technical sections go below it. -->
+This mod as the other series of *A touch of* is inspired by one of the game Don't Starve mechanics: the dark is dangerous and can kill you.
 
-The Dark strikes anyone who stays unlit, and every light burns out.
+If you play in survival and the light at your eyes drops below 5 you get ten seconds there before the Babau strikes. You never see it, and it hits for 10 damage on Normal, then again every ten seconds until you find light. A full moon keeps you safe under open sky unless it rains, and the End’s sky always does. Night Vision doesn’t count.
+
+Light is now something you carry and feed. Vanilla’s torches, lanterns, candles, campfires, glowstone and the rest have no recipe, and redstone torches, glow lichen and amethyst give no light at all. Any vanilla torch, lantern or campfire you pick up becomes the mod’s own item. A Torch lights you only while held in hand, and it burns out in five minutes. You can relight a spent torch once with flint and steel or any fire, for a quarter of the time. Campfires and Lamps take any furnace fuel. A Lamp holds a day’s worth, you can carry it or place it, and it burns only while it’s on.
+
+The Dark also gives something back. Holding a Spent Torch while you’re in the Dark slowly darkens it into a Nightbrand, one per player per day. Set a Lamp on a gold block and kindle it with a Torch, and it becomes the **Lampad**, a small robed figure who tends your Lamps. The gold becomes her Votive, where you leave fuel, gold nuggets and a Nightbrand. She carries the fuel to every placed Lamp nearby. Each week she takes a Nightbrand to stay bound, plus a nugget for every eight Lamps she looks after, and without one she stands still as a statue. She can be hurt, and when she is she stops working and goes to heal in the dark.
 
 ## For pack authors
 
