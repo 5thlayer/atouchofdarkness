@@ -13,12 +13,16 @@ This Pillar.
 _Avoid_: Module (a FactoryWorks mod), Library, Binding
 
 **A Touch Of**:
-The suite this Pillar belongs to, with A Touch of Madness and A Touch of Cold.
+The suite this Pillar belongs to, with A Touch of Wickedness and A Touch of Madness.
 _Avoid_: FactoryWorks (another suite), the Pack
 
 **Consumer**:
 A modpack that loads this Pillar.
 _Avoid_: client (collides with the game's client side), dependent, integration
+
+**Tough As Nails**:
+The mod the suite leaves cold and heat to, which a Consumer may load beside this Pillar. The Pillar works with it where it is loaded and never requires it.
+_Avoid_: TAN, A Touch of Cold (shelved), temperature mod
 
 ### The Dark
 
@@ -49,8 +53,12 @@ This Pillar's lantern: a Light Source carried or placed, turned on and off by ha
 _Avoid_: lantern (vanilla's block), FE lamp (not made yet)
 
 **Campfire**:
-This Pillar's placed fire, put down already burning and fed fuel by hand up to what it can hold; its light dims as its fuel runs down.
+This Pillar's placed fire, put down already burning and fed fuel by hand up to what it can hold; its light dims as its fuel runs down. Where Tough As Nails is loaded it warms those near it while it is lit, however full.
 _Avoid_: fire pit, bonfire
+
+**Soul Campfire**:
+The Campfire's soul kind, dimmer, which cools those near it while it is lit where Tough As Nails is loaded, as the Campfire warms them.
+_Avoid_: blue campfire, cold fire
 
 **Lampad**:
 A torch-bearing spirit of the underworld, after Hecate's nymphs, summoned from a Lamp set on gold and kindled with a Torch, the gold becoming her Votive. She carries fuel from her Votive into the placed Lamps around it, never Campfires, and takes gold from it as they grow in number. Her binding fades within a week, and once it has faded she stands dormant until a Nightbrand renews it. Hurt, she retreats to the Dark and tends nothing until she has healed. She gives no light and is not a Light Source.
