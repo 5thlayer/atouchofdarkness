@@ -4,6 +4,8 @@ Written for Consumers: what a mod building against A Touch of Darkness can use, 
 
 ## Unreleased
 
+## 0.1.0
+
 - The Pillar has its own creative tab, "A Touch of Darkness", and no longer nests `libworks-runtime` or fills its Works tab.
 - The Dark: a survival player in a dimension type tagged `atouchofdarkness:dark` (by default the Overworld, the Nether and the End) whose eyes are below light 5, as the open sky is at night, loses a 10 s Grace Period, which refills after 2 s of unbroken light and on respawn. When it runs out, the Babau, never seen, lands a Strike, then every 10 s in the Dark: the damage type `atouchofdarkness:strike`, 10 on Normal before armour, scaled to 0 / 5 / 15 on Peaceful / Easy / Hard by the `DamageScaling` `atouchofdarkness:strike` and the `DeathMessageType` `atouchofdarkness:strike`, which picks one of four death messages naming the Babau. Creative and Spectator players and non-players are never struck, and Night Vision isn't light.
 - The sky lights the Dark: a player whose eyes see the sky is Lit at night under a full moon unless it's raining, and always under the sky of a dimension type tagged `atouchofdarkness:sky_always_lit` (by default the End). Under a roof, or in the Nether, only the light at their eyes counts.
