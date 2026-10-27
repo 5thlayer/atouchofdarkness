@@ -17,7 +17,7 @@ import net.minecraft.world.item.ItemStack;
 
 /**
  * The Pillar has its own creative tab, "A Touch of Darkness", and every item of the Pillar is in it,
- * in {@code DarknessTab}'s order, and in no other tab. Every item the Pillar registers is listed here,
+ * in {@code DarknessTab}'s order, where it first appears, and in no other tab. Every item the Pillar registers is listed here,
  * so a new item fails the tests until it is.
  */
 final class CreativeTabTests {
@@ -66,7 +66,8 @@ final class CreativeTabTests {
 
     private static void inOrder(GameTestHelper helper) {
         rebuild(helper);
-        var shown = pathsIn(BuiltInRegistries.CREATIVE_MODE_TAB.getValueOrThrow(DarknessTab.KEY));
+        // Each Lamp is shown twice, empty and full: an item is in order where it first appears.
+        var shown = pathsIn(BuiltInRegistries.CREATIVE_MODE_TAB.getValueOrThrow(DarknessTab.KEY)).stream().distinct().toList();
         if (!shown.equals(TAB_ORDER)) {
             helper.fail("the tab shows " + shown + ", not " + TAB_ORDER);
             return;
