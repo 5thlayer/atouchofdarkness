@@ -1,0 +1,106 @@
+# SPDX-FileCopyrightText: 2026 5thlayer
+# SPDX-License-Identifier: MIT
+
+# Temporary cover and icon, in the -works suite's style (Voidworks' make-cover.py), until an in-game
+# screenshot or an artist's art replaces them. Run from the repo root with Pillow installed.
+import math
+import os
+import random
+
+from PIL import Image, ImageDraw, ImageFont
+
+T = 'src/main/resources/assets/atouchofdarkness/textures/item/'
+BG = (8, 8, 12)
+ACCENT = (196, 86, 255)  # violet, the Nightbrand's
+FLAME = (255, 168, 64)  # a Torch's flame
+SOUL = (96, 220, 236)  # a soul Torch's flame
+# each light with the glow it casts. The lit Lamp's item model is vanilla's lantern, which the cover
+# can't hold (libworks ADR 0012), so the Lamps stand dark beside the Spent Torch and the Nightbrand.
+LIGHTS = [('torch', FLAME), ('soul_torch', SOUL), ('lamp_off', None), ('soul_lamp_off', None),
+          ('spent_torch', None), ('nightbrand', None)]
+
+
+def sprite(name, px):
+    return Image.open(f'{T}{name}.png').convert('RGBA').resize((px, px), Image.NEAREST)
+
+
+def glow(rgb, r):
+    # a pool of light that falls off to nothing, as the Dark closes in around it
+    im = Image.new('RGBA', (2 * r, 2 * r))
+    for y in range(2 * r):
+        for x in range(2 * r):
+            d = math.hypot(x - r, y - r) / r
+            if d < 1:
+                im.putpixel((x, y), rgb + (int(150 * (1 - d) ** 2),))
+    return im
+
+
+def field(W, H, px, seed):
+    # the Dark, with a few lights scattered through it, kept clear of the title band
+    rng = random.Random(seed)
+    img = Image.new('RGBA', (W, H), BG + (255,))
+    d = ImageDraw.Draw(img)
+    for _ in range(W * H // 900):
+        v = rng.randrange(10, 22)
+        x, y = rng.randrange(W), rng.randrange(H)
+        d.point((x, y), fill=(v, v, v + 4))
+    slots = [(x, y) for y in (0.18, 0.82) for x in (0.12, 0.31, 0.5, 0.69, 0.88)]
+    rng.shuffle(slots)
+    for (fx, fy), (name, rgb) in zip(slots, LIGHTS * 2):
+        cx, cy = int(fx * W + rng.uniform(-0.04, 0.04) * W), int(fy * H)
+        if rgb:
+            g = glow(rgb, int(px * 2.4))
+            img.alpha_composite(g, (cx - g.width // 2, cy - g.height // 2))
+        s = sprite(name, px)
+        img.alpha_composite(s, (cx - px // 2, cy - px // 2))
+    return img
+
+
+def font(names, size):
+    for n in names:
+        if os.path.exists(n):
+            return ImageFont.truetype(n, size)
+    raise SystemExit('needs one of ' + ', '.join(names))
+
+
+def make(W, H, out, title_size, px, stacked=False):
+    # stacked puts the pill above the word, for the square icon
+    img = field(W, H, px, 7)
+    f1 = font(['/System/Library/Fonts/Supplemental/Impact.ttf', '/usr/share/fonts/TTF/impact.ttf',
+               os.path.expanduser('~/.local/share/fonts/msfonts/impact.ttf'),
+               '/usr/share/fonts/noto/NotoSans-Black.ttf'], title_size)
+    f2 = font(['/System/Library/Fonts/Supplemental/Apple Chancery.ttf', '/usr/share/fonts/gsfonts/Z003-MediumItalic.otf',
+               '/usr/share/fonts/urw-base35/Z003-MediumItalic.otf'], int(title_size * (0.62 if stacked else 0.55)))
+    # the -works title turned around: the suite's "A touch of" in a script, then the Pillar's word
+    w, a = 'A touch of', 'DARKNESS'
+    d = ImageDraw.Draw(img)
+    b1, b2 = d.textbbox((0, 0), a, font=f1), d.textbbox((0, 0), w, font=f2)
+    w1, w2, h1, h2 = b1[2] - b1[0], b2[2] - b2[0], b1[3] - b1[1], b2[3] - b2[1]
+    pad, gap, sh = int(title_size * 0.16), int(title_size * 0.1), max(3, title_size // 20)
+    bw, ph = w2 + 2 * gap, (h2 + 2 * pad if stacked else h1)
+    th = ph + gap + h1 if stacked else h1
+    cy, bh = H // 2, int(th + title_size * 0.6)
+    band = Image.new('RGBA', (W, H), (0, 0, 0, 0))
+    ImageDraw.Draw(band).rectangle([0, cy - bh // 2, W, cy + bh // 2], fill=(4, 4, 6, 235))
+    img = Image.alpha_composite(img, band)
+    d = ImageDraw.Draw(img)
+    lt = max(3, title_size // 25)
+    d.rectangle([0, cy - bh // 2, W, cy - bh // 2 + lt], fill=ACCENT)
+    d.rectangle([0, cy + bh // 2 - lt, W, cy + bh // 2], fill=ACCENT)
+    if stacked:
+        x, bt = (W - bw) // 2, cy - th // 2
+        tx, tt = (W - w1) // 2, bt + ph + gap
+    else:
+        x, bt = (W - (bw + gap + w1)) // 2, cy - h1 // 2
+        tx, tt = x + bw + gap, bt
+    sx, sy = x + gap - b2[0], bt + (ph - h2) // 2 - b2[1]
+    d.text((sx + sh, sy + sh), w, font=f2, fill=(0, 0, 0))
+    d.text((sx, sy), w, font=f2, fill=(240, 232, 214))
+    ty = tt - b1[1]
+    d.text((tx + sh - b1[0], ty + sh), a, font=f1, fill=(0, 0, 0))
+    d.text((tx - b1[0], ty), a, font=f1, fill=ACCENT)
+    img.convert('RGB').save(out)
+
+
+make(1280, 640, 'publish/atouchofdarkness-cover.png', 150, 80)
+make(512, 512, 'publish/atouchofdarkness-icon.png', 84, 56, stacked=True)
