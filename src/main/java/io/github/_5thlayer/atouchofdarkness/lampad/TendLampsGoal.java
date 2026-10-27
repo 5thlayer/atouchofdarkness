@@ -23,7 +23,7 @@ import org.jspecify.annotations.Nullable;
  * A Lampad's round, as a copper golem carries items between chests: to her Votive for one fuel item,
  * then to the nearest Lamp she tends that the whole of it fits, and in with it, a sound at each end and
  * a burst of flame at the Lamp. She sets out only when some Lamp has room for what her Votive holds,
- * or for what she still carries.
+ * or for what she still carries, and never while she is hurt.
  */
 final class TendLampsGoal extends Goal {
 
@@ -53,7 +53,7 @@ final class TendLampsGoal extends Goal {
 
     @Override
     public boolean canUse() {
-        if (lampad.isDormant() || lampad.tickCount < nextLook) {
+        if (lampad.isDormant() || lampad.isHurt() || lampad.tickCount < nextLook) {
             return false;
         }
         nextLook = lampad.tickCount + LOOK_INTERVAL;
@@ -63,7 +63,7 @@ final class TendLampsGoal extends Goal {
 
     @Override
     public boolean canContinueToUse() {
-        return !done && !lampad.isDormant() && lamp != null;
+        return !done && !lampad.isDormant() && !lampad.isHurt() && lamp != null;
     }
 
     @Override

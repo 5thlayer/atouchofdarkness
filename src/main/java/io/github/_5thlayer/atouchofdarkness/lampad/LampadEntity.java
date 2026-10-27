@@ -12,9 +12,11 @@ import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.PathfinderMob;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
@@ -37,12 +39,16 @@ import org.jspecify.annotations.Nullable;
  * takes a gold nugget from her Votive for each so many Lamps in range, rounded up, at its start and again
  * whenever more Lamps come into range than it has paid for, and tends only as many Lamps as its gold paid
  * for, nearest the Votive first. With no Nightbrand there, or no Votive, she stands dormant, a statue,
- * until one comes. She holds the Nightbrand of her binding and the Lamp she was summoned from. She gives no
- * light, and the Babau strikes only players.
+ * until one comes. She holds the Nightbrand of her binding, spent once it fades, and the Lamp she was
+ * summoned from, and drops both, with the fuel she carries, when she dies; the gold is lost. Dormant,
+ * she is a statue that a player's blow breaks, as if she had died. Mobs treat her as a passive mob, and
+ * fire never harms her. Hurt, she heals in the Dark by her {@link HealGoal} and tends nothing until
+ * she is whole, her binding fading all the while. She gives no light, and the Babau strikes only players.
  */
 public final class LampadEntity extends PathfinderMob {
 
     private static final EntityDataAccessor<Boolean> DORMANT = SynchedEntityData.defineId(LampadEntity.class, EntityDataSerializers.BOOLEAN);
+    private static final EntityDataAccessor<Boolean> HEALING = SynchedEntityData.defineId(LampadEntity.class, EntityDataSerializers.BOOLEAN);
 
     private static final String VOTIVE = "votive";
     private static final String BINDING = "binding";
@@ -68,6 +74,7 @@ public final class LampadEntity extends PathfinderMob {
         super(type, level);
         setPersistenceRequired();
         getNavigation().setRequiredPathLength(48F);
+        setGuaranteedDrop(EquipmentSlot.MAINHAND);
     }
 
     /** The copper golem's health and pace. */
@@ -79,10 +86,12 @@ public final class LampadEntity extends PathfinderMob {
     protected void defineSynchedData(SynchedEntityData.Builder builder) {
         super.defineSynchedData(builder);
         builder.define(DORMANT, true);
+        builder.define(HEALING, false);
     }
 
     @Override
     protected void registerGoals() {
+        goalSelector.addGoal(0, new HealGoal(this));
         goalSelector.addGoal(1, new TendLampsGoal(this));
         goalSelector.addGoal(5, new WaterAvoidingRandomStrollGoal(this, 0.6));
         goalSelector.addGoal(6, new LookAtPlayerGoal(this, Player.class, 6F));
@@ -111,6 +120,20 @@ public final class LampadEntity extends PathfinderMob {
                 playSound(SoundEvents.COPPER_GOLEM_SPAWN);
             }
         }
+    }
+
+    /** Short of her full health, so healing and tending nothing. */
+    public boolean isHurt() {
+        return getHealth() < getMaxHealth();
+    }
+
+    /** Healing in the Dark, as she is hurt. */
+    public boolean isHealing() {
+        return entityData.get(HEALING);
+    }
+
+    void setHealing(boolean healing) {
+        entityData.set(HEALING, healing);
     }
 
     @Nullable BlockPos votive() {
@@ -185,11 +208,12 @@ public final class LampadEntity extends PathfinderMob {
         }
     }
 
-    /** The next Nightbrand, and the gold its Lamps owe. */
+    /** The next Nightbrand, and the gold its Lamps owe; with none, the faded one is spent and she stands dormant. */
     private void renew(ServerLevel level, VotiveBlockEntity votiveEntity) {
         nuggets = 0;
         var next = votiveEntity.takeNightbrand();
         if (next.isEmpty()) {
+            nightbrand = ItemStack.EMPTY;
             setDormant(true);
             return;
         }
@@ -208,6 +232,31 @@ public final class LampadEntity extends PathfinderMob {
     @Override
     public boolean isPushable() {
         return super.isPushable() && !isDormant();
+    }
+
+    /** A statue breaks at a player's blow. */
+    @Override
+    public boolean hurtServer(ServerLevel level, DamageSource source, float damage) {
+        return super.hurtServer(level, source, isDormant() && source.getEntity() instanceof Player ? Float.MAX_VALUE : damage);
+    }
+
+    /** A statue breaks as a copper golem's does. */
+    @Override
+    protected @Nullable SoundEvent getDeathSound() {
+        return isDormant() ? SoundEvents.COPPER_GOLEM_STATUE_BREAK : super.getDeathSound();
+    }
+
+    /** The Lamp she was summoned from and the Nightbrand of her binding, besides the fuel she carries. */
+    @Override
+    protected void dropCustomDeathLoot(ServerLevel level, DamageSource source, boolean killedByPlayer) {
+        super.dropCustomDeathLoot(level, source, killedByPlayer);
+        for (var held : List.of(lamp, nightbrand)) {
+            if (!held.isEmpty()) {
+                spawnAtLocation(level, held);
+            }
+        }
+        lamp = ItemStack.EMPTY;
+        nightbrand = ItemStack.EMPTY;
     }
 
     /** Dead, her Votive has no Lampad, and summons one again. */

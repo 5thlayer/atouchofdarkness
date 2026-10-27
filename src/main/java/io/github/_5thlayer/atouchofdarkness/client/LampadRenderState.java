@@ -5,8 +5,9 @@ package io.github._5thlayer.atouchofdarkness.client;
 
 import net.minecraft.client.renderer.entity.state.ArmedEntityRenderState;
 
-/** What a Lampad's renderer draws from: the fuel in her hand, and whether she stands dormant. */
+/** What a Lampad's renderer draws from: the fuel in her hand, and whether she stands dormant or heals. */
 public final class LampadRenderState extends ArmedEntityRenderState {
 
     public boolean dormant;
+    public boolean healing;
 }

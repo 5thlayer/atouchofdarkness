@@ -41,9 +41,9 @@ public final class Lampad {
     private static final DeferredRegister.Entities ENTITIES = DeferredRegister.createEntities(ATouchOfDarkness.MOD_ID);
     private static final DeferredRegister<MenuType<?>> MENUS = DeferredRegister.create(Registries.MENU, ATouchOfDarkness.MOD_ID);
 
-    /** The copper golem's size, near enough. */
+    /** The copper golem's size, near enough. A torch-bearer of the underworld, fire never harms her. */
     public static final DeferredHolder<EntityType<?>, EntityType<LampadEntity>> LAMPAD = ENTITIES.registerEntityType("lampad", LampadEntity::new,
-            MobCategory.MISC, builder -> builder.sized(0.5F, 1.2F).eyeHeight(1.0F).clientTrackingRange(10));
+            MobCategory.MISC, builder -> builder.sized(0.5F, 1.2F).eyeHeight(1.0F).clientTrackingRange(10).fireImmune());
     public static final DeferredItem<SpawnEggItem> LAMPAD_SPAWN_EGG = ITEMS.registerItem("lampad_spawn_egg", SpawnEggItem::new,
             properties -> properties.spawnEgg(LAMPAD.get()));
 

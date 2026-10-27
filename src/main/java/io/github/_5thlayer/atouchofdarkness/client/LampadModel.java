@@ -19,7 +19,8 @@ import net.minecraft.world.entity.HumanoidArm;
  * The Lampad: a small robed nymph, her hair down her back, her left arm raising the Nightbrand of her
  * binding, its dark flame giving no light, and her right free for the fuel she carries. Walking, her
  * right arm and her robe swing and the dark flame bobs; dormant, she holds her statue pose, head bowed,
- * the Nightbrand still raised.
+ * the Nightbrand still raised. Healing in the Dark, she bows her head and draws the Nightbrand in to her
+ * breast, her right hand over it, and breathes slowly.
  */
 public final class LampadModel extends EntityModel<LampadRenderState> implements ArmedModel<LampadRenderState> {
 
@@ -72,6 +73,15 @@ public final class LampadModel extends EntityModel<LampadRenderState> implements
             head.xRot = 0.35F;
             rightArm.xRot = -0.2F;
             rightArm.zRot = 0.15F;
+            return;
+        }
+        if (state.healing) {
+            float breath = Mth.sin(state.ageInTicks * 0.05F) * 0.04F;
+            head.xRot = 0.5F + breath;
+            leftArm.xRot = -0.9F + breath;
+            leftArm.zRot = -0.35F;
+            rightArm.xRot = -1.1F + breath;
+            rightArm.zRot = 0.5F;
             return;
         }
         head.xRot = state.xRot * Mth.DEG_TO_RAD;
