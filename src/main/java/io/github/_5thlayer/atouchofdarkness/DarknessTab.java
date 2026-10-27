@@ -52,8 +52,11 @@ public final class DarknessTab {
         output.accept(Light.SPENT_TORCH);
         output.accept(Light.CAMPFIRE_ITEM);
         output.accept(Light.SOUL_CAMPFIRE_ITEM);
+        // Each Lamp as crafted, empty, and beside it one full of fuel and on, ready to use.
         output.accept(Light.LAMP_ITEM);
+        output.accept(Light.LAMP_ITEM.get().full());
         output.accept(Light.SOUL_LAMP_ITEM);
+        output.accept(Light.SOUL_LAMP_ITEM.get().full());
         output.accept(Nightbrand.NIGHTBRAND);
         output.accept(Lampad.VOTIVE_ITEM);
         output.accept(Lampad.LAMPAD_SPAWN_EGG);
