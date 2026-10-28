@@ -4,6 +4,8 @@ Written for Consumers: what a mod building against A Touch of Darkness can use, 
 
 ## Unreleased
 
+- The Vesper Dial, `atouchofdarkness:vesper_dial`: four gold ingots in a cross around a Nightbrand craft one, which stacks to 1, never wears out and gives no light. While it is in either hand it shows its carrier the meter `atouchofdarkness:light`, drawn by A Touch Of's Runtime, which the Pillar now nests and requires, `atouchof` 0.1.1 up to 0.2: a row of ten suns above the food bar, filled in half steps of the light at their eyes as the Dark measures it, out of 15, gold while they are Lit and a dim indigo while they are In the Dark. The state is the Dark's own Lit check, so a full moon or the End's sky shows gold at a low reading, and a dimension the Dark doesn't reach always shows gold. It shows nothing of the Grace Period or the Strikes, which stay felt. Its sprites are `atouchofdarkness:hud/light_{full,half,empty}`, with `_dark` versions, which a resource pack can replace (#32).
+
 ## 0.1.0
 
 - The Pillar has its own creative tab, "A Touch of Darkness", and no longer nests `libworks-runtime` or fills its Works tab.

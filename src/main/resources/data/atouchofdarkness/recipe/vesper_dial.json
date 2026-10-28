@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "tools",
+  "key": {
+    "#": "atouchofdarkness:nightbrand",
+    "X": "minecraft:gold_ingot"
+  },
+  "pattern": [
+    " X ",
+    "X#X",
+    " X "
+  ],
+  "result": {
+    "count": 1,
+    "id": "atouchofdarkness:vesper_dial"
+  }
+}

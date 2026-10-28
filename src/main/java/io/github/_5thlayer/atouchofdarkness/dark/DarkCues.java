@@ -24,8 +24,9 @@ import org.jspecify.annotations.Nullable;
 /**
  * How a player feels the Dark before it strikes: a sound on entering it, a warning 2 s before each
  * Strike and a sound for each Strike, every one with a subtitle in {@code sounds.json} and heard by
- * that player alone, and the {@link DarkState} sent to their client, whose vignette follows it. No meter,
- * and nothing on the Runtime's HUD.
+ * that player alone, and the {@link DarkState} sent to their client, whose vignette follows it. The
+ * Vesper Dial's meter shows the light and whether the player is Lit, but never the Grace Period or a
+ * Strike, which are only ever felt.
  */
 public final class DarkCues {
 

@@ -3,6 +3,7 @@
 
 package io.github._5thlayer.atouchofdarkness;
 
+import io.github._5thlayer.atouchofdarkness.dial.VesperDial;
 import io.github._5thlayer.atouchofdarkness.lampad.Lampad;
 import io.github._5thlayer.atouchofdarkness.light.Light;
 import io.github._5thlayer.atouchofdarkness.nightbrand.Nightbrand;
@@ -58,6 +59,7 @@ public final class DarknessTab {
         output.accept(Light.SOUL_LAMP_ITEM);
         output.accept(Light.SOUL_LAMP_ITEM.get().full());
         output.accept(Nightbrand.NIGHTBRAND);
+        output.accept(VesperDial.VESPER_DIAL);
         output.accept(Lampad.VOTIVE_ITEM);
         output.accept(Lampad.LAMPAD_SPAWN_EGG);
     }
