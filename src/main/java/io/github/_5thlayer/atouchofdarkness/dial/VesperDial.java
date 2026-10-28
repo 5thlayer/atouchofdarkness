@@ -23,7 +23,7 @@ import net.neoforged.neoforge.registries.DeferredRegister;
  * a player's hands, shows them the light meter {@code atouchofdarkness:light}, drawn by the Runtime
  * (suite ADR-0005). Each tick it hands the meter the light at their eyes as the Lit check measures it,
  * and whether that check finds them Lit, as a {@link LightReading}; in a dimension the Dark doesn't
- * reach, Lit. It shows nothing of the Grace Period or the Strikes, has no trend, gives no light and
+ * reach, Lit. Once the Dial is in neither hand the meter is cleared, and no longer drawn. It shows nothing of the Grace Period or the Strikes, has no trend, gives no light and
  * never wears out.
  */
 public final class VesperDial {
@@ -55,6 +55,9 @@ public final class VesperDial {
             if (carried(player)) {
                 var reading = LightReading.of(Dark.lightAtEyes(player), !Dark.reaches(player) || Dark.isLit(player));
                 meter.set(player, reading.value(), reading.state(), 0);
+            } else {
+                // Told to the client only if it was drawing the meter.
+                meter.clear(player);
             }
         }
     }
