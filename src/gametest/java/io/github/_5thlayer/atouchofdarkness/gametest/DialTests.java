@@ -11,7 +11,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import io.github._5thlayer.atouchof.meter.MeterPayload;
 import io.github._5thlayer.atouchof.meter.MeterSync;
-import io.github._5thlayer.atouchofdarkness.dial.LightReading;
+import io.github._5thlayer.atouchofdarkness.dial.LightState;
 import io.github._5thlayer.atouchofdarkness.dial.VesperDial;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.server.level.ServerPlayer;
@@ -22,9 +22,9 @@ import net.minecraft.world.item.ItemStack;
 /**
  * The Vesper Dial's meter: while a Dial is in either hand, the Pillar hands the Runtime the light at
  * the player's eyes, as the half steps of 15 the Runtime sends, and the Lit check's answer as its
- * state, and clears it once the Dial is in neither. The light and the Lit check are the Dark's own, tested there; what the Runtime draws is
- * checked by hand in the dev client, which no game test loads. Each test stands on the
- * {@link DarkFixture}, and every test's name starts {@code dial_}.
+ * state, and clears it once the Dial is in neither. The light and the Lit check are the Dark's own,
+ * tested there; what the Runtime draws is checked by hand in the dev client, which no game test
+ * loads. Each test stands on the {@link DarkFixture}, and every test's name starts {@code dial_}.
  */
 final class DialTests {
 
@@ -58,13 +58,13 @@ final class DialTests {
         var player = caged(helper, 10);
         player.setItemInHand(InteractionHand.MAIN_HAND, VesperDial.VESPER_DIAL.toStack());
         helper.startSequence()
-                .thenWaitUntil(() -> expectTold(helper, player, 14, LightReading.LIT))
+                .thenWaitUntil(() -> expectTold(helper, player, 14, LightState.LIT))
                 .thenExecute(() -> {
                     player.setItemInHand(InteractionHand.MAIN_HAND, ItemStack.EMPTY);
                     player.setItemInHand(InteractionHand.OFF_HAND, VesperDial.VESPER_DIAL.toStack());
                     light(helper, 15);
                 })
-                .thenWaitUntil(() -> expectTold(helper, player, 20, LightReading.LIT))
+                .thenWaitUntil(() -> expectTold(helper, player, 20, LightState.LIT))
                 .thenExecute(() -> leave(player))
                 .thenSucceed();
     }
@@ -74,7 +74,7 @@ final class DialTests {
         var player = caged(helper, 4);
         player.setItemInHand(InteractionHand.MAIN_HAND, VesperDial.VESPER_DIAL.toStack());
         helper.startSequence()
-                .thenWaitUntil(() -> expectTold(helper, player, 6, LightReading.IN_THE_DARK))
+                .thenWaitUntil(() -> expectTold(helper, player, 6, LightState.IN_THE_DARK))
                 .thenExecute(() -> leave(player))
                 .thenSucceed();
     }
@@ -84,7 +84,7 @@ final class DialTests {
         var player = caged(helper, 10);
         player.setItemInHand(InteractionHand.MAIN_HAND, VesperDial.VESPER_DIAL.toStack());
         helper.startSequence()
-                .thenWaitUntil(() -> expectTold(helper, player, 14, LightReading.LIT))
+                .thenWaitUntil(() -> expectTold(helper, player, 14, LightState.LIT))
                 .thenExecute(() -> {
                     player.setItemInHand(InteractionHand.MAIN_HAND, ItemStack.EMPTY);
                     // Past the hotbar: add() would take the empty selected slot, the main hand.
@@ -96,9 +96,9 @@ final class DialTests {
                 .thenSucceed();
     }
 
-    private static void expectTold(GameTestHelper helper, ServerPlayer player, int halves, int state) {
+    private static void expectTold(GameTestHelper helper, ServerPlayer player, int halves, LightState state) {
         var told = TOLD.get(player.getUUID());
-        helper.assertTrue(told != null && told.halves() == halves && told.state() == state && told.trend() == 0,
+        helper.assertTrue(told != null && told.halves() == halves && told.state() == state.ordinal() && told.trend() == 0,
                 "the meter was told " + told + ", not " + halves + " halves in state " + state + " with no trend");
     }
 }
