@@ -12,8 +12,10 @@ import net.minecraft.world.level.MoonPhase;
 
 /**
  * A test environment whose batch runs at midnight in the Overworld under one phase of the moon, in one
- * weather, both set back after it. The clock and the weather are the server's, so no test of another
- * hour can run beside it.
+ * weather, both set back after it. The clock is paused through the batch, since its test may start
+ * thousands of ticks after this setup, and dawn comes 4330 after midnight. The game-test server never
+ * cycles the weather, and the rain is set at once both ways, so none fades into this batch or the next.
+ * The clock and the weather are the server's, so no test of another hour can run beside it.
  */
 record AtNight(MoonPhase moon, TestEnvironmentDefinition.Weather.Type weather) implements TestEnvironmentDefinition<AtNight.Before> {
 
@@ -34,19 +36,28 @@ record AtNight(MoonPhase moon, TestEnvironmentDefinition.Weather.Type weather) i
         var overworld = level.registryAccess().getOrThrow(WorldClocks.OVERWORLD);
         long before = clocks.getTotalTicks(overworld);
         clocks.setTotalTicks(overworld, moon.startTick() + MIDNIGHT);
+        clocks.setPaused(overworld, true);
         var weatherBefore = new TestEnvironmentDefinition.Weather(weather).setup(level);
-        // The weather otherwise fades in over a second or more, Lit or not as it goes.
-        boolean raining = weather != TestEnvironmentDefinition.Weather.Type.CLEAR;
-        level.setRainLevel(raining ? 1F : 0F);
-        level.setThunderLevel(weather == TestEnvironmentDefinition.Weather.Type.THUNDER ? 1F : 0F);
-        level.updateSkyBrightness();
+        settle(level, weather);
         return new Before(before, weatherBefore);
     }
 
     @Override
     public void teardown(ServerLevel level, Before before) {
         new TestEnvironmentDefinition.Weather(weather).teardown(level, before.weather());
-        level.getServer().clockManager().setTotalTicks(level.registryAccess().getOrThrow(WorldClocks.OVERWORLD), before.clock());
+        var clocks = level.getServer().clockManager();
+        var overworld = level.registryAccess().getOrThrow(WorldClocks.OVERWORLD);
+        // The game-test server's clock always runs, so there is no pause to restore.
+        clocks.setPaused(overworld, false);
+        clocks.setTotalTicks(overworld, before.clock());
+        settle(level, before.weather());
+    }
+
+    /** The weather otherwise fades in or out over a second or more, Lit or not as it goes. */
+    private static void settle(ServerLevel level, TestEnvironmentDefinition.Weather.Type weather) {
+        level.setRainLevel(weather != TestEnvironmentDefinition.Weather.Type.CLEAR ? 1F : 0F);
+        level.setThunderLevel(weather == TestEnvironmentDefinition.Weather.Type.THUNDER ? 1F : 0F);
+        level.updateSkyBrightness();
     }
 
     @Override

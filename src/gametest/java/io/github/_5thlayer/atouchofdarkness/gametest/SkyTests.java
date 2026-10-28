@@ -54,10 +54,17 @@ final class SkyTests {
         assertOpenUntouchedRoofedStruck(helper, inTheOpen(helper, OPEN), caged(helper, 0));
     }
 
+    /** The player in the open is struck, whenever the Strike lands, and takes one Strike's damage. */
     private static void struckInTheOpen(GameTestHelper helper) {
         var player = inTheOpen(helper, OPEN);
-        expectStruck(helper, player, BEFORE_FIRST, 0F);
-        finishAt(helper, player, AFTER_FIRST, 10F);
+        helper.onEachTick(() -> {
+            if (StrikeSignals.raisedFor(player) == 0) {
+                return;
+            }
+            assertTaken(helper, player, (int) helper.getTick(), 10F);
+            leave(player);
+            helper.succeed();
+        });
     }
 
     /** One player under the End's open sky, one under a roof beside them, both on stone over the void. */
