@@ -6,7 +6,7 @@ plugins {
 }
 
 // A Touch Of's Runtime, which draws the Vesper Dial's meter (suite ADR-0005), and which a Pillar nests.
-def atouchofRange = '[0.1.1,0.2)'
+def atouchofRange = '[0.1.2,0.2)'
 
 // What the Module requires of other Modules, each as a range (libworks ADR 0003):
 libworks {
@@ -53,7 +53,7 @@ dependencies {
     jarJar('io.github.5thlayer:atouchof') {
         version {
             strictly atouchofRange
-            prefer '0.1.1'
+            prefer '0.1.2'
         }
     }
     // Jade for 26.1.2 is built on NeoForge 26.1.2.76, so it runs on our .77. Jade finds the Pillar's
