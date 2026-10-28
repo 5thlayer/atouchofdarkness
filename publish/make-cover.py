@@ -76,8 +76,9 @@ def glow(rgb, r):
 
 
 def field(W, H, px, seed, row, votive_x):
-    # the Dark, its lights in a row at the height row, spaced evenly with the Votive among them, in the
-    # place nearest the fraction of the width votive_x where the Lampad leans
+    # the Dark, its lights in a row at the height row with the Votive among them, beneath the Lampad at
+    # the fraction of the width votive_x: as many lights on either side of her as an even row would
+    # put there, spaced evenly between her and the edge
     rng = random.Random(seed)
     img = Image.new('RGBA', (W, H), BG + (255,))
     d = ImageDraw.Draw(img)
@@ -85,9 +86,10 @@ def field(W, H, px, seed, row, votive_x):
         v = rng.randrange(10, 22)
         x, y = rng.randrange(W), rng.randrange(H)
         d.point((x, y), fill=(v, v, v + 4))
-    xs = [(i + 0.5) / (len(LIGHTS) + 1) for i in range(len(LIGHTS) + 1)]
-    vx = min(xs, key=lambda x: abs(x - votive_x))
-    xs.remove(vx)
+    n = len(LIGHTS) + 1
+    k = min(range(n), key=lambda i: abs((i + 0.5) / n - votive_x))
+    xs = ([votive_x * (i + 0.5) / (k + 0.5) for i in range(k)]
+          + [1 - (1 - votive_x) * (i + 0.5) / (n - k - 0.5) for i in reversed(range(n - k - 1))])
     lights = LIGHTS[:]
     rng.shuffle(lights)
     for fx, (name, rgb) in zip(xs, lights):
@@ -98,7 +100,7 @@ def field(W, H, px, seed, row, votive_x):
         s = sprite(name, px)
         img.alpha_composite(s, (cx - px // 2, row - px // 2))
     v = votive(px)
-    img.alpha_composite(v, (int(vx * W) - px // 2, row + px // 2 - v.height))
+    img.alpha_composite(v, (int(votive_x * W) - px // 2, row + px // 2 - v.height))
     return img
 
 
@@ -123,7 +125,8 @@ def font(names, size):
 
 def make(W, H, out, title_size, px, lampad_x, band_y, stacked=False):
     # stacked puts "A touch of" above the word, for the square icon; lampad_x is where the Lampad
-    # leans, a fraction of the width, and band_y where the band's middle is, a fraction of the height
+    # leans, a fraction of the width or the letter of the word she stands over, and band_y where the
+    # band's middle is, a fraction of the height
     f1 = font(['/System/Library/Fonts/Supplemental/Impact.ttf', '/usr/share/fonts/TTF/impact.ttf',
                os.path.expanduser('~/.local/share/fonts/msfonts/impact.ttf'),
                '/usr/share/fonts/noto/NotoSans-Black.ttf'], title_size)
@@ -138,6 +141,15 @@ def make(W, H, out, title_size, px, lampad_x, band_y, stacked=False):
     bw, ph = w2 + 2 * gap, (h2 + 2 * pad if stacked else h1)
     th = ph + gap + h1 if stacked else h1
     cy, bh = int(band_y * H), int(th + title_size * 0.6)
+    if stacked:
+        x, bt = (W - bw) // 2, cy - th // 2
+        tx, tt = (W - w1) // 2, bt + ph + gap
+    else:
+        x, bt = (W - (bw + gap + w1)) // 2, cy - h1 // 2
+        tx, tt = x + bw + gap, bt
+    if isinstance(lampad_x, str):
+        i = a.index(lampad_x)
+        lampad_x = (tx - b1[0] + (d.textlength(a[:i], font=f1) + d.textlength(a[:i + 1], font=f1)) / 2) / W
     img = field(W, H, px, 7, (cy + bh // 2 + H) // 2, lampad_x)
     front, at = stand(img, int(lampad_x * W), cy - bh // 2, H // 50)
     band = Image.new('RGBA', (W, H), (0, 0, 0, 0))
@@ -148,12 +160,6 @@ def make(W, H, out, title_size, px, lampad_x, band_y, stacked=False):
     d.rectangle([0, cy - bh // 2, W, cy - bh // 2 + lt], fill=ACCENT)
     d.rectangle([0, cy + bh // 2 - lt, W, cy + bh // 2], fill=ACCENT)
     img.alpha_composite(front, at)
-    if stacked:
-        x, bt = (W - bw) // 2, cy - th // 2
-        tx, tt = (W - w1) // 2, bt + ph + gap
-    else:
-        x, bt = (W - (bw + gap + w1)) // 2, cy - h1 // 2
-        tx, tt = x + bw + gap, bt
     sx, sy = x + gap - b2[0], bt + (ph - h2) // 2 - b2[1]
     d.text((sx + sh, sy + sh), w, font=f2, fill=(0, 0, 0))
     d.text((sx, sy), w, font=f2, fill=(240, 232, 214))
@@ -163,5 +169,5 @@ def make(W, H, out, title_size, px, lampad_x, band_y, stacked=False):
     img.convert('RGB').save(out)
 
 
-make(1280, 640, 'publish/atouchofdarkness-cover.png', 150, 80, 0.9, 0.55)
-make(512, 512, 'publish/atouchofdarkness-icon.png', 84, 56, 0.5, 0.6, stacked=True)
+make(1280, 640, 'publish/atouchofdarkness-cover.png', 150, 80, 'E', 0.55)
+make(512, 512, 'publish/atouchofdarkness-icon.png', 84, 56, 2 / 3, 0.6, stacked=True)
