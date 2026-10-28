@@ -8,6 +8,7 @@ import java.util.function.Supplier;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
+import io.github._5thlayer.atouchof.signal.Strike;
 import io.github._5thlayer.atouchofdarkness.ATouchOfDarkness;
 import io.github._5thlayer.atouchofdarkness.discovery.Discoveries;
 import net.minecraft.core.BlockPos;
@@ -163,9 +164,13 @@ public final class Dark {
         }
     }
 
-    /** One Strike: the config's damage, which the damage type's scaling sets for the difficulty. */
+    /**
+     * One Strike: the config's damage, which the damage type's scaling sets for the difficulty, and the
+     * Runtime's {@link Strike} signal, raised whatever the damage dealt, Peaceful included (suite ADR-0004).
+     */
     private static void strike(ServerLevel level, ServerPlayer player) {
         player.hurtServer(level, level.damageSources().source(STRIKE), (float) DarkConfig.STRIKE_DAMAGE.getAsDouble());
+        Strike.raise(player);
         Discoveries.struck(player);
     }
 

@@ -45,8 +45,9 @@ final class DarkTests {
         tests.test("dark_respawned_player_has_a_full_grace_period", 330, DarkTests::respawnRefills);
         tests.test("dark_death_message_names_the_dark", QUIET + 5, DarkTests::deathMessage);
 
-        tests.in("peaceful", new WithDifficulty(Difficulty.PEACEFUL))
-                .test("dark_strike_deals_0_on_peaceful", AFTER_FIRST + 5, helper -> dealsOnTheDifficulty(helper, 0F));
+        var peaceful = tests.in("peaceful", new WithDifficulty(Difficulty.PEACEFUL));
+        peaceful.test("dark_strike_deals_0_on_peaceful", AFTER_FIRST + 5, helper -> dealsOnTheDifficulty(helper, 0F));
+        peaceful.test("dark_strike_raises_the_signal_on_peaceful", AFTER_FIRST + 5, DarkTests::raisesTheSignal);
         tests.in("easy", new WithDifficulty(Difficulty.EASY))
                 .test("dark_strike_deals_5_on_easy", AFTER_FIRST + 5, helper -> dealsOnTheDifficulty(helper, 5F));
         tests.in("hard", new WithDifficulty(Difficulty.HARD))
@@ -99,6 +100,25 @@ final class DarkTests {
         var player = caged(helper, 0);
         expectStruck(helper, player, BEFORE_FIRST, 0F);
         finishAt(helper, player, AFTER_FIRST, damage);
+    }
+
+    /**
+     * The Runtime's Strike signal is raised once for the Strike that deals nothing on Peaceful, so
+     * another Pillar may price it (suite ADR-0004).
+     */
+    private static void raisesTheSignal(GameTestHelper helper) {
+        var player = caged(helper, 0);
+        helper.runAtTickTime(BEFORE_FIRST, () -> assertRaised(helper, player, BEFORE_FIRST, 0));
+        helper.runAtTickTime(AFTER_FIRST, () -> {
+            assertRaised(helper, player, AFTER_FIRST, 1);
+            leave(player);
+            helper.succeed();
+        });
+    }
+
+    private static void assertRaised(GameTestHelper helper, ServerPlayer player, int tick, int times) {
+        int raised = StrikeSignals.raisedFor(player);
+        helper.assertTrue(raised == times, "by tick " + tick + " the Strike signal was raised " + raised + " times, not " + times);
     }
 
     private static void armourSoftens(GameTestHelper helper) {
