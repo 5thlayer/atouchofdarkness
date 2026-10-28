@@ -9,6 +9,8 @@ import java.util.function.Supplier;
 import io.github._5thlayer.atouchof.discovery.Discovery;
 import io.github._5thlayer.atouchofdarkness.ATouchOfDarkness;
 import io.github._5thlayer.atouchofdarkness.dark.DarkConfig;
+import io.github._5thlayer.atouchofdarkness.lampad.LampadEntity;
+import net.minecraft.advancements.CriteriaTriggers;
 import net.minecraft.advancements.CriterionTrigger;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.server.level.ServerPlayer;
@@ -67,5 +69,10 @@ public final class Discoveries {
 
     public static void darkening(ServerPlayer player) {
         DARKENING.get().trigger(player);
+    }
+
+    /** The player summoned the Lampad, as vanilla's {@code summoned_entity} hears of a golem built. */
+    public static void summoned(ServerPlayer player, LampadEntity lampad) {
+        CriteriaTriggers.SUMMONED_ENTITY.trigger(player, lampad);
     }
 }

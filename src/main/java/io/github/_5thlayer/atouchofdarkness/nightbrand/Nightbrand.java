@@ -49,9 +49,6 @@ public final class Nightbrand {
     /** The day of a player's last Nightbrand: none yet. */
     private static final long NEVER = Long.MIN_VALUE;
 
-    /** Ticks of the time of day from one dawn to the next. */
-    private static final long DAY = 24000;
-
     /**
      * The day, counted in dawns of the Overworld's clock, on which the player last darkened a Nightbrand.
      * Copied on death, so dying never buys a second one that day.
@@ -79,7 +76,7 @@ public final class Nightbrand {
             return;
         }
         int full = fullDarkening();
-        long today = Math.floorDiv(level.getOverworldClockTime(), DAY);
+        long today = Math.floorDiv(level.getOverworldClockTime(), LightConfig.DAY);
         for (ServerPlayer player : level.players()) {
             // A machine's fake player in the world is no one who took the risk.
             if (!player.isAlive() || player.isFakePlayer() || player.getData(DARKENED_ON) == today || !Dark.inTheDark(player)) {

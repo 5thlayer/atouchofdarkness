@@ -43,9 +43,6 @@ import org.jspecify.annotations.Nullable;
 @EmiEntrypoint
 public final class DarknessEmiPlugin implements EmiPlugin {
 
-    /** A day of game time, in ticks. */
-    private static final int DAY = 24000;
-
     @Override
     public void register(EmiRegistry registry) {
         // The caps from this side's config, as the tooltips read it.
@@ -61,7 +58,7 @@ public final class DarknessEmiPlugin implements EmiPlugin {
         info(registry, "votive", Discoveries.VOTIVE, stacks(Lampad.VOTIVE_ITEM, Items.GOLD_BLOCK, Light.LAMP_ITEM, Light.SOUL_LAMP_ITEM));
         info(registry, "dark", Discoveries.DARK, stacks(Light.TORCH, Light.SOUL_TORCH, Light.LAMP_ITEM, VesperDial.VESPER_DIAL));
         info(registry, "lampad", Discoveries.LAMPAD, stacks(Lampad.VOTIVE_ITEM, Nightbrand.NIGHTBRAND, Light.LAMP_ITEM),
-                LightConfig.LAMPAD_LAMPS_PER_NUGGET.getAsInt(), Math.ceilDiv(LightConfig.LAMPAD_BINDING.getAsInt(), DAY));
+                LightConfig.LAMPAD_LAMPS_PER_NUGGET.getAsInt(), Math.ceilDiv(LightConfig.LAMPAD_BINDING.getAsInt(), LightConfig.DAY));
         // Each gone recipe's item, which its id names, waxing from honeycomb too.
         info(registry, "no_recipe", null, Unlit.RECIPES.stream().map(id -> id.withPath(path -> path.replace("_from_honeycomb", ""))).distinct().sorted()
                 .flatMap(id -> BuiltInRegistries.ITEM.getOptional(id).stream()).map(EmiStack::of));

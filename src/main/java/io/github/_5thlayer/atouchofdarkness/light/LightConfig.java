@@ -8,9 +8,12 @@ import net.neoforged.neoforge.common.ModConfigSpec;
 /**
  * The Light Sources' common config, {@code atouchofdarkness-light.toml}, beside the Dark's. Every
  * number is a starting value to tune in play (suite ADR-0001). Times are in ticks of the time of day,
- * 24000 to a day.
+ * {@link #DAY} to a day.
  */
 public final class LightConfig {
+
+    /** A day of the time of day, in ticks. */
+    public static final int DAY = 24000;
 
     /** Its file, in the {@code config} folder. */
     public static final String FILE = "atouchofdarkness-light.toml";
