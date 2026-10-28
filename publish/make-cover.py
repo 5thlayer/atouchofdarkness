@@ -16,7 +16,7 @@ BG = (8, 8, 12)
 ACCENT = (196, 86, 255)  # violet, the Nightbrand's
 FLAME = (255, 168, 64)  # a Torch's flame
 SOUL = (96, 220, 236)  # a soul Torch's flame
-DUSK = (44, 32, 68)  # not light, the Nightbrand gives none, but a faint haze to lift it off the Dark
+DUSK = (56, 40, 88)  # not light, the Nightbrand gives none, but a faint haze to lift it off the Dark
 # each light with the glow it casts. The lit Lamp's item model is vanilla's lantern, which the cover
 # can't hold (libworks ADR 0012), so the Lamps stand dark beside the Spent Torch and the Nightbrand.
 LIGHTS = [('torch', FLAME), ('soul_torch', SOUL), ('lamp_off', None), ('soul_lamp_off', None),
@@ -67,7 +67,7 @@ def field(W, H, px, seed, clear):
     slots = [(x, y) for y in (0.18, 0.82) for x in (0.12, 0.31, 0.5, 0.69, 0.88)
              if y > 0.5 or not clear[0] <= x <= clear[1]]
     rng.shuffle(slots)
-    for (fx, fy), (name, rgb) in zip(slots, LIGHTS * 2):
+    for (fx, fy), (name, rgb) in zip(slots, LIGHTS):
         cx, cy = int(fx * W + rng.uniform(-0.04, 0.04) * W), int(fy * H)
         if rgb:
             g = glow(rgb, int(px * 2.4))
