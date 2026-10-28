@@ -104,7 +104,7 @@ public final class Dark {
      * Whether the player is Lit where the Dark reaches, and so always in a dimension it doesn't. Unlike
      * {@link #inTheDark}, it reads the Lit check alone, whatever the player's game mode.
      */
-    public static boolean isLitOrOutOfReach(ServerPlayer player) {
+    public static boolean isLitWhereReached(ServerPlayer player) {
         return !reaches(player) || isLit(player);
     }
 
