@@ -73,7 +73,7 @@ A Spent Torch that a player has carried in the Dark until it has soaked the Dark
 _Avoid_: steeped torch, dark torch, Stygian Torch
 
 **Vesper Dial**:
-This Pillar's gold instrument set around a Nightbrand, which, while carried, shows its carrier the light at their eyes and whether they are Lit. It shows nothing of the Grace Period, which is only ever felt. It gives no light, is not a Light Source, and never wears out.
+This Pillar's gold instrument, four gold ingots set around a Nightbrand, which, while in either of its carrier's hands, shows them the light at their eyes and whether they are Lit, as a meter on the Runtime's HUD. It shows nothing of the Grace Period, which is only ever felt. It gives no light, is not a Light Source, and never wears out.
 _Avoid_: light meter (the row it shows), photometer, lux meter, compass
 
 **Unlit**:

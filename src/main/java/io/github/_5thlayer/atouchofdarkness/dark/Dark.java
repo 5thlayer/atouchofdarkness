@@ -82,7 +82,7 @@ public final class Dark {
 
     /** Whether eyes at this block would be Lit, as a player's are. */
     public static boolean isLit(ServerLevel level, BlockPos eyes) {
-        if (level.getMaxLocalRawBrightness(eyes) >= DarkConfig.LIT_THRESHOLD.getAsInt()) {
+        if (lightAt(level, eyes) >= DarkConfig.LIT_THRESHOLD.getAsInt()) {
             return true;
         }
         // A dimension with no sky, such as the Nether, has no sky light, so it is never seen there.
@@ -90,6 +90,23 @@ public final class Dark {
             return false;
         }
         return level.dimensionTypeRegistration().is(SKY_ALWAYS_LIT) || underAFullMoon(level, eyes);
+    }
+
+    /**
+     * The light at the player's eyes, 0 to 15, as the Lit check measures it: the sky's dimmed for the
+     * hour and the weather, or the block light there, whichever is brighter, carried light included.
+     */
+    public static int lightAtEyes(ServerPlayer player) {
+        return lightAt(player.level(), BlockPos.containing(player.getEyePosition()));
+    }
+
+    private static int lightAt(ServerLevel level, BlockPos eyes) {
+        return level.getMaxLocalRawBrightness(eyes);
+    }
+
+    /** Whether the Dark reaches the player's dimension at all. */
+    public static boolean reaches(ServerPlayer player) {
+        return player.level().dimensionTypeRegistration().is(DIMENSIONS);
     }
 
     /** Night, a full moon, and no rain: a dimension with a fixed time, such as the End, has no night. */
@@ -103,7 +120,7 @@ public final class Dark {
      * nor in Spectator, and not Lit. The Pillar's one meaning of it, which everything the Dark does reads.
      */
     public static boolean inTheDark(ServerPlayer player) {
-        return player.level().dimensionTypeRegistration().is(DIMENSIONS) && !player.isCreative() && !player.isSpectator() && !isLit(player);
+        return reaches(player) && !player.isCreative() && !player.isSpectator() && !isLit(player);
     }
 
     /** Ticks the player could still spend in the Dark before the next Strike lands. */

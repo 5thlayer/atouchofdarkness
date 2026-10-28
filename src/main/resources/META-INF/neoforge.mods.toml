@@ -30,6 +30,14 @@ versionRange = "[${minecraft_version}]"
 ordering = "NONE"
 side = "BOTH"
 
+# A Touch Of's Runtime, nested in the jar, which draws the Vesper Dial's meter (#32).
+[[dependencies.${mod_id}]]
+modId = "atouchof"
+type = "required"
+versionRange = "${atouchof_range}"
+ordering = "AFTER"
+side = "BOTH"
+
 # Shows a placed Campfire's and Lamp's fuel in Jade's tooltip (#20). Not required: its plugin is only
 # loaded by Jade. The range is the Jade the plugin is compiled against.
 [[dependencies.${mod_id}]]

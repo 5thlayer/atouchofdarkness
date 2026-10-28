@@ -23,8 +23,8 @@ import net.neoforged.neoforge.client.network.event.RegisterClientPayloadHandlers
 /**
  * The screen's edge darkening as the player's Grace Period drains, from nothing when it is full to
  * vanilla's vignette at its darkest once it has run out, and clearing over a second in light. It
- * follows the {@link DarkState} the server sends, and is no meter: there is no number, and nothing on
- * the Runtime's HUD.
+ * follows the {@link DarkState} the server sends, and shows no number: the Vesper Dial's meter on the
+ * Runtime's HUD shows the light and whether the player is Lit, and nothing of the Grace Period.
  */
 @EventBusSubscriber(modid = ATouchOfDarkness.MOD_ID, value = Dist.CLIENT)
 public final class DarkVignette {

@@ -84,6 +84,7 @@ public final class ATouchOfDarknessGameTests {
         LampTests.register(tests);
         UnlitTests.register(tests);
         NightbrandTests.register(tests);
+        DialTests.register(tests);
         LampadTests.register(tests);
     }
 
