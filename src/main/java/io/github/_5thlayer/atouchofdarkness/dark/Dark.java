@@ -9,6 +9,7 @@ import com.mojang.serialization.Codec;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import io.github._5thlayer.atouchofdarkness.ATouchOfDarkness;
+import io.github._5thlayer.atouchofdarkness.discovery.Discoveries;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.Identifier;
@@ -165,6 +166,7 @@ public final class Dark {
     /** One Strike: the config's damage, which the damage type's scaling sets for the difficulty. */
     private static void strike(ServerLevel level, ServerPlayer player) {
         player.hurtServer(level, level.damageSources().source(STRIKE), (float) DarkConfig.STRIKE_DAMAGE.getAsDouble());
+        Discoveries.struck(player);
     }
 
     private static Identifier id(String path) {

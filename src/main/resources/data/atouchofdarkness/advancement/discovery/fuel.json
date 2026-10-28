@@ -1,0 +1,67 @@
+{
+  "parent": "atouchofdarkness:discovery/root",
+  "criteria": {
+    "lamp": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": "atouchofdarkness:lamp"
+          }
+        ]
+      }
+    },
+    "soul_lamp": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": "atouchofdarkness:soul_lamp"
+          }
+        ]
+      }
+    },
+    "campfire": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": "atouchofdarkness:campfire"
+          }
+        ]
+      }
+    },
+    "soul_campfire": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": "atouchofdarkness:soul_campfire"
+          }
+        ]
+      }
+    }
+  },
+  "display": {
+    "announce_to_chat": false,
+    "description": {
+      "translate": "advancements.atouchofdarkness.discovery.fuel.description"
+    },
+    "hidden": true,
+    "icon": {
+      "id": "atouchofdarkness:lamp"
+    },
+    "show_toast": true,
+    "title": {
+      "translate": "advancements.atouchofdarkness.discovery.fuel.title"
+    }
+  },
+  "requirements": [
+    [
+      "lamp",
+      "soul_lamp",
+      "campfire",
+      "soul_campfire"
+    ]
+  ]
+}

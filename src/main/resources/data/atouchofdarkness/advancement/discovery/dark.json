@@ -1,0 +1,27 @@
+{
+  "parent": "atouchofdarkness:discovery/root",
+  "criteria": {
+    "struck": {
+      "trigger": "atouchofdarkness:struck"
+    }
+  },
+  "display": {
+    "announce_to_chat": false,
+    "description": {
+      "translate": "advancements.atouchofdarkness.discovery.dark.description"
+    },
+    "hidden": true,
+    "icon": {
+      "id": "atouchofdarkness:soul_torch"
+    },
+    "show_toast": true,
+    "title": {
+      "translate": "advancements.atouchofdarkness.discovery.dark.title"
+    }
+  },
+  "requirements": [
+    [
+      "struck"
+    ]
+  ]
+}

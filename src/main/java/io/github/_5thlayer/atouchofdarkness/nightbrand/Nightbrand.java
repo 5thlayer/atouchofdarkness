@@ -9,6 +9,7 @@ import com.mojang.serialization.Codec;
 import io.github._5thlayer.atouchofdarkness.ATouchOfDarkness;
 import io.github._5thlayer.atouchofdarkness.dark.Dark;
 import io.github._5thlayer.atouchofdarkness.dark.DarkConfig;
+import io.github._5thlayer.atouchofdarkness.discovery.Discoveries;
 import io.github._5thlayer.atouchofdarkness.light.Light;
 import io.github._5thlayer.atouchofdarkness.light.LightConfig;
 import net.minecraft.core.component.DataComponentType;
@@ -91,6 +92,7 @@ public final class Nightbrand {
                     continue;
                 }
                 var darkening = stack.getOrDefault(DARKENING, new Darkening(0, full)).darken(1, full);
+                Discoveries.darkening(player);
                 if (darkening.done()) {
                     player.setItemInHand(hand, NIGHTBRAND.toStack());
                     player.setData(DARKENED_ON, today);

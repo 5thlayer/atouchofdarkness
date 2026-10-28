@@ -5,8 +5,10 @@ package io.github._5thlayer.atouchofdarkness.lampad;
 
 import io.github._5thlayer.atouchofdarkness.light.LampBlock;
 import io.github._5thlayer.atouchofdarkness.light.TorchItem;
+import net.minecraft.advancements.CriteriaTriggers;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.InteractionResult;
@@ -67,6 +69,9 @@ final class Summoning {
         lampad.summonedAt(below, lamp);
         level.addFreshEntity(lampad);
         votive.bind(lampad.getUUID());
+        if (player instanceof ServerPlayer serverPlayer) {
+            CriteriaTriggers.SUMMONED_ENTITY.trigger(serverPlayer, lampad);
+        }
         level.playSound(null, pos, SoundEvents.COPPER_GOLEM_SPAWN, SoundSource.NEUTRAL, 1F, 1F);
     }
 }

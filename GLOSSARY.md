@@ -4,7 +4,7 @@ The Pillar of A Touch Of that owns the Dark: a player who stays unlit too long i
 
 ## Language
 
-The Pillar's own terms, each with what it is and the words to avoid. The suite's terms (Pillar, Runtime, Dark, Light Source, Spent Torch) are defined in the A Touch Of glossary, in `5thlayer/atouchof`. `/domain-modeling` adds terms here as they are resolved.
+The Pillar's own terms, each with what it is and the words to avoid. The suite's terms (Pillar, Runtime, Discovery, Dark, Light Source, Spent Torch) are defined in the A Touch Of glossary, in `5thlayer/atouchof`. `/domain-modeling` adds terms here as they are resolved.
 
 ### Parties
 

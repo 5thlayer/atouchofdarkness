@@ -44,5 +44,22 @@
   "emi.atouchofdarkness.info.vanilla_lights": "In your inventory, a vanilla torch, lantern or campfire turns into one that burns out: a Torch, a full Lamp switched on, or a Campfire.",
   "emi.atouchofdarkness.info.nightbrand": "Hold a single Spent Torch in the Dark for %s and it becomes a Nightbrand. Time out of the Dark doesn't reset it. One a day per player.",
   "emi.atouchofdarkness.info.votive": "Set a Lamp on a gold block and use a Torch on it: the Lamp becomes a Lampad, the gold her Votive. A Votive without a Lampad summons a new one the same way.",
-  "emi.atouchofdarkness.info.no_recipe": "Vanilla's torches, lanterns, candles, campfires and other cheap lights can't be crafted. The vanillaLight config option brings their recipes back."
+  "emi.atouchofdarkness.info.no_recipe": "Vanilla's torches, lanterns, candles, campfires and other cheap lights can't be crafted. The vanillaLight config option brings their recipes back.",
+  "emi.atouchofdarkness.info.dark": "Where the light at your eyes is too dim, you are in the Dark; enough light, and you are Lit. Something strikes whoever stays unlit too long, and strikes again until they find light.",
+  "emi.atouchofdarkness.info.lampad": "A Lampad carries fuel from her Votive into the placed Lamps nearest it. She takes a gold nugget from her Votive for every %s Lamps in her range, and tends only the Lamps it paid for. Her binding fades after %s days; a Nightbrand in her Votive renews it, and without one she stands as a statue. Hurt, she retreats into the Dark to heal, tending nothing until she is whole.",
+  "emi.atouchofdarkness.info.undiscovered": "Not yet discovered",
+  "advancements.atouchofdarkness.discovery.root.title": "A Touch of Darkness",
+  "advancements.atouchofdarkness.discovery.root.description": "The Dark and the lights that keep it back. Learn how each works by meeting it.",
+  "advancements.atouchofdarkness.discovery.fuel.title": "Kept Burning",
+  "advancements.atouchofdarkness.discovery.fuel.description": "Lamps and Campfires burn fuel, and hold only so much.",
+  "advancements.atouchofdarkness.discovery.spent_torch.title": "Burnt Out",
+  "advancements.atouchofdarkness.discovery.spent_torch.description": "A Torch burns down to a Spent Torch, which can be relit.",
+  "advancements.atouchofdarkness.discovery.nightbrand.title": "Darkening",
+  "advancements.atouchofdarkness.discovery.nightbrand.description": "A Spent Torch held in the Dark begins to darken.",
+  "advancements.atouchofdarkness.discovery.votive.title": "Nightbrand",
+  "advancements.atouchofdarkness.discovery.votive.description": "A Spent Torch darkened through. A Lamp set on gold could use it.",
+  "advancements.atouchofdarkness.discovery.dark.title": "Struck in the Dark",
+  "advancements.atouchofdarkness.discovery.dark.description": "Something strikes whoever stays unlit.",
+  "advancements.atouchofdarkness.discovery.lampad.title": "Keeper of Lamps",
+  "advancements.atouchofdarkness.discovery.lampad.description": "A Lampad, bound to her Votive, tends the Lamps around it."
 }

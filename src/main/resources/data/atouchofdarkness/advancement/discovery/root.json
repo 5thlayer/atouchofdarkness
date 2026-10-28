@@ -1,0 +1,26 @@
+{
+  "criteria": {
+    "joined": {
+      "trigger": "minecraft:tick"
+    }
+  },
+  "display": {
+    "announce_to_chat": false,
+    "background": "minecraft:block/deepslate",
+    "description": {
+      "translate": "advancements.atouchofdarkness.discovery.root.description"
+    },
+    "icon": {
+      "id": "atouchofdarkness:torch"
+    },
+    "show_toast": false,
+    "title": {
+      "translate": "advancements.atouchofdarkness.discovery.root.title"
+    }
+  },
+  "requirements": [
+    [
+      "joined"
+    ]
+  ]
+}

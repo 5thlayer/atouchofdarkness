@@ -1,0 +1,27 @@
+{
+  "parent": "atouchofdarkness:discovery/root",
+  "criteria": {
+    "darkening": {
+      "trigger": "atouchofdarkness:darkening"
+    }
+  },
+  "display": {
+    "announce_to_chat": false,
+    "description": {
+      "translate": "advancements.atouchofdarkness.discovery.nightbrand.description"
+    },
+    "hidden": true,
+    "icon": {
+      "id": "atouchofdarkness:spent_torch"
+    },
+    "show_toast": true,
+    "title": {
+      "translate": "advancements.atouchofdarkness.discovery.nightbrand.title"
+    }
+  },
+  "requirements": [
+    [
+      "darkening"
+    ]
+  ]
+}

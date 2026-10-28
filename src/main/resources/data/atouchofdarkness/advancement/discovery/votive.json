@@ -1,0 +1,34 @@
+{
+  "parent": "atouchofdarkness:discovery/root",
+  "criteria": {
+    "nightbrand": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": "atouchofdarkness:nightbrand"
+          }
+        ]
+      }
+    }
+  },
+  "display": {
+    "announce_to_chat": false,
+    "description": {
+      "translate": "advancements.atouchofdarkness.discovery.votive.description"
+    },
+    "hidden": true,
+    "icon": {
+      "id": "atouchofdarkness:nightbrand"
+    },
+    "show_toast": true,
+    "title": {
+      "translate": "advancements.atouchofdarkness.discovery.votive.title"
+    }
+  },
+  "requirements": [
+    [
+      "nightbrand"
+    ]
+  ]
+}

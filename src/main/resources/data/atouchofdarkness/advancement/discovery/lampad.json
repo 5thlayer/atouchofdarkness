@@ -1,0 +1,32 @@
+{
+  "parent": "atouchofdarkness:discovery/root",
+  "criteria": {
+    "summoned": {
+      "trigger": "minecraft:summoned_entity",
+      "conditions": {
+        "entity": {
+          "type": "atouchofdarkness:lampad"
+        }
+      }
+    }
+  },
+  "display": {
+    "announce_to_chat": false,
+    "description": {
+      "translate": "advancements.atouchofdarkness.discovery.lampad.description"
+    },
+    "hidden": true,
+    "icon": {
+      "id": "atouchofdarkness:votive"
+    },
+    "show_toast": true,
+    "title": {
+      "translate": "advancements.atouchofdarkness.discovery.lampad.title"
+    }
+  },
+  "requirements": [
+    [
+      "summoned"
+    ]
+  ]
+}
