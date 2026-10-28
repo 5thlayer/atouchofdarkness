@@ -18,7 +18,7 @@ ACCENT = (196, 86, 255)  # violet, the Nightbrand's
 FLAME = (255, 168, 64)  # a Torch's flame
 SOUL = (96, 220, 236)  # a soul Torch's flame
 DUSK = (56, 40, 88)  # not light, the Nightbrand gives none, but a faint haze to lift it off the Dark
-SHADE = (120, 84, 192)  # nor does the Lampad, but a soft aura about her, a spirit of the underworld
+SHADE = (150, 104, 236)  # nor does the Lampad, but a soft aura about her, a spirit of the underworld
 # each light with the glow it casts. The Lamps are left out: lit, their item model is vanilla's
 # lantern, which the cover can't hold (libworks ADR 0012), and dark they read as vanilla's too.
 LIGHTS = [('torch', FLAME), ('soul_torch', SOUL), ('spent_torch', None), ('nightbrand', DUSK)]
@@ -65,14 +65,14 @@ def votive(px):
     return im
 
 
-def glow(rgb, r):
+def glow(rgb, r, peak=150):
     # a pool of light that falls off to nothing, as the Dark closes in around it
     im = Image.new('RGBA', (2 * r, 2 * r))
     for y in range(2 * r):
         for x in range(2 * r):
             d = math.hypot(x - r, y - r) / r
             if d < 1:
-                im.putpixel((x, y), rgb + (int(150 * (1 - d) ** 2),))
+                im.putpixel((x, y), rgb + (int(peak * (1 - d) ** 2),))
     return im
 
 
@@ -110,7 +110,7 @@ def stand(img, cx, top, margin):
     # flame, fit, with a haze behind her; returns what lies over the band and where
     u = (top - margin) // 16
     behind, front = lampad(u)
-    g = glow(SHADE, 11 * u)
+    g = glow(SHADE, 11 * u, 210)
     img.alpha_composite(g, (cx - g.width // 2, top - 8 * u - g.height // 2))
     at = (cx - behind.width // 2, top - 16 * u)
     img.alpha_composite(behind, at)
