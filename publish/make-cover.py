@@ -18,7 +18,7 @@ ACCENT = (196, 86, 255)  # violet, the Nightbrand's
 FLAME = (255, 168, 64)  # a Torch's flame
 SOUL = (96, 220, 236)  # a soul Torch's flame
 DUSK = (56, 40, 88)  # not light, the Nightbrand gives none, but a faint haze to lift it off the Dark
-SHADE = (92, 64, 148)  # nor does the Lampad, but a soft aura about her, a spirit of the underworld
+SHADE = (120, 84, 192)  # nor does the Lampad, but a soft aura about her, a spirit of the underworld
 # each light with the glow it casts. The Lamps are left out: lit, their item model is vanilla's
 # lantern, which the cover can't hold (libworks ADR 0012), and dark they read as vanilla's too.
 LIGHTS = [('torch', FLAME), ('soul_torch', SOUL), ('spent_torch', None), ('nightbrand', DUSK)]
