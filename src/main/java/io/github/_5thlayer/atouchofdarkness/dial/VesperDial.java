@@ -58,7 +58,7 @@ public final class VesperDial {
         }
         for (ServerPlayer player : level.players()) {
             if (held(player)) {
-                meter.set(player, Dark.lightAtEyes(player), LightState.of(Dark.isLitOrOutOfReach(player)).ordinal(), 0);
+                meter.set(player, Dark.lightAtEyes(player), LightState.of(Dark.isLitWhereReached(player)).ordinal(), 0);
             } else {
                 // Told to the client only if it was drawing the meter.
                 meter.clear(player);
