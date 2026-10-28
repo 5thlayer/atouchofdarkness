@@ -9,6 +9,7 @@ import java.util.Map;
 import java.util.function.Supplier;
 
 import io.github._5thlayer.atouchofdarkness.ATouchOfDarkness;
+import io.github._5thlayer.atouchofdarkness.dark.Dark;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.GlobalPos;
 import net.minecraft.server.level.ServerLevel;
@@ -71,7 +72,7 @@ public final class CarriedLight {
 
     /** Whether a player in the level carries light to this block now, which keeps a {@link CarriedLightBlock} there. */
     static boolean carriedTo(ServerLevel level, BlockPos pos) {
-        return level.players().stream().anyMatch(player -> heldLight(player) > 0 && eyes(player).equals(pos));
+        return level.players().stream().anyMatch(player -> heldLight(player) > 0 && Dark.eyes(player).equals(pos));
     }
 
     private static void tick(LevelTickEvent.Post event) {
@@ -99,7 +100,7 @@ public final class CarriedLight {
             carrier.off = player.getOffhandItem();
             int light = heldLight(player);
             if (light > 0) {
-                wanted.merge(eyes(player), light, Math::max);
+                wanted.merge(Dark.eyes(player), light, Math::max);
             }
         }
         for (ServerPlayer player : level.players()) {
@@ -117,7 +118,7 @@ public final class CarriedLight {
         }
         wanted.forEach((pos, light) -> {
             if (place(level, pos, light)) {
-                level.players().stream().filter(player -> heldLight(player) > 0 && eyes(player).equals(pos))
+                level.players().stream().filter(player -> heldLight(player) > 0 && Dark.eyes(player).equals(pos))
                         .forEach(player -> player.getData(CARRIER).lit = GlobalPos.of(level.dimension(), pos));
             }
         });
@@ -167,11 +168,6 @@ public final class CarriedLight {
             }
         }
         return light;
-    }
-
-    /** The block at the player's eyes, which the Dark reads too. */
-    private static BlockPos eyes(ServerPlayer player) {
-        return BlockPos.containing(player.getEyePosition());
     }
 
     /** Puts the light at the block, into air or a water source only; true if it is there. */

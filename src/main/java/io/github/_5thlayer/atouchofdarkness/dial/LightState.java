@@ -6,8 +6,7 @@ package io.github._5thlayer.atouchofdarkness.dial;
 /**
  * The Vesper Dial's meter's states, in the order it registers them, so each one's ordinal is the index
  * the meter is set: Lit, or In the Dark. A player's state comes from the Dark's own Lit check, not from
- * the light against the threshold, so a full moon or the End's sky shows Lit at a low reading. Plain
- * Java, with no Minecraft types.
+ * the light against the threshold, so a full moon or the End's sky shows Lit at a low reading.
  */
 public enum LightState {
     LIT(""),

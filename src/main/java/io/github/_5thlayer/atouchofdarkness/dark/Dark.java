@@ -108,7 +108,8 @@ public final class Dark {
         return !reaches(player) || isLit(player);
     }
 
-    private static BlockPos eyes(ServerPlayer player) {
+    /** The block at the player's eyes, which the Lit check reads and carried light lights. */
+    public static BlockPos eyes(ServerPlayer player) {
         return BlockPos.containing(player.getEyePosition());
     }
 
