@@ -77,7 +77,7 @@ public final class Dark {
      * Night Vision changes nothing here.
      */
     public static boolean isLit(ServerPlayer player) {
-        return isLit(player.level(), BlockPos.containing(player.getEyePosition()));
+        return isLit(player.level(), eyes(player));
     }
 
     /** Whether eyes at this block would be Lit, as a player's are. */
@@ -97,7 +97,19 @@ public final class Dark {
      * hour and the weather, or the block light there, whichever is brighter, carried light included.
      */
     public static int lightAtEyes(ServerPlayer player) {
-        return lightAt(player.level(), BlockPos.containing(player.getEyePosition()));
+        return lightAt(player.level(), eyes(player));
+    }
+
+    /**
+     * Whether the player is Lit where the Dark reaches, and so always in a dimension it doesn't. Unlike
+     * {@link #inTheDark}, it reads the Lit check alone, whatever the player's game mode.
+     */
+    public static boolean isLitOrOutOfReach(ServerPlayer player) {
+        return !reaches(player) || isLit(player);
+    }
+
+    private static BlockPos eyes(ServerPlayer player) {
+        return BlockPos.containing(player.getEyePosition());
     }
 
     private static int lightAt(ServerLevel level, BlockPos eyes) {
@@ -105,7 +117,7 @@ public final class Dark {
     }
 
     /** Whether the Dark reaches the player's dimension at all. */
-    public static boolean reaches(ServerPlayer player) {
+    private static boolean reaches(ServerPlayer player) {
         return player.level().dimensionTypeRegistration().is(DIMENSIONS);
     }
 

@@ -3,6 +3,8 @@
 
 package io.github._5thlayer.atouchofdarkness.dial;
 
+import java.util.Arrays;
+
 import io.github._5thlayer.atouchof.meter.Meter;
 import io.github._5thlayer.atouchof.meter.MeterState;
 import io.github._5thlayer.atouchofdarkness.ATouchOfDarkness;
@@ -22,9 +24,9 @@ import net.neoforged.neoforge.registries.DeferredRegister;
  * The Vesper Dial (GLOSSARY.md): a gold instrument set around a Nightbrand which, while in either of
  * a player's hands, shows them the light meter {@code atouchofdarkness:light}, drawn by the Runtime
  * (suite ADR-0005). Each tick it hands the meter the light at their eyes as the Lit check measures it,
- * and whether that check finds them Lit, as a {@link LightReading}; in a dimension the Dark doesn't
- * reach, Lit. Once the Dial is in neither hand the meter is cleared, and no longer drawn. It shows nothing of the Grace Period or the Strikes, has no trend, gives no light and
- * never wears out.
+ * out of 15, and as its {@link LightState} whether that check finds them Lit; in a dimension the Dark
+ * doesn't reach, Lit. Once the Dial is in neither hand the meter is cleared, and no longer drawn. It
+ * shows nothing of the Grace Period or the Strikes, has no trend, gives no light and never wears out.
  */
 public final class VesperDial {
 
@@ -34,6 +36,9 @@ public final class VesperDial {
 
     public static final DeferredItem<Item> VESPER_DIAL = ITEMS.registerSimpleItem("vesper_dial", properties -> properties.stacksTo(1));
 
+    /** The light that fills the meter's row, vanilla's brightest. */
+    private static final float MAX_LIGHT = 15F;
+
     private static Meter meter;
 
     private VesperDial() {
@@ -42,8 +47,8 @@ public final class VesperDial {
     /** Registers the Dial and its meter, from the mod's constructor, as the Runtime requires. */
     public static void register(IEventBus modBus) {
         ITEMS.register(modBus);
-        // In LightReading's order of states.
-        meter = Meter.register(METER_ID, LightReading.MAX, state(""), state("_dark"));
+        var states = Arrays.stream(LightState.values()).map(VesperDial::state).toArray(MeterState[]::new);
+        meter = Meter.register(METER_ID, MAX_LIGHT, states);
         NeoForge.EVENT_BUS.addListener(VesperDial::tick);
     }
 
@@ -52,9 +57,8 @@ public final class VesperDial {
             return;
         }
         for (ServerPlayer player : level.players()) {
-            if (carried(player)) {
-                var reading = LightReading.of(Dark.lightAtEyes(player), !Dark.reaches(player) || Dark.isLit(player));
-                meter.set(player, reading.value(), reading.state(), 0);
+            if (held(player)) {
+                meter.set(player, Dark.lightAtEyes(player), LightState.of(Dark.isLitOrOutOfReach(player)).ordinal(), 0);
             } else {
                 // Told to the client only if it was drawing the meter.
                 meter.clear(player);
@@ -63,7 +67,7 @@ public final class VesperDial {
     }
 
     /** Whether the player holds a Dial in their main or off hand. */
-    public static boolean carried(ServerPlayer player) {
+    private static boolean held(ServerPlayer player) {
         for (var hand : InteractionHand.values()) {
             if (player.getItemInHand(hand).is(VESPER_DIAL)) {
                 return true;
@@ -72,8 +76,9 @@ public final class VesperDial {
         return false;
     }
 
-    /** The icons of a state: {@code hud/light_full}, {@code _half} and {@code _empty}, with {@code _dark} after them In the Dark. */
-    private static MeterState state(String suffix) {
+    /** The icons of a state: {@code hud/light_full}, {@code _half} and {@code _empty}, each followed by the state's suffix. */
+    private static MeterState state(LightState state) {
+        var suffix = state.suffix();
         return new MeterState(sprite("full" + suffix), sprite("half" + suffix), sprite("empty" + suffix));
     }
 
