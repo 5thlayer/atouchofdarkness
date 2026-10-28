@@ -17,10 +17,9 @@ ACCENT = (196, 86, 255)  # violet, the Nightbrand's
 FLAME = (255, 168, 64)  # a Torch's flame
 SOUL = (96, 220, 236)  # a soul Torch's flame
 DUSK = (56, 40, 88)  # not light, the Nightbrand gives none, but a faint haze to lift it off the Dark
-# each light with the glow it casts. The lit Lamp's item model is vanilla's lantern, which the cover
-# can't hold (libworks ADR 0012), so the Lamps stand dark beside the Spent Torch and the Nightbrand.
-LIGHTS = [('torch', FLAME), ('soul_torch', SOUL), ('lamp_off', None), ('soul_lamp_off', None),
-          ('spent_torch', None), ('nightbrand', DUSK)]
+# each light with the glow it casts. The Lamps are left out: lit, their item model is vanilla's
+# lantern, which the cover can't hold (libworks ADR 0012), and dark they read as vanilla's too.
+LIGHTS = [('torch', FLAME), ('soul_torch', SOUL), ('spent_torch', None), ('nightbrand', DUSK)]
 
 
 def sprite(name, px):
