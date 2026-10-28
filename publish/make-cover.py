@@ -67,8 +67,14 @@ def field(W, H, px, seed, clear):
     slots = [(x, y) for y in (0.18, 0.82) for x in (0.12, 0.31, 0.5, 0.69, 0.88)
              if y > 0.5 or not clear[0] <= x <= clear[1]]
     rng.shuffle(slots)
-    for (fx, fy), (name, rgb) in zip(slots, LIGHTS):
-        cx, cy = int(fx * W + rng.uniform(-0.04, 0.04) * W), int(fy * H)
+    placed = list(zip(slots, LIGHTS))
+    # the bottom row has no Lampad to keep clear of, so its lights are spaced evenly across it
+    bottom = sorted((p for p in placed if p[0][1] > 0.5), key=lambda p: p[0][0])
+    placed = [p for p in placed if p[0][1] <= 0.5] + [(((i + 0.5) / len(bottom), fy), l)
+                                                      for i, ((_, fy), l) in enumerate(bottom)]
+    for (fx, fy), (name, rgb) in placed:
+        jitter = rng.uniform(-0.04, 0.04) if fy <= 0.5 else 0
+        cx, cy = int((fx + jitter) * W), int(fy * H)
         if rgb:
             g = glow(rgb, int(px * 2.4))
             img.alpha_composite(g, (cx - g.width // 2, cy - g.height // 2))
