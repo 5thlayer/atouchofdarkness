@@ -29,25 +29,26 @@ def sprite(name, px):
 
 def lampad(u):
     # the Lampad seen from the front leaning on the band, each part the front face of its LampadModel
-    # cube, u pixels to a model unit: head and body above the band's edge at the skirt's top, the arms
-    # hanging at her sides so the hands drape over it, and the Torch with the Nightbrand's dark flame
-    # held upright in her left hand. Returns what stands behind the band, cut off at its edge, and the
-    # cuffs and hands, which lie over it, each 14 by 14 units with the edge 13 units down.
+    # cube, u pixels to a model unit: head and body above the band's edge at the skirt's top, the right
+    # arm hanging so its hand drapes over it, and the left raised forward, so only its top shows,
+    # holding the Torch upright with the Nightbrand's dark flame. Returns what stands behind the band,
+    # cut off at its edge, and the right cuff and hand, which lie over it, each 14 by 17 units with the
+    # edge 16 units down.
     tex = Image.open(A + 'entity/lampad/lampad.png').convert('RGBA')
 
     def layer(faces):
         # (u, v, w, h) of the face in the texture, then x, y in model units, the band's edge at y = 0
         # and the middle at x = 0, drawn at half units since the head sits half a unit off the grid
-        im = Image.new('RGBA', (28, 28))
+        im = Image.new('RGBA', (28, 34))
         for fu, fv, w, h, x, y in faces:
             face = tex.crop((fu, fv, fu + w, fv + h)).resize((2 * w, 2 * h), Image.NEAREST)
-            im.alpha_composite(face, (int(2 * x + 14), int(2 * y + 26)))
-        return im.resize((14 * u, 14 * u), Image.NEAREST)
+            im.alpha_composite(face, (int(2 * x + 14), int(2 * y + 32)))
+        return im.resize((14 * u, 17 * u), Image.NEAREST)
 
     behind = layer([(29, 1, 7, 8, -3.5, -13), (4, 20, 6, 6, -3, -6), (7, 7, 7, 7, -3.5, -13),
-                    (34, 18, 2, 7, -5, -6), (42, 18, 2, 7, 3, -6), (49, 17, 1, 6, 5, -6), (54, 18, 2, 2, 4.5, -8)])
-    behind.paste((0, 0, 0, 0), (0, 13 * u, 14 * u, 14 * u))
-    front = layer([(34, 22, 2, 3, -5, -2), (42, 22, 2, 3, 3, -2), (49, 22, 1, 1, 5, 0)])
+                    (34, 18, 2, 7, -5, -6), (42, 18, 2, 3, 3, -8), (49, 17, 1, 6, 3.5, -14), (54, 18, 2, 2, 3, -16)])
+    behind.paste((0, 0, 0, 0), (0, 16 * u, 14 * u, 17 * u))
+    front = layer([(34, 22, 2, 3, -5, -2)])
     return behind, front
 
 
@@ -102,13 +103,13 @@ def field(W, H, px, seed, row, votive_x):
 
 
 def stand(img, cx, top, margin):
-    # the Lampad leaning on the band's top edge, as large as her 13 units above it fit, with a haze
-    # behind her; returns what lies over the band and where
-    u = (top - margin) // 13
+    # the Lampad leaning on the band's top edge, as large as her 16 units above it, to the Torch's
+    # flame, fit, with a haze behind her; returns what lies over the band and where
+    u = (top - margin) // 16
     behind, front = lampad(u)
     g = glow(DUSK, 9 * u)
-    img.alpha_composite(g, (cx - g.width // 2, top - 7 * u - g.height // 2))
-    at = (cx - behind.width // 2, top - 13 * u)
+    img.alpha_composite(g, (cx - g.width // 2, top - 8 * u - g.height // 2))
+    at = (cx - behind.width // 2, top - 16 * u)
     img.alpha_composite(behind, at)
     return front, at
 
@@ -162,5 +163,5 @@ def make(W, H, out, title_size, px, lampad_x, band_y, stacked=False):
     img.convert('RGB').save(out)
 
 
-make(1280, 640, 'publish/atouchofdarkness-cover.png', 150, 80, 0.9, 0.5)
-make(512, 512, 'publish/atouchofdarkness-icon.png', 84, 56, 0.5, 0.58, stacked=True)
+make(1280, 640, 'publish/atouchofdarkness-cover.png', 150, 80, 0.9, 0.55)
+make(512, 512, 'publish/atouchofdarkness-icon.png', 84, 56, 0.5, 0.6, stacked=True)
