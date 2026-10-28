@@ -12,7 +12,6 @@ import io.github._5thlayer.atouchofdarkness.dark.Dark;
 import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.InteractionHand;
 import net.minecraft.world.item.Item;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.common.NeoForge;
@@ -39,6 +38,9 @@ public final class VesperDial {
     /** The light that fills the meter's row, vanilla's brightest. */
     private static final float MAX_LIGHT = 15F;
 
+    /** The trend band the meter always shows: none, so it draws no chevrons. */
+    private static final int NO_TREND = 0;
+
     private static Meter meter;
 
     private VesperDial() {
@@ -57,23 +59,13 @@ public final class VesperDial {
             return;
         }
         for (ServerPlayer player : level.players()) {
-            if (held(player)) {
-                meter.set(player, Dark.lightAtEyes(player), LightState.of(Dark.isLitWhereReached(player)).ordinal(), 0);
+            if (player.isHolding(VESPER_DIAL.get())) {
+                meter.set(player, Dark.lightAtEyes(player), LightState.of(Dark.isLitWhereReached(player)).ordinal(), NO_TREND);
             } else {
                 // Told to the client only if it was drawing the meter.
                 meter.clear(player);
             }
         }
-    }
-
-    /** Whether the player holds a Dial in their main or off hand. */
-    private static boolean held(ServerPlayer player) {
-        for (var hand : InteractionHand.values()) {
-            if (player.getItemInHand(hand).is(VESPER_DIAL)) {
-                return true;
-            }
-        }
-        return false;
     }
 
     /** The icons of a state: {@code hud/light_full}, {@code _half} and {@code _empty}, each followed by the state's suffix. */
