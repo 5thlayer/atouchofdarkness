@@ -10,6 +10,7 @@ import java.util.List;
 import io.github._5thlayer.atouchofdarkness.ATouchOfDarkness;
 import io.github._5thlayer.atouchofdarkness.dark.Dark;
 import io.github._5thlayer.atouchofdarkness.dark.DarkCues;
+import io.github._5thlayer.atouchofdarkness.dark.Lit;
 import io.github._5thlayer.atouchofdarkness.light.Burning;
 import io.github._5thlayer.atouchofdarkness.light.CarriedLightBlock;
 import io.github._5thlayer.atouchofdarkness.light.HeldLightSource;
@@ -83,8 +84,8 @@ final class TorchTests {
 
     /**
      * A player holding a Torch, Lit by a light block in the open, is teleported into the Dark's cage, where
-     * no old carried light spills: on that tick too they are Lit, so they hear no entry sound and their
-     * Grace Period stays full.
+     * no old carried light spills. On no tick from then on do they hear the entry sound or does their Grace
+     * Period drain, up to a tick after their carried light shows in the world's own light there.
      */
     private static void teleported(GameTestHelper helper) {
         var cage = STAND;
@@ -94,18 +95,31 @@ final class TorchTests {
         var player = inTheOpen(helper, from);
         player.setItemInHand(InteractionHand.MAIN_HAND, Light.TORCH.toStack());
         var inbox = ClientInbox.of(helper, player);
-        int[] full = new int[1];
-        helper.runAtTickTime(5, () -> {
-            full[0] = Dark.ticksToStrike(player);
-            var to = helper.absolutePos(cage);
-            player.teleportTo(to.getX() + 0.5, to.getY(), to.getZ() + 0.5);
-        });
-        helper.runAtTickTime(30, () -> {
+        int full = Dark.ticksToStrike(player);
+        var to = helper.absolutePos(cage);
+        boolean[] jumped = {false};
+        boolean[] worldLit = {false};
+        helper.onEachTick(() -> {
             helper.assertTrue(inbox.heard(DarkCues.ENTER.get()).isEmpty(), "entering the Dark was heard at ticks " + inbox.heard(DarkCues.ENTER.get()));
-            helper.assertTrue(Dark.ticksToStrike(player) == full[0],
-                    "the Grace Period drained to " + Dark.ticksToStrike(player) + " ticks from " + full[0]);
-            leave(player);
-            helper.succeed();
+            helper.assertTrue(Dark.ticksToStrike(player) == full,
+                    "the Grace Period drained to " + Dark.ticksToStrike(player) + " ticks from " + full);
+            if (!jumped[0]) {
+                // Once the Dark has ticked them Lit where they stand.
+                var state = inbox.lastDarkState();
+                if (state == null) {
+                    return;
+                }
+                helper.assertFalse(state.inTheDark(), "the player was in the Dark before the jump");
+                player.teleportTo(to.getX() + 0.5, to.getY(), to.getZ() + 0.5);
+                jumped[0] = true;
+                return;
+            }
+            // A tick after the world's light shows, so the inbox has read whatever the gap sent.
+            if (worldLit[0]) {
+                leave(player);
+                helper.succeed();
+            }
+            worldLit[0] = Lit.isLit(helper.getLevel(), Lit.eyes(player));
         });
     }
 
