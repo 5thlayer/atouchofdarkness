@@ -8,7 +8,7 @@ import java.util.Arrays;
 import io.github._5thlayer.atouchof.meter.Meter;
 import io.github._5thlayer.atouchof.meter.MeterState;
 import io.github._5thlayer.atouchofdarkness.ATouchOfDarkness;
-import io.github._5thlayer.atouchofdarkness.dark.Dark;
+import io.github._5thlayer.atouchofdarkness.dark.Lit;
 import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -60,7 +60,8 @@ public final class VesperDial {
         }
         for (ServerPlayer player : level.players()) {
             if (player.isHolding(VESPER_DIAL.get())) {
-                meter.set(player, Dark.lightAtEyes(player), LightState.of(Dark.isLitWhereReached(player)).ordinal(), NO_TREND);
+                var reading = Lit.reading(player);
+                meter.set(player, reading.light(), LightState.of(reading.litWhereReached()).ordinal(), NO_TREND);
             } else {
                 // Told to the client only if it was drawing the meter.
                 meter.clear(player);

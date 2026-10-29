@@ -11,7 +11,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.LockSupport;
 import java.util.function.BooleanSupplier;
 
-import io.github._5thlayer.atouchofdarkness.dark.Dark;
+import io.github._5thlayer.atouchofdarkness.dark.Lit;
 import io.github._5thlayer.atouchofdarkness.lampad.Lampad;
 import io.github._5thlayer.atouchofdarkness.lampad.LampadEntity;
 import io.github._5thlayer.atouchofdarkness.lampad.VotiveBlockEntity;
@@ -474,7 +474,7 @@ final class LampadTests {
             int fed = PlacedFuel.left(helper.getLevel(), helper.absolutePos(lamp));
             helper.assertTrue(fed == 0 || !lampad.isHurt(), "the Lampad fed a Lamp while hurt, " + lampad.getHealth() + " health");
             if (lampad.isHealing()) {
-                helper.assertFalse(Dark.isLit(level, BlockPos.containing(lampad.getEyePosition())), "the Lampad heals where it is Lit");
+                helper.assertFalse(Lit.isLit(level, BlockPos.containing(lampad.getEyePosition())), "the Lampad heals where it is Lit");
                 if (!wasHealing[0]) {
                     healedAt[0] = tick;
                 }

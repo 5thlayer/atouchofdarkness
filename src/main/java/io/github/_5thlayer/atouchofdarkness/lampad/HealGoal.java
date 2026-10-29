@@ -8,7 +8,7 @@ import java.util.Comparator;
 import java.util.EnumSet;
 import java.util.Set;
 
-import io.github._5thlayer.atouchofdarkness.dark.Dark;
+import io.github._5thlayer.atouchofdarkness.dark.Lit;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.particles.ParticleTypes;
@@ -71,7 +71,7 @@ final class HealGoal extends Goal {
         var level = (ServerLevel) lampad.level();
         var votive = lampad.votive();
         boolean inTheDark = votive != null && TendedLamps.inRange(votive, lampad.blockPosition())
-                && !Dark.isLit(level, BlockPos.containing(lampad.getEyePosition()));
+                && !Lit.isLit(level, BlockPos.containing(lampad.getEyePosition()));
         if (inTheDark) {
             // Counted from the tick she is in the Dark, so each health comes a whole 40 ticks after.
             if (!lampad.isHealing()) {
@@ -86,7 +86,7 @@ final class HealGoal extends Goal {
             return;
         }
         lampad.setHealing(false);
-        boolean needsSpot = spot == null || lampad.getNavigation().isDone() || Dark.isLit(level, spot.above());
+        boolean needsSpot = spot == null || lampad.getNavigation().isDone() || Lit.isLit(level, spot.above());
         if (needsSpot && lampad.tickCount >= nextLook) {
             nextLook = lampad.tickCount + LOOK_INTERVAL;
             spot = walkToTheDark(level);
@@ -101,7 +101,7 @@ final class HealGoal extends Goal {
         }
         var spots = new ArrayList<BlockPos>();
         for (var pos : TendedLamps.range(votive)) {
-            if (level.isLoaded(pos) && standsOn(level, pos) && !Dark.isLit(level, pos.above())) {
+            if (level.isLoaded(pos) && standsOn(level, pos) && !Lit.isLit(level, pos.above())) {
                 spots.add(pos.immutable());
             }
         }

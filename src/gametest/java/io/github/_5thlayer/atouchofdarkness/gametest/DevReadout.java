@@ -7,6 +7,7 @@ import java.util.Locale;
 
 import io.github._5thlayer.atouchofdarkness.ATouchOfDarkness;
 import io.github._5thlayer.atouchofdarkness.dark.Dark;
+import io.github._5thlayer.atouchofdarkness.dark.Lit;
 import io.github._5thlayer.atouchofdarkness.dark.DarkConfig;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
@@ -37,13 +38,14 @@ final class DevReadout {
             return;
         }
         var level = player.level();
-        if (!level.dimensionTypeRegistration().is(Dark.DIMENSIONS)) {
+        if (!level.dimensionTypeRegistration().is(Lit.DIMENSIONS)) {
             player.sendSystemMessage(Component.literal("No Dark in this dimension"), true);
             return;
         }
-        var eyes = BlockPos.containing(player.getEyePosition());
+        var eyes = Lit.eyes(player);
+        var reading = Lit.reading(player);
         String text = String.format(Locale.ROOT, "%s · light %d/%d · %s · Strike in %.1f s",
-                Dark.isLit(player) ? "Lit" : "Dark", level.getMaxLocalRawBrightness(eyes), DarkConfig.LIT_THRESHOLD.getAsInt(),
+                reading.lit() ? "Lit" : "Dark", reading.light(), DarkConfig.LIT_THRESHOLD.getAsInt(),
                 sky(player, eyes), (float) Dark.ticksToStrike(player) / TICKS_PER_SECOND);
         player.sendSystemMessage(Component.literal(text), true);
     }
@@ -54,7 +56,7 @@ final class DevReadout {
         if (!level.canSeeSky(eyes)) {
             return "roofed";
         }
-        if (level.dimensionTypeRegistration().is(Dark.SKY_ALWAYS_LIT)) {
+        if (level.dimensionTypeRegistration().is(Lit.SKY_ALWAYS_LIT)) {
             return "sky always lit";
         }
         String open = level.isDarkOutside()

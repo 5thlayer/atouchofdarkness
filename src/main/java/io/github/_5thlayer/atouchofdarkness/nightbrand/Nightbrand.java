@@ -7,7 +7,7 @@ import java.util.function.Supplier;
 
 import com.mojang.serialization.Codec;
 import io.github._5thlayer.atouchofdarkness.ATouchOfDarkness;
-import io.github._5thlayer.atouchofdarkness.dark.Dark;
+import io.github._5thlayer.atouchofdarkness.dark.Lit;
 import io.github._5thlayer.atouchofdarkness.dark.DarkConfig;
 import io.github._5thlayer.atouchofdarkness.discovery.Discoveries;
 import io.github._5thlayer.atouchofdarkness.light.Light;
@@ -79,7 +79,7 @@ public final class Nightbrand {
         long today = Math.floorDiv(level.getOverworldClockTime(), LightConfig.DAY);
         for (ServerPlayer player : level.players()) {
             // A machine's fake player in the world is no one who took the risk.
-            if (!player.isAlive() || player.isFakePlayer() || player.getData(DARKENED_ON) == today || !Dark.inTheDark(player)) {
+            if (!player.isAlive() || player.isFakePlayer() || player.getData(DARKENED_ON) == today || !Lit.reading(player).inTheDark()) {
                 continue;
             }
             for (var hand : InteractionHand.values()) {
