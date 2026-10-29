@@ -60,6 +60,10 @@ _Avoid_: fire pit, bonfire
 The Campfire's soul kind, dimmer, which cools those near it while it is lit where Tough As Nails is loaded, as the Campfire warms them.
 _Avoid_: blue campfire, cold fire
 
+**Fuel**:
+The burn time a Lamp or a Campfire holds: ten times the furnace burn time of each item fed to it, up to what it can hold, the overflow lost. It burns down only while the Light Source is lit, a Campfire's twice as fast in rain under the open sky, and a Light Source with none left gives no light.
+_Avoid_: charge, burn time (an item's, before it is fed), fuel level
+
 **Lampad**:
 A torch-bearing spirit of the underworld, after Hecate's nymphs, summoned from a Lamp set on gold and kindled with a Torch, the gold becoming her Votive. She carries fuel from her Votive into the placed Lamps around it, never Campfires, and takes gold from it as they grow in number. Her binding fades within a week, and once it has faded she stands dormant until a Nightbrand renews it. Hurt, she retreats to the Dark and tends nothing until she has healed. She gives no light and is not a Light Source.
 _Avoid_: golem (vanilla's kind), lamplighter, servant, Munaciello
