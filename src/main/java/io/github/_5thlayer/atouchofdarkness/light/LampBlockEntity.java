@@ -25,15 +25,6 @@ public final class LampBlockEntity extends BlockEntity {
         super(Light.LAMP_ENTITY.get(), pos, state);
     }
 
-    /** Gives it this much fuel, burning from its next tick. */
-    public void setFuel(int left) {
-        setData(Light.FUEL, Fuel.unclocked(left));
-    }
-
-    public int fuelLeft() {
-        return getData(Light.FUEL).left();
-    }
-
     /** A Lamp saved by 0.1.x keeps its fuel, from its own key, which it isn't saved with again. Kept until 1.0. */
     @Override
     protected void loadAdditional(ValueInput input) {

@@ -8,10 +8,10 @@ import static io.github._5thlayer.atouchofdarkness.gametest.DarkFixture.*;
 import java.util.List;
 
 import io.github._5thlayer.atouchofdarkness.ATouchOfDarkness;
-import io.github._5thlayer.atouchofdarkness.light.Fuel;
 import io.github._5thlayer.atouchofdarkness.light.LampBlock;
 import io.github._5thlayer.atouchofdarkness.light.LampBlockEntity;
 import io.github._5thlayer.atouchofdarkness.light.Light;
+import io.github._5thlayer.atouchofdarkness.light.PlacedFuel;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -38,7 +38,6 @@ import net.minecraft.world.level.MoonPhase;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.ComparatorBlock;
-import net.minecraft.world.level.block.entity.CampfireBlockEntity;
 import net.minecraft.world.level.block.entity.ComparatorBlockEntity;
 import net.minecraft.world.level.storage.TagValueInput;
 import net.minecraft.world.phys.BlockHitResult;
@@ -394,7 +393,7 @@ final class LampTests {
         lamp(helper, Light.LAMP.get(), full, CAP);
         lamp(helper, Light.LAMP.get(), low, 100);
         helper.setBlock(campfire, Light.CAMPFIRE.get());
-        helper.getBlockEntity(campfire, CampfireBlockEntity.class).setData(Light.FUEL, Fuel.unclocked(CampfireTests.CAP));
+        PlacedFuel.set(helper.getLevel(), helper.absolutePos(campfire), CampfireTests.CAP);
         for (var light : List.of(full, low, campfire)) {
             helper.setBlock(light.south(), Blocks.COMPARATOR.defaultBlockState().setValue(ComparatorBlock.FACING, Direction.NORTH));
         }
@@ -445,7 +444,7 @@ final class LampTests {
     /** A Lamp set at the block, on if it holds any fuel. */
     static void lamp(GameTestHelper helper, Block lamp, BlockPos at, int fuel) {
         helper.setBlock(at, lamp.defaultBlockState().setValue(LampBlock.ON, fuel > 0).setValue(LampBlock.LIT, fuel > 0));
-        helper.getBlockEntity(at, LampBlockEntity.class).setFuel(fuel);
+        PlacedFuel.set(helper.getLevel(), helper.absolutePos(at), fuel);
     }
 
     /** The player uses the stack on the side of the block at {@code at}. */
@@ -464,7 +463,7 @@ final class LampTests {
     static void assertPlaced(GameTestHelper helper, BlockPos at, boolean lit, int fuel) {
         var state = helper.getBlockState(at);
         helper.assertTrue(state.getBlock() instanceof LampBlock, "the Lamp at " + at + " became " + state);
-        int left = helper.getBlockEntity(at, LampBlockEntity.class).fuelLeft();
+        int left = PlacedFuel.left(helper.getLevel(), helper.absolutePos(at));
         helper.assertTrue(state.getValue(LampBlock.LIT) == lit && (fuel < 0 || left == fuel),
                 "the Lamp at " + at + " is " + state + " with " + left + " fuel, not " + (lit ? "on" : "off") + " with " + fuel);
     }

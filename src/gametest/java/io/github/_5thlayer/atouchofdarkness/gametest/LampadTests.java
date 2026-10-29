@@ -15,11 +15,10 @@ import io.github._5thlayer.atouchofdarkness.dark.Dark;
 import io.github._5thlayer.atouchofdarkness.lampad.Lampad;
 import io.github._5thlayer.atouchofdarkness.lampad.LampadEntity;
 import io.github._5thlayer.atouchofdarkness.lampad.VotiveBlockEntity;
-import io.github._5thlayer.atouchofdarkness.light.Fuel;
 import io.github._5thlayer.atouchofdarkness.light.LampBlock;
-import io.github._5thlayer.atouchofdarkness.light.LampBlockEntity;
 import io.github._5thlayer.atouchofdarkness.light.LampItem;
 import io.github._5thlayer.atouchofdarkness.light.Light;
+import io.github._5thlayer.atouchofdarkness.light.PlacedFuel;
 import io.github._5thlayer.atouchofdarkness.nightbrand.Nightbrand;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -41,7 +40,6 @@ import net.minecraft.world.level.MoonPhase;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.HopperBlock;
-import net.minecraft.world.level.block.entity.CampfireBlockEntity;
 import net.minecraft.world.level.block.entity.HopperBlockEntity;
 import net.minecraft.world.level.storage.TagValueInput;
 import net.minecraft.world.level.storage.TagValueOutput;
@@ -173,9 +171,9 @@ final class LampadTests {
         helper.setBlock(onDry, Light.LAMP.get().defaultBlockState().setValue(LampBlock.ON, true));
         LampTests.lamp(helper, Light.LAMP.get(), farthest, 0);
         helper.setBlock(nearlyFull, Light.LAMP.get());
-        helper.getBlockEntity(nearlyFull, LampBlockEntity.class).setFuel(LampTests.CAP - 1000);
+        PlacedFuel.set(helper.getLevel(), helper.absolutePos(nearlyFull), LampTests.CAP - 1000);
         helper.setBlock(campfire, Light.SOUL_CAMPFIRE.get());
-        helper.getBlockEntity(campfire, CampfireBlockEntity.class).setData(Light.FUEL, Fuel.unclocked(2000));
+        PlacedFuel.set(helper.getLevel(), helper.absolutePos(campfire), 2000);
         var votiveEntity = summon(helper, player, votive);
         votiveEntity.setItem(VotiveBlockEntity.FUEL, new ItemStack(Items.COAL, 20));
         votiveEntity.setItem(VotiveBlockEntity.NIGHTBRAND, Nightbrand.NIGHTBRAND.toStack());
@@ -184,12 +182,12 @@ final class LampadTests {
         var fedAt = new long[] {-1};
         helper.onEachTick(() -> {
             if (fedAt[0] < 0) {
-                if (fed.stream().allMatch(lamp -> helper.getBlockEntity(lamp, LampBlockEntity.class).fuelLeft() > 0)) {
+                if (fed.stream().allMatch(lamp -> PlacedFuel.left(helper.getLevel(), helper.absolutePos(lamp)) > 0)) {
                     fedAt[0] = helper.getTick();
                 }
             } else if (helper.getTick() == fedAt[0] + 200) {
                 for (var lamp : fed) {
-                    int left = helper.getBlockEntity(lamp, LampBlockEntity.class).fuelLeft();
+                    int left = PlacedFuel.left(helper.getLevel(), helper.absolutePos(lamp));
                     helper.assertTrue(lamp.equals(onDry) ? left > 15_000 && left <= 16_000 : left == 16_000,
                             "the Lamp at " + lamp + " holds " + left + ", not a coal's 16000");
                 }
@@ -197,13 +195,13 @@ final class LampadTests {
                 LampTests.assertPlaced(helper, new BlockPos(2, 1, 0), false, 16_000);
                 LampTests.assertPlaced(helper, nearlyFull, false, LampTests.CAP - 1000);
                 LampTests.assertPlaced(helper, farthest, false, 0);
-                var fire = helper.getBlockEntity(campfire, CampfireBlockEntity.class).getData(Light.FUEL).left();
+                var fire = PlacedFuel.left(helper.getLevel(), helper.absolutePos(campfire));
                 helper.assertTrue(fire <= 2000, "the Lampad fed the Campfire, to " + fire);
                 helper.assertTrue(player.getMainHandItem().getOrDefault(Light.LAMP_FUEL, 0) == 0, "the Lampad fed a carried Lamp");
                 assertHolds(helper, votiveEntity, VotiveBlockEntity.FUEL, Items.COAL, 20 - fed.size());
                 assertHolds(helper, votiveEntity, VotiveBlockEntity.GOLD, Items.GOLD_NUGGET, 0);
                 votiveEntity.setItem(VotiveBlockEntity.GOLD, new ItemStack(Items.GOLD_NUGGET));
-            } else if (helper.getTick() > fedAt[0] + 200 && helper.getBlockEntity(farthest, LampBlockEntity.class).fuelLeft() == 16_000) {
+            } else if (helper.getTick() > fedAt[0] + 200 && PlacedFuel.left(helper.getLevel(), helper.absolutePos(farthest)) == 16_000) {
                 assertHolds(helper, votiveEntity, VotiveBlockEntity.GOLD, Items.GOLD_NUGGET, 0);
                 leave(player);
                 helper.succeed();
@@ -331,7 +329,7 @@ final class LampadTests {
         var votive = new BlockPos(1, 1, 1);
         var lamp = new BlockPos(4, 1, 1);
         helper.setBlock(lamp, Light.LAMP.get());
-        helper.getBlockEntity(lamp, LampBlockEntity.class).setFuel(LampTests.CAP);
+        PlacedFuel.set(helper.getLevel(), helper.absolutePos(lamp), LampTests.CAP);
         var votiveEntity = summon(helper, player, votive);
         votiveEntity.setItem(VotiveBlockEntity.NIGHTBRAND, Nightbrand.NIGHTBRAND.toStack());
         votiveEntity.setItem(VotiveBlockEntity.GOLD, new ItemStack(Items.GOLD_NUGGET));
@@ -344,7 +342,7 @@ final class LampadTests {
             lampad.saveWithoutId(output);
             saved[0] = output.buildResult();
             lampad.remove(Entity.RemovalReason.UNLOADED_TO_CHUNK);
-            helper.getBlockEntity(lamp, LampBlockEntity.class).setFuel(0);
+            PlacedFuel.set(helper.getLevel(), helper.absolutePos(lamp), 0);
             votiveEntity.setItem(VotiveBlockEntity.FUEL, new ItemStack(Items.COAL, 4));
             KeepsClock.advance(helper, 8 * 24_000);
         });
@@ -360,7 +358,7 @@ final class LampadTests {
                 return;
             }
             helper.assertFalse(reloaded[0].isDormant(), "the Lampad caught her absence up and stands dormant");
-            if (helper.getBlockEntity(lamp, LampBlockEntity.class).fuelLeft() == 16_000) {
+            if (PlacedFuel.left(helper.getLevel(), helper.absolutePos(lamp)) == 16_000) {
                 leave(player);
                 helper.succeed();
             }
@@ -473,7 +471,7 @@ final class LampadTests {
         var waited = new boolean[1];
         helper.onEachTick(() -> {
             long tick = helper.getTick();
-            int fed = helper.getBlockEntity(lamp, LampBlockEntity.class).fuelLeft();
+            int fed = PlacedFuel.left(helper.getLevel(), helper.absolutePos(lamp));
             helper.assertTrue(fed == 0 || !lampad.isHurt(), "the Lampad fed a Lamp while hurt, " + lampad.getHealth() + " health");
             if (lampad.isHealing()) {
                 helper.assertFalse(Dark.isLit(level, BlockPos.containing(lampad.getEyePosition())), "the Lampad heals where it is Lit");
@@ -515,7 +513,7 @@ final class LampadTests {
         var votive = new BlockPos(2, 1, 2);
         var soulVotive = new BlockPos(6, 1, 6);
         helper.setBlock(new BlockPos(0, 1, 0), Light.LAMP.get());
-        helper.getBlockEntity(new BlockPos(0, 1, 0), LampBlockEntity.class).setFuel(LampTests.CAP);
+        PlacedFuel.set(helper.getLevel(), helper.absolutePos(new BlockPos(0, 1, 0)), LampTests.CAP);
         var votiveEntity = summonFrom(helper, player, votive, Light.LAMP.get(), 5000);
         var soulVotiveEntity = summonFrom(helper, player, soulVotive, Light.SOUL_LAMP.get(), 3000);
         votiveEntity.setItem(VotiveBlockEntity.FUEL, new ItemStack(Items.COAL, 5));
@@ -573,7 +571,7 @@ final class LampadTests {
     private static VotiveBlockEntity summonFrom(GameTestHelper helper, ServerPlayer player, BlockPos at, Block lamp, int fuel) {
         helper.setBlock(at, Blocks.GOLD_BLOCK);
         helper.setBlock(at.above(), lamp);
-        helper.getBlockEntity(at.above(), LampBlockEntity.class).setFuel(fuel);
+        PlacedFuel.set(helper.getLevel(), helper.absolutePos(at.above()), fuel);
         LampTests.useOn(helper, player, Light.TORCH.toStack(), at.above());
         player.setItemInHand(InteractionHand.MAIN_HAND, ItemStack.EMPTY);
         return helper.getBlockEntity(at, VotiveBlockEntity.class);

@@ -8,8 +8,8 @@ import static io.github._5thlayer.atouchofdarkness.gametest.DarkFixture.*;
 import java.util.List;
 
 import io.github._5thlayer.atouchofdarkness.ATouchOfDarkness;
-import io.github._5thlayer.atouchofdarkness.light.Fuel;
 import io.github._5thlayer.atouchofdarkness.light.Light;
+import io.github._5thlayer.atouchofdarkness.light.PlacedFuel;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.registries.Registries;
@@ -123,8 +123,8 @@ final class CampfireTests {
     }
 
     private static void assertFuel(GameTestHelper helper, BlockPos at, int left) {
-        var fuel = helper.getBlockEntity(at, CampfireBlockEntity.class).getData(Light.FUEL);
-        helper.assertTrue(fuel.left() == left, "the Campfire at " + at + " holds " + fuel.left() + " fuel, not " + left);
+        int fuel = PlacedFuel.left(helper.getLevel(), helper.absolutePos(at));
+        helper.assertTrue(fuel == left, "the Campfire at " + at + " holds " + fuel + " fuel, not " + left);
     }
 
     /**
@@ -237,7 +237,7 @@ final class CampfireTests {
     /** A Campfire set at the block, holding this much fuel. */
     private static void fuelled(GameTestHelper helper, Block campfire, BlockPos at, int fuel) {
         helper.setBlock(at, campfire);
-        helper.getBlockEntity(at, CampfireBlockEntity.class).setData(Light.FUEL, Fuel.unclocked(fuel));
+        PlacedFuel.set(helper.getLevel(), helper.absolutePos(at), fuel);
     }
 
     /** Lit, and giving this light. */
