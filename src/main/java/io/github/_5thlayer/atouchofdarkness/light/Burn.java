@@ -4,10 +4,11 @@
 package io.github._5thlayer.atouchofdarkness.light;
 
 /**
- * The burn arithmetic every Light Source shares, with no Minecraft types so JUnit runs it on a plain
- * JVM. A Light Source burns by the level's time of day, not its game time, so sleep and
- * {@code /time} burn it too: a tick of fuel for each tick the clock moves on, at a rate that pauses
- * it or doubles it in rain. Fuel, burn and caps are in ticks.
+ * The burn arithmetic every Light Source shares, and the item bar that shows what is left of a burn or
+ * a darkening, with no Minecraft types so JUnit runs it on a plain JVM. A Light Source burns by the
+ * level's time of day, not its game time, so sleep and {@code /time} burn it too: a tick of fuel for
+ * each tick the clock moves on, at a rate that pauses it or doubles it in rain. Fuel, burn and caps
+ * are in ticks.
  */
 public final class Burn {
 
@@ -77,7 +78,7 @@ public final class Burn {
     }
 
     /** An item bar's width, out of this many pixels, for so much of the full amount: rounded, never past full. */
-    public static int bar(int part, int full, int width) {
+    public static int barWidth(int part, int full, int width) {
         return Math.clamp(Math.round((float) width * part / full), 0, width);
     }
 

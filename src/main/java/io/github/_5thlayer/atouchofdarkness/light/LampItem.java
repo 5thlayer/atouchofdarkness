@@ -160,7 +160,7 @@ public final class LampItem extends BlockItem implements HeldLightSource {
 
     @Override
     public int getBarWidth(ItemStack stack) {
-        return Burn.bar(fuel(stack), cap(), MAX_BAR_WIDTH);
+        return Burn.barWidth(fuel(stack), cap(), MAX_BAR_WIDTH);
     }
 
     @Override

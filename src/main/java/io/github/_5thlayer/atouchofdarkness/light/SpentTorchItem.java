@@ -86,7 +86,7 @@ public final class SpentTorchItem extends Item {
     @Override
     public int getBarWidth(ItemStack stack) {
         var darkening = stack.get(Nightbrand.DARKENING);
-        return darkening == null ? 0 : Burn.bar(darkening.darkened(), darkening.full(), MAX_BAR_WIDTH);
+        return darkening == null ? 0 : Burn.barWidth(darkening.darkened(), darkening.full(), MAX_BAR_WIDTH);
     }
 
     @Override

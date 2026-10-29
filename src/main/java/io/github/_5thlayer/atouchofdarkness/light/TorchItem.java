@@ -114,7 +114,7 @@ public final class TorchItem extends Item implements HeldLightSource {
     @Override
     public int getBarWidth(ItemStack stack) {
         var burning = stack.get(Light.BURNING);
-        return burning == null ? MAX_BAR_WIDTH : Burn.bar(burning.left(), burning.full(), MAX_BAR_WIDTH);
+        return burning == null ? MAX_BAR_WIDTH : Burn.barWidth(burning.left(), burning.full(), MAX_BAR_WIDTH);
     }
 
     @Override
