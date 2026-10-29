@@ -72,6 +72,7 @@ final class LampTests {
         tests.test("lamp_redstone_rise_turns_it_on_and_fall_off_and_a_hand_toggle_holds_till_the_next_change", 10, LampTests::redstone);
         tests.test("lamp_fuel_never_switches_it_off_stays_off_and_on_dry_shines_again", 5, LampTests::fuelKeepsSwitch);
         tests.test("lamp_placed_into_a_live_signal_is_placed_on", 5, LampTests::placedIntoSignal);
+        tests.test("lamp_saved_by_0_1_1_keeps_its_fuel", 5, LampTests::oldSave);
         tests.in("lamp_toggled", KeepsClock.INSTANCE)
                 .test("lamp_empty_hand_toggles_it_and_it_doesnt_burn_while_off", 10, LampTests::toggled);
         tests.in("lamp_goes_dark", KeepsClock.INSTANCE)
@@ -355,6 +356,28 @@ final class LampTests {
                 assertPlaced(helper, pos, false, 0);
                 assertLight(helper, pos, 0);
             }
+            helper.succeed();
+        });
+    }
+
+    /**
+     * A Lamp, off, loaded from a save shaped as 0.1.1 saved it, its fuel under its own {@code "fuel"}
+     * key: it holds that fuel still.
+     */
+    private static void oldSave(GameTestHelper helper) {
+        var at = new BlockPos(4, 1, 4);
+        helper.setBlock(at, Light.LAMP.get());
+        var lamp = helper.getBlockEntity(at, LampBlockEntity.class);
+        var registries = helper.getLevel().registryAccess();
+        var saved = lamp.saveWithFullMetadata(registries);
+        saved.remove("neoforge:attachments");
+        var fuel = new CompoundTag();
+        fuel.putInt("left", 1000);
+        fuel.putLong("clock", helper.getLevel().getOverworldClockTime());
+        saved.put("fuel", fuel);
+        lamp.loadWithComponents(TagValueInput.create(ProblemReporter.DISCARDING, registries, saved));
+        helper.runAtTickTime(2, () -> {
+            assertPlaced(helper, at, false, 1000);
             helper.succeed();
         });
     }

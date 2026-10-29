@@ -4,6 +4,8 @@ Written for Consumers: what a mod building against A Touch of Darkness can use, 
 
 ## Unreleased
 
+- A placed Lamp now saves its fuel as the Campfire does, in the attachment `atouchofdarkness:fuel` under its block entity's `neoforge:attachments`, not under its own `fuel` key. A Lamp saved by 0.1.x keeps its fuel when loaded; that read stays until 1.0 (#38).
+
 ## 0.1.1
 
 - Every Strike, Peaceful included and whatever it dealt, now raises A Touch Of's Runtime signal `io.github._5thlayer.atouchof.signal.Strike` (suite ADR-0004), so where A Touch of Madness is loaded a Strike costs Sanity, as the glossary says (#36).

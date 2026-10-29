@@ -31,7 +31,7 @@ import org.jspecify.annotations.Nullable;
 
 /**
  * The Lamp, placed: vanilla's lantern, standing or hanging, lit while it is on with fuel, its
- * {@link Fuel} in a {@link LampBlockEntity}. Lit, it burns by the time of day, loaded or not, rain or
+ * {@link Fuel} kept by {@link PlacedFuel}. Lit, it burns by the time of day, loaded or not, rain or
  * not, and goes dark once dry, on still. An empty hand turns it off, or on if it has fuel, and so does
  * redstone, as a door's: a rise in the signal turns it on, a fall off, and a hand toggle in between holds
  * until the next change; placed into a live signal, it is placed on. Any furnace fuel used on it adds ten

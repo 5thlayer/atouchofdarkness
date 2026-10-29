@@ -48,13 +48,10 @@ public final class PlacedFuel {
     /** Gives the placed light there this much fuel, burning from its next tick. */
     public static void set(Level level, BlockPos pos, int left) {
         var entity = level.getBlockEntity(pos);
-        if (entity instanceof LampBlockEntity lamp) {
-            lamp.setFuel(left);
-        } else if (stored(entity) != null) {
-            entity.setData(Light.FUEL, Fuel.unclocked(left));
-        } else {
+        if (stored(entity) == null) {
             throw new IllegalArgumentException("no placed light at " + pos);
         }
+        entity.setData(Light.FUEL, Fuel.unclocked(left));
     }
 
     /** A comparator's reading of how full the placed light there is, 0 only once dry. */
@@ -136,12 +133,12 @@ public final class PlacedFuel {
         }
     }
 
-    /** The fuel kept in a placed light's block entity, or null if it isn't one. */
+    /** The fuel attached to a placed light's block entity, or null if it isn't one. */
     private static @Nullable Fuel stored(@Nullable BlockEntity entity) {
         if (entity == null || !(entity.getBlockState().getBlock() instanceof FuelledLight)) {
             return null;
         }
-        return entity instanceof LampBlockEntity lamp ? lamp.fuel() : entity.getData(Light.FUEL);
+        return entity.getData(Light.FUEL);
     }
 
     /** A placed light there, its fuel burnt up to now, and the burn time of one of these. */
