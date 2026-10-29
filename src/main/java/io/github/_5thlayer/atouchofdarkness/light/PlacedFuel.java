@@ -13,7 +13,6 @@ import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import org.jspecify.annotations.Nullable;
 
 /**
@@ -69,8 +68,8 @@ public final class PlacedFuel {
 
     /**
      * Puts one of these into the placed light there, unless it is full, the overflow lost; false if it
-     * took none. The stack is left as it was, for the one who fed it to use up. Fed, it is lit again if its
-     * block lets it.
+     * took none. The stack is left as it was, for the one who fed it to use up. Fed, it is
+     * {@linkplain FuelledLight#relit relit}.
      */
     public static boolean take(ServerLevel level, BlockPos pos, ItemStack stack) {
         var feeding = Feeding.of(level, pos, stack);
@@ -79,7 +78,7 @@ public final class PlacedFuel {
         }
         feeding.fuel.refuel(feeding.burnTime, feeding.light.cap());
         feeding.entity.setChanged();
-        show(level, pos, feeding.state, feeding.light.shown(level, pos, feeding.state.setValue(BlockStateProperties.LIT, true), feeding.fuel));
+        show(level, pos, feeding.state, feeding.light.shown(level, pos, feeding.light.relit(feeding.state), feeding.fuel));
         return true;
     }
 

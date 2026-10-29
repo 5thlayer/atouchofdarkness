@@ -126,7 +126,7 @@ public final class FuelledCampfireBlock extends CampfireBlock implements Fuelled
         return PlacedFuel.signal(level, pos);
     }
 
-    /** Vanilla's, which cooks while lit, then the burn. */
+    /** Vanilla's, which cooks while lit, then the burn; going out dry, a fire's hiss. */
     @Override
     public <T extends BlockEntity> @Nullable BlockEntityTicker<T> getTicker(Level level, BlockState state, BlockEntityType<T> type) {
         var vanilla = super.getTicker(level, state, type);
@@ -138,6 +138,9 @@ public final class FuelledCampfireBlock extends CampfireBlock implements Fuelled
                 vanilla.tick(tickLevel, pos, tickState, entity);
             }
             PlacedFuel.tick(tickLevel, pos, tickState, entity);
+            if (tickState.getValue(LIT) && !tickLevel.getBlockState(pos).getValue(LIT)) {
+                tickLevel.playSound(null, pos, SoundEvents.GENERIC_EXTINGUISH_FIRE, SoundSource.BLOCKS, 1F, 1F);
+            }
         };
     }
 
@@ -147,14 +150,16 @@ public final class FuelledCampfireBlock extends CampfireBlock implements Fuelled
         return !state.getValue(LIT) ? Burn.PAUSED : level.isRainingAt(pos.above()) ? Burn.IN_RAIN : Burn.STILL;
     }
 
-    /** Its light, from its fuel, and out once dry, or underwater; going out dry, a fire's hiss. */
+    /** Lit again, unless it is underwater. */
+    @Override
+    public BlockState relit(BlockState state) {
+        return state.setValue(LIT, !state.getValue(WATERLOGGED));
+    }
+
+    /** Its light, from its fuel, and out once dry. */
     @Override
     public BlockState shown(ServerLevel level, BlockPos pos, BlockState state, Fuel fuel) {
         int light = Burn.step(fuel.left(), cap(), lights());
-        var shown = state.setValue(LIGHT, light).setValue(LIT, state.getValue(LIT) && !state.getValue(WATERLOGGED) && light > 0);
-        if (state.getValue(LIT) && light == 0) {
-            level.playSound(null, pos, SoundEvents.GENERIC_EXTINGUISH_FIRE, SoundSource.BLOCKS, 1F, 1F);
-        }
-        return shown;
+        return state.setValue(LIGHT, light).setValue(LIT, state.getValue(LIT) && light > 0);
     }
 }

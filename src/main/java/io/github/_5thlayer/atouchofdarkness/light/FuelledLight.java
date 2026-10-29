@@ -6,6 +6,7 @@ package io.github._5thlayer.atouchofdarkness.light;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 
 /**
  * A placed Light Source's block whose {@link Fuel} {@link PlacedFuel} keeps: what differs between the
@@ -22,9 +23,11 @@ interface FuelledLight {
     /** The {@link Burn} rate it burns at now, in this state. */
     int rate(ServerLevel level, BlockPos pos, BlockState state);
 
-    /**
-     * The state that shows this fuel, from this one: lit only if this one is and the fuel lets it. Plays
-     * the block's own sound for the change, if it has one.
-     */
+    /** The state it is fed in, before its fuel is shown: lit again, if its block lets it. */
+    default BlockState relit(BlockState state) {
+        return state.setValue(BlockStateProperties.LIT, true);
+    }
+
+    /** The state that shows this fuel, from this one: lit only if this one is and the fuel lets it. */
     BlockState shown(ServerLevel level, BlockPos pos, BlockState state, Fuel fuel);
 }
