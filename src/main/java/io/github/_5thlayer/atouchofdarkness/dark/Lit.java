@@ -21,8 +21,9 @@ import net.minecraft.world.level.dimension.DimensionType;
  * see the sky of a dimension tagged {@link #SKY_ALWAYS_LIT}, or a full moon's night sky with no rain.
  * A player's own light counts at their eyes as soon as they hold it, ahead of the carried light block
  * that lights the world a tick later (ADR 0002). Night Vision changes nothing here. It is worked out on
- * asking: the light engine's visible data changes only between ticks, so every listener in a tick reads
- * the same light, whatever order they run in.
+ * asking: the world's light holds for the whole tick, as the light engine's visible data changes only
+ * between ticks, while held light is as of when it is read, since carried light can burn a Torch out
+ * within the tick.
  */
 public final class Lit {
 
@@ -63,7 +64,7 @@ public final class Lit {
      * Has the rule count the light a player carries, so a carrier who jumps into the dark is Lit on that
      * tick, before the light engine shows their carried light block. Carried light calls it as it registers.
      */
-    public static void countCarried(ToIntFunction<ServerPlayer> heldLight) {
+    public static void countHeldLight(ToIntFunction<ServerPlayer> heldLight) {
         carried = heldLight;
     }
 
