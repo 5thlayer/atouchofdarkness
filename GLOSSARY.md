@@ -27,7 +27,7 @@ _Avoid_: TAN, A Touch of Cold (shelved), temperature mod
 ### The Dark
 
 **Lit**:
-A player is lit when the light at their eyes, vanilla's light with the sky dimmed for the hour and the weather, is enough. They are also lit under the open sky of a dimension whose sky never darkens, such as the End, and on the surface at night under a full moon when it isn't raining. A burning Light Source a player carries lights the world around them as a placed one would.
+A player is lit when the light at their eyes is enough: vanilla's light with the sky dimmed for the hour and the weather, or the light of a burning Light Source in either of their hands, whichever is brighter. They are also lit under the open sky of a dimension whose sky never darkens, such as the End, and on the surface at night under a full moon when it isn't raining. A burning Light Source a player carries lights the world around them as a placed one would.
 _Avoid_: bright, safe
 
 **Babau**:

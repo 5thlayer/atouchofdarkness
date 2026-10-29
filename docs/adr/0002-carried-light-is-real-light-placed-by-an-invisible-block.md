@@ -24,6 +24,8 @@ one the Pillar already lights, so the light is never doubled and dropped items s
 no data for such a mod and recommends none; carried light moves a block at a time, and a player who
 adds one may see a held Light Source's light doubled.
 
+**Amended.** The Dark also counts the light of a burning Light Source in a carrier's hands at their eyes, beside the block, never in its place: the block's light shows only from the next tick, so a carrier who jumps into the dark would otherwise be in the Dark for a tick (#40). The world, mobs and A Touch of Madness still see only the block.
+
 **Considered.** Leaving carried light to a dynamic-lights mod alone, with a rule that only counts a carrier as lit: such a mod draws light on the client only, so the Dark would have its own idea of light
 apart from vanilla's, Madness would not see it, and mobs would spawn at a torch-bearer's feet. A
 mixin into vanilla's light engine so an entity emits light: deep, fragile across versions, and in
