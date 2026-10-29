@@ -13,7 +13,6 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.tags.FluidTags;
-import net.minecraft.util.Mth;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
@@ -87,7 +86,7 @@ public final class SpentTorchItem extends Item {
     @Override
     public int getBarWidth(ItemStack stack) {
         var darkening = stack.get(Nightbrand.DARKENING);
-        return darkening == null ? 0 : Mth.clamp(Math.round((float) MAX_BAR_WIDTH * darkening.darkened() / darkening.full()), 0, MAX_BAR_WIDTH);
+        return darkening == null ? 0 : Burn.bar(darkening.darkened(), darkening.full(), MAX_BAR_WIDTH);
     }
 
     @Override

@@ -9,7 +9,6 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
-import net.minecraft.util.Mth;
 import net.minecraft.util.Unit;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
@@ -161,7 +160,7 @@ public final class LampItem extends BlockItem implements HeldLightSource {
 
     @Override
     public int getBarWidth(ItemStack stack) {
-        return Mth.clamp(Math.round((float) MAX_BAR_WIDTH * fuel(stack) / cap()), 0, MAX_BAR_WIDTH);
+        return Burn.bar(fuel(stack), cap(), MAX_BAR_WIDTH);
     }
 
     @Override

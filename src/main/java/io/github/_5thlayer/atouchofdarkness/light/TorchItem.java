@@ -5,13 +5,11 @@ package io.github._5thlayer.atouchofdarkness.light;
 
 import java.util.function.Consumer;
 
+import io.github._5thlayer.atouchofdarkness.dark.Lit;
 import net.minecraft.ChatFormatting;
-import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.tags.FluidTags;
-import net.minecraft.util.Mth;
-import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
@@ -75,7 +73,7 @@ public final class TorchItem extends Item implements HeldLightSource {
     private Burning burnt(ItemStack stack, ServerPlayer player, long elapsed) {
         var burning = stack.getOrDefault(Light.BURNING, Burning.fresh(freshBurn()));
         // Above the eyes, as the carried light there hides the sky from its own block.
-        int rate = player.level().isRainingAt(BlockPos.containing(player.getEyePosition()).above()) ? Burn.IN_RAIN : Burn.STILL;
+        int rate = player.level().isRainingAt(Lit.eyes(player).above()) ? Burn.IN_RAIN : Burn.STILL;
         return burning.withLeft(Burn.burn(burning.left(), elapsed, rate));
     }
 
@@ -90,9 +88,9 @@ public final class TorchItem extends Item implements HeldLightSource {
     }
 
     /** Whether the player's eyes are below the surface of water, as vanilla's own check, which only a player's own tick updates. */
-    private static boolean eyesUnderWater(Player player) {
+    private static boolean eyesUnderWater(ServerPlayer player) {
         var level = player.level();
-        var eyes = BlockPos.containing(player.getEyePosition());
+        var eyes = Lit.eyes(player);
         var fluid = level.getFluidState(eyes);
         return fluid.is(FluidTags.WATER) && player.getEyeY() < eyes.getY() + fluid.getHeight(level, eyes);
     }
@@ -116,7 +114,7 @@ public final class TorchItem extends Item implements HeldLightSource {
     @Override
     public int getBarWidth(ItemStack stack) {
         var burning = stack.get(Light.BURNING);
-        return burning == null ? MAX_BAR_WIDTH : Mth.clamp(Math.round((float) MAX_BAR_WIDTH * burning.left() / burning.full()), 0, MAX_BAR_WIDTH);
+        return burning == null ? MAX_BAR_WIDTH : Burn.bar(burning.left(), burning.full(), MAX_BAR_WIDTH);
     }
 
     @Override
