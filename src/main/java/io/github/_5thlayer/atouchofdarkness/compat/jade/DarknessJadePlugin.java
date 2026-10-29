@@ -6,15 +6,13 @@ package io.github._5thlayer.atouchofdarkness.compat.jade;
 import io.github._5thlayer.atouchofdarkness.ATouchOfDarkness;
 import io.github._5thlayer.atouchofdarkness.light.FuelledCampfireBlock;
 import io.github._5thlayer.atouchofdarkness.light.LampBlock;
-import io.github._5thlayer.atouchofdarkness.light.LampBlockEntity;
-import io.github._5thlayer.atouchofdarkness.light.Light;
+import io.github._5thlayer.atouchofdarkness.light.PlacedFuel;
 import io.github._5thlayer.atouchofdarkness.light.TimeLeft;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.resources.Identifier;
-import net.minecraft.world.level.block.entity.CampfireBlockEntity;
 import org.jspecify.annotations.Nullable;
 import snownee.jade.api.BlockAccessor;
 import snownee.jade.api.IBlockComponentProvider;
@@ -63,11 +61,7 @@ public final class DarknessJadePlugin implements IWailaPlugin {
 
         @Override
         public @Nullable Integer streamData(BlockAccessor accessor) {
-            return switch (accessor.getBlockEntity()) {
-                case LampBlockEntity lamp -> lamp.fuelLeft();
-                case CampfireBlockEntity campfire when accessor.getBlock() instanceof FuelledCampfireBlock -> campfire.getData(Light.FUEL).left();
-                case null, default -> null;
-            };
+            return accessor.getBlockEntity() == null ? null : PlacedFuel.left(accessor.getLevel(), accessor.getPosition());
         }
 
         @Override

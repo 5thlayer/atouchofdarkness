@@ -111,8 +111,8 @@ public final class Light {
     }
 
     private static Fuel placedFuel(IAttachmentHolder holder) {
-        return holder instanceof BlockEntity entity && entity.getBlockState().getBlock() instanceof FuelledCampfireBlock campfire
-                ? Fuel.unclocked(campfire.placedFuel()) : Fuel.unclocked(0);
+        return holder instanceof BlockEntity entity && entity.getBlockState().getBlock() instanceof FuelledLight light
+                ? Fuel.unclocked(light.placedFuel()) : Fuel.unclocked(0);
     }
 
     public static void register(IEventBus modBus) {

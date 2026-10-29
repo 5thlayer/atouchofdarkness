@@ -6,17 +6,25 @@ package io.github._5thlayer.atouchofdarkness.light;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.block.state.BlockState;
-import org.jspecify.annotations.Nullable;
 
-/** A placed Light Source's block that {@link PlacedFuel} feeds: the Lamp's and the Campfire's. */
+/**
+ * A placed Light Source's block whose {@link Fuel} {@link PlacedFuel} keeps: what differs between the
+ * Lamp's and the Campfire's.
+ */
 interface FuelledLight {
-
-    /** Its fuel, burnt up to now, or null without its block entity. */
-    @Nullable Fuel upToDate(ServerLevel level, BlockPos pos, BlockState state);
 
     /** The fuel it holds at most. */
     int cap();
 
-    /** Saves the fuel just added, and shows it. */
-    void fuelled(ServerLevel level, BlockPos pos, BlockState state, Fuel fuel);
+    /** The fuel it is placed with, before anything gives it any. */
+    int placedFuel();
+
+    /** The {@link Burn} rate it burns at now, in this state. */
+    int rate(ServerLevel level, BlockPos pos, BlockState state);
+
+    /**
+     * The state that shows this fuel, from this one: lit only if this one is and the fuel lets it. Plays
+     * the block's own sound for the change, if it has one.
+     */
+    BlockState shown(ServerLevel level, BlockPos pos, BlockState state, Fuel fuel);
 }

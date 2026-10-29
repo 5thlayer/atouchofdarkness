@@ -22,7 +22,6 @@ import net.minecraft.world.level.block.CampfireBlock;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityTicker;
 import net.minecraft.world.level.block.entity.BlockEntityType;
-import net.minecraft.world.level.block.entity.CampfireBlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
@@ -90,8 +89,9 @@ public final class FuelledCampfireBlock extends CampfireBlock implements Fuelled
         return LightConfig.CAMPFIRE_CAP.getAsInt() * (soul ? 2 : 1);
     }
 
-    /** The fuel it is placed with. */
-    int placedFuel() {
+    /** Half its cap. */
+    @Override
+    public int placedFuel() {
         return cap() / 2;
     }
 
@@ -111,18 +111,8 @@ public final class FuelledCampfireBlock extends CampfireBlock implements Fuelled
      */
     @Override
     protected InteractionResult useItemOn(ItemStack stack, BlockState state, Level level, BlockPos pos, Player player, InteractionHand hand, BlockHitResult hit) {
-        if (HandFuel.burnTime(stack, level) <= 0 || !(level.getBlockEntity(pos) instanceof CampfireBlockEntity)) {
-            return super.useItemOn(stack, state, level, pos, player, hand, hit);
-        }
-        // The client doesn't know the fuel.
-        if (level.isClientSide()) {
-            return InteractionResult.SUCCESS;
-        }
-        if (!PlacedFuel.take((ServerLevel) level, pos, stack)) {
-            return InteractionResult.CONSUME;
-        }
-        HandFuel.feed(stack, level, pos, player, hand);
-        return InteractionResult.SUCCESS_SERVER;
+        var fed = PlacedFuel.feedByHand(stack, level, pos, player, hand);
+        return fed == null ? super.useItemOn(stack, state, level, pos, player, hand, hit) : fed;
     }
 
     @Override
@@ -133,7 +123,7 @@ public final class FuelledCampfireBlock extends CampfireBlock implements Fuelled
     /** How full it is, 0 only once dry. */
     @Override
     protected int getAnalogOutputSignal(BlockState state, Level level, BlockPos pos, Direction direction) {
-        return level.getBlockEntity(pos) instanceof CampfireBlockEntity campfire ? Burn.signal(campfire.getData(Light.FUEL).left(), cap()) : 0;
+        return PlacedFuel.signal(level, pos);
     }
 
     /** Vanilla's, which cooks while lit, then the burn. */
@@ -147,52 +137,24 @@ public final class FuelledCampfireBlock extends CampfireBlock implements Fuelled
             if (vanilla != null) {
                 vanilla.tick(tickLevel, pos, tickState, entity);
             }
-            burn((ServerLevel) tickLevel, pos, tickState, (CampfireBlockEntity) entity);
+            PlacedFuel.tick(tickLevel, pos, tickState, entity);
         };
     }
 
+    /** By the time of day while lit, twice as fast in rain under the open sky. Out, it burns nothing. */
     @Override
-    public @Nullable Fuel upToDate(ServerLevel level, BlockPos pos, BlockState state) {
-        return level.getBlockEntity(pos) instanceof CampfireBlockEntity campfire ? upToDate(level, pos, state, campfire) : null;
+    public int rate(ServerLevel level, BlockPos pos, BlockState state) {
+        return !state.getValue(LIT) ? Burn.PAUSED : level.isRainingAt(pos.above()) ? Burn.IN_RAIN : Burn.STILL;
     }
 
-    /** Lit again, unless it is underwater, and its light shown. */
+    /** Its light, from its fuel, and out once dry, or underwater; going out dry, a fire's hiss. */
     @Override
-    public void fuelled(ServerLevel level, BlockPos pos, BlockState state, Fuel fuel) {
-        if (level.getBlockEntity(pos) instanceof CampfireBlockEntity campfire) {
-            campfire.setChanged();
-        }
-        level.setBlockAndUpdate(pos, shown(state.setValue(LIT, !state.getValue(WATERLOGGED)), fuel));
-    }
-
-    /** Brings its fuel up to date with the time of day, and shows it. */
-    private void burn(ServerLevel level, BlockPos pos, BlockState state, CampfireBlockEntity campfire) {
-        var shown = shown(state, upToDate(level, pos, state, campfire));
-        if (shown != state) {
-            if (state.getValue(LIT) && !shown.getValue(LIT)) {
-                level.playSound(null, pos, SoundEvents.GENERIC_EXTINGUISH_FIRE, SoundSource.BLOCKS, 1F, 1F);
-            }
-            level.setBlockAndUpdate(pos, shown);
-        }
-    }
-
-    /**
-     * Its fuel, burnt by the time of day since it was last brought up to date while lit, twice as fast in
-     * rain under the open sky. Out, its clock still moves, so it burns nothing for the time it was out once
-     * lit again.
-     */
-    private static Fuel upToDate(ServerLevel level, BlockPos pos, BlockState state, CampfireBlockEntity campfire) {
-        var fuel = campfire.getData(Light.FUEL);
-        int rate = !state.getValue(LIT) ? Burn.PAUSED : level.isRainingAt(pos.above()) ? Burn.IN_RAIN : Burn.STILL;
-        if (fuel.burn(level.getOverworldClockTime(), rate)) {
-            campfire.setChanged();
-        }
-        return fuel;
-    }
-
-    /** The state that shows this fuel: its light, and out once dry. */
-    private BlockState shown(BlockState state, Fuel fuel) {
+    public BlockState shown(ServerLevel level, BlockPos pos, BlockState state, Fuel fuel) {
         int light = Burn.step(fuel.left(), cap(), lights());
-        return state.setValue(LIGHT, light).setValue(LIT, state.getValue(LIT) && light > 0);
+        var shown = state.setValue(LIGHT, light).setValue(LIT, state.getValue(LIT) && !state.getValue(WATERLOGGED) && light > 0);
+        if (state.getValue(LIT) && light == 0) {
+            level.playSound(null, pos, SoundEvents.GENERIC_EXTINGUISH_FIRE, SoundSource.BLOCKS, 1F, 1F);
+        }
+        return shown;
     }
 }
