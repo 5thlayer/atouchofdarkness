@@ -65,8 +65,16 @@ The burn time a Lamp or a Campfire holds: ten times the furnace burn time of eac
 _Avoid_: charge, burn time (an item's, before it is fed), fuel level
 
 **Lampad**:
-A torch-bearing spirit of the underworld, after Hecate's nymphs, summoned from a Lamp set on gold and kindled with a Torch, the gold becoming her Votive. She carries fuel from her Votive into the placed Lamps around it, never Campfires, and takes gold from it as they grow in number. Her binding fades within a week, and once it has faded she stands dormant until a Nightbrand renews it. Hurt, she retreats to the Dark and tends nothing until she has healed. She gives no light and is not a Light Source.
+A torch-bearing spirit of the underworld, after Hecate's nymphs, summoned from a Lamp set on gold and kindled with a Torch, the gold becoming her Votive. She carries fuel from her Votive into her Tended Lamps, never Campfires, and takes gold from it as her Claimed Lamps grow in number. Her binding fades within a week, and once it has faded she stands dormant until a Nightbrand renews it. Hurt, she retreats to the Dark and tends nothing until she has healed. She gives no light and is not a Light Source.
 _Avoid_: golem (vanilla's kind), lamplighter, servant, Munaciello
+
+**Claimed Lamp**:
+A placed Lamp in a Votive's range, nearer it than any other Votive with a Lampad, which that Lampad owes gold for. A carried Lamp is never claimed, nor is a Campfire.
+_Avoid_: Lamp in range, her Lamps
+
+**Tended Lamp**:
+A Claimed Lamp that the gold her binding has taken pays for, which she carries fuel to, nearest her Votive first.
+_Avoid_: paid Lamp, served Lamp
 
 **Votive**:
 The offering stand a Lampad is summoned at and works from, holding the fuel, the Nightbrand and the gold she takes. She works from nothing else.
