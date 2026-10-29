@@ -68,6 +68,7 @@ public final class CarriedLight {
     static void register(IEventBus modBus) {
         ATTACHMENTS.register(modBus);
         NeoForge.EVENT_BUS.addListener(CarriedLight::tick);
+        Lit.countCarried(CarriedLight::heldLight);
     }
 
     /** Whether a player in the level carries light to this block now, which keeps a {@link CarriedLightBlock} there. */

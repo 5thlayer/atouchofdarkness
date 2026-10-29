@@ -8,6 +8,8 @@ import static io.github._5thlayer.atouchofdarkness.gametest.DarkFixture.*;
 import java.util.List;
 
 import io.github._5thlayer.atouchofdarkness.ATouchOfDarkness;
+import io.github._5thlayer.atouchofdarkness.dark.Dark;
+import io.github._5thlayer.atouchofdarkness.dark.DarkCues;
 import io.github._5thlayer.atouchofdarkness.light.Burning;
 import io.github._5thlayer.atouchofdarkness.light.CarriedLightBlock;
 import io.github._5thlayer.atouchofdarkness.light.HeldLightSource;
@@ -62,6 +64,7 @@ final class TorchTests {
     static void register(ATouchOfDarknessGameTests.Registrar tests) {
         tests.test("torch_recipe_gives_one_burning_torch_and_torches_never_stack", 1, TorchTests::recipe);
         tests.test("torch_held_keeps_its_carrier_lit_at_14_soul_10_and_its_light_follows", QUIET + 5, TorchTests::carried);
+        tests.test("torch_carrier_teleported_into_the_dark_hears_nothing_and_drains_nothing", 40, TorchTests::teleported);
         tests.test("torch_goes_out_underwater", 10, TorchTests::underwater);
         tests.test("torch_light_goes_into_water_never_into_a_solid_block_and_keeps_monsters_away", 40, TorchTests::whereTheLightGoes);
         tests.test("torch_dropped_gives_no_light_and_an_orphaned_light_removes_itself", 60, TorchTests::orphans);
@@ -76,6 +79,34 @@ final class TorchTests {
                 .test("torch_spent_relit_by_each_means_burns_a_quarter_as_long_then_is_gone", 20, TorchTests::relit);
         tests.in("torch_rain", new AtNight(MoonPhase.FULL_MOON, Weather.Type.RAIN))
                 .test("torch_burns_twice_as_fast_in_rain_under_the_open_sky", 20, TorchTests::rain);
+    }
+
+    /**
+     * A player holding a Torch, Lit by a light block in the open, is teleported into the Dark's cage, where
+     * no old carried light spills: on that tick too they are Lit, so they hear no entry sound and their
+     * Grace Period stays full.
+     */
+    private static void teleported(GameTestHelper helper) {
+        var cage = STAND;
+        var from = new BlockPos(1, 1, 1);
+        cage(helper, cage);
+        light(helper, from.above(), 15);
+        var player = inTheOpen(helper, from);
+        player.setItemInHand(InteractionHand.MAIN_HAND, Light.TORCH.toStack());
+        var inbox = ClientInbox.of(helper, player);
+        int[] full = new int[1];
+        helper.runAtTickTime(5, () -> {
+            full[0] = Dark.ticksToStrike(player);
+            var to = helper.absolutePos(cage);
+            player.teleportTo(to.getX() + 0.5, to.getY(), to.getZ() + 0.5);
+        });
+        helper.runAtTickTime(30, () -> {
+            helper.assertTrue(inbox.heard(DarkCues.ENTER.get()).isEmpty(), "entering the Dark was heard at ticks " + inbox.heard(DarkCues.ENTER.get()));
+            helper.assertTrue(Dark.ticksToStrike(player) == full[0],
+                    "the Grace Period drained to " + Dark.ticksToStrike(player) + " ticks from " + full[0]);
+            leave(player);
+            helper.succeed();
+        });
     }
 
     /** Coal or charcoal over a stick, and over soul soil or soul sand for the soul Torch: one, burning, alone in its stack. */

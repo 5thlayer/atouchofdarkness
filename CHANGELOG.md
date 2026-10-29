@@ -4,6 +4,8 @@ Written for Consumers: what a mod building against A Touch of Darkness can use, 
 
 ## Unreleased
 
+- A player carrying a burning Torch or Lamp is Lit on the tick they jump into the dark, by an ender pearl, chorus fruit, a teleport, a change of dimension, joining or respawning: the Dark now counts the light in their hands at their eyes, as well as the carried light block, which shows a tick later. They no longer hear the Dark's entry sound for nothing, nor lose a tick of their Grace Period or its refill. The Vesper Dial's meter reads the same. Vanilla's light still shows the gap for that tick, for mobs and for A Touch of Madness (#40).
+
 ## 0.1.1
 
 - Every Strike, Peaceful included and whatever it dealt, now raises A Touch Of's Runtime signal `io.github._5thlayer.atouchof.signal.Strike` (suite ADR-0004), so where A Touch of Madness is loaded a Strike costs Sanity, as the glossary says (#36).

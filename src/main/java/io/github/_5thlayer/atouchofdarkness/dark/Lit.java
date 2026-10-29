@@ -3,6 +3,8 @@
 
 package io.github._5thlayer.atouchofdarkness.dark;
 
+import java.util.function.ToIntFunction;
+
 import io.github._5thlayer.atouchofdarkness.ATouchOfDarkness;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.Registries;
@@ -17,8 +19,10 @@ import net.minecraft.world.level.dimension.DimensionType;
 /**
  * The Lit rule (GLOSSARY.md): the light at a player's eyes is at or above the threshold, or their eyes
  * see the sky of a dimension tagged {@link #SKY_ALWAYS_LIT}, or a full moon's night sky with no rain.
- * Night Vision changes nothing here. It is worked out on asking: the light engine's visible data changes
- * only between ticks, so every listener in a tick reads the same light, whatever order they run in.
+ * A player's own light counts at their eyes as soon as they hold it, ahead of the carried light block
+ * that lights the world a tick later (ADR 0002). Night Vision changes nothing here. It is worked out on
+ * asking: the light engine's visible data changes only between ticks, so every listener in a tick reads
+ * the same light, whatever order they run in.
  */
 public final class Lit {
 
@@ -34,8 +38,8 @@ public final class Lit {
     /**
      * One player's reading of the Lit rule.
      *
-     * @param light the light at their eyes, 0 to 15: the sky's dimmed for the hour and the weather, or
-     *              the block light there, whichever is brighter, carried light included
+     * @param light the light at their eyes, 0 to 15: the sky's dimmed for the hour and the weather, the
+     *              block light there, or the light they carry, whichever is brighter
      * @param lit whether they are Lit, whatever their game mode and dimension
      * @param reached whether the Dark reaches their dimension at all
      * @param inTheDark whether they are in the Dark: reached, neither in Creative nor in Spectator, and
@@ -49,22 +53,38 @@ public final class Lit {
         }
     }
 
+    /** The light a player carries in their hands, 0 for none, which carried light tells this rule. */
+    private static ToIntFunction<ServerPlayer> carried = player -> 0;
+
     private Lit() {
+    }
+
+    /**
+     * Has the rule count the light a player carries, so a carrier who jumps into the dark is Lit on that
+     * tick, before the light engine shows their carried light block. Carried light calls it as it registers.
+     */
+    public static void countCarried(ToIntFunction<ServerPlayer> heldLight) {
+        carried = heldLight;
     }
 
     /** The player's reading now. */
     public static Reading reading(ServerPlayer player) {
         var level = player.level();
         var eyes = eyes(player);
-        boolean lit = isLit(level, eyes);
+        int light = Math.max(lightAt(level, eyes), carried.applyAsInt(player));
+        boolean lit = isLit(level, eyes, light);
         boolean reached = level.dimensionTypeRegistration().is(DIMENSIONS);
         boolean inTheDark = reached && !player.isCreative() && !player.isSpectator() && !lit;
-        return new Reading(lightAt(level, eyes), lit, reached, inTheDark);
+        return new Reading(light, lit, reached, inTheDark);
     }
 
     /** Whether eyes at this block would be Lit, as a player's are: for anything that isn't a player. */
     public static boolean isLit(ServerLevel level, BlockPos eyes) {
-        if (lightAt(level, eyes) >= DarkConfig.LIT_THRESHOLD.getAsInt()) {
+        return isLit(level, eyes, lightAt(level, eyes));
+    }
+
+    private static boolean isLit(ServerLevel level, BlockPos eyes, int light) {
+        if (light >= DarkConfig.LIT_THRESHOLD.getAsInt()) {
             return true;
         }
         // A dimension with no sky, such as the Nether, has no sky light, so it is never seen there.
