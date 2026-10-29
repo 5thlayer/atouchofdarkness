@@ -14,7 +14,6 @@ import io.github._5thlayer.atouchofdarkness.nightbrand.Nightbrand;
 import io.github._5thlayer.atouchofdarkness.nightbrand.Darkening;
 import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTestHelper;
-import net.minecraft.network.chat.Component;
 import net.minecraft.world.Difficulty;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.EntityType;
@@ -239,7 +238,7 @@ final class NightbrandTests {
     }
 
     private static void assertDarkeningLine(GameTestHelper helper, ItemStack stack, TooltipFlag flag, @Nullable String countdown) {
-        var lines = stack.getTooltipLines(Item.TooltipContext.of(helper.getLevel()), null, flag).stream().map(Component::getString).toList();
+        var lines = LightFixture.tooltip(helper, stack, flag);
         boolean told = lines.stream().anyMatch(text -> text.endsWith("to a Nightbrand"));
         helper.assertTrue(countdown == null ? !told : lines.contains(countdown), stack + "'s tooltip " + lines + " with " + flag + " should read " + countdown);
     }

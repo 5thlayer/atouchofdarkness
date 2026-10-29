@@ -4,37 +4,27 @@
 package io.github._5thlayer.atouchofdarkness.gametest;
 
 import static io.github._5thlayer.atouchofdarkness.gametest.DarkFixture.*;
+import static io.github._5thlayer.atouchofdarkness.gametest.LightFixture.*;
 
 import java.util.List;
 
-import io.github._5thlayer.atouchofdarkness.ATouchOfDarkness;
 import io.github._5thlayer.atouchofdarkness.light.Light;
-import io.github._5thlayer.atouchofdarkness.light.PlacedFuel;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.core.registries.Registries;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.gametest.framework.TestEnvironmentDefinition.Weather;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.resources.Identifier;
-import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.ProblemReporter;
-import net.minecraft.world.InteractionHand;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
-import net.minecraft.world.item.crafting.CraftingInput;
-import net.minecraft.world.item.crafting.CraftingRecipe;
 import net.minecraft.world.level.MoonPhase;
-import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.CampfireBlock;
 import net.minecraft.world.level.block.entity.CampfireBlockEntity;
 import net.minecraft.world.level.storage.TagValueInput;
-import net.minecraft.world.phys.BlockHitResult;
-import net.minecraft.world.phys.Vec3;
 
 /**
  * The Campfire: crafted in vanilla's shape, placed already burning at half its cap, fed fuel by hand
@@ -44,9 +34,8 @@ import net.minecraft.world.phys.Vec3;
  */
 final class CampfireTests {
 
-    /** A Campfire's cap at the defaults, half a day, and the soul Campfire's. */
-    static final int CAP = 12_000;
-    private static final int SOUL_CAP = 2 * CAP;
+    /** The soul Campfire's cap at the defaults. */
+    private static final int SOUL_CAP = 2 * CAMPFIRE_CAP;
 
     /** Ticks short of a burn the clock is moved, and then past it, as the clock also runs a tick a tick. */
     private static final int MARGIN = 100;
@@ -78,52 +67,37 @@ final class CampfireTests {
         assertCrafts(helper, "soul_campfire", List.of(Items.AIR, Items.STICK, Items.AIR, Items.STICK, Items.SOUL_SOIL, Items.STICK, Items.OAK_LOG, Items.OAK_LOG, Items.OAK_LOG),
                 Light.SOUL_CAMPFIRE_ITEM.get());
 
-        var player = survivalPlayer(helper);
-        standAt(helper, STAND, player);
+        var player = survivalPlayerAt(helper, STAND);
         var campfire = new BlockPos(2, 1, 2);
         var soul = new BlockPos(6, 1, 2);
         place(helper, player, Light.CAMPFIRE_ITEM.get(), campfire);
         place(helper, player, Light.SOUL_CAMPFIRE_ITEM.get(), soul);
-        assertFuel(helper, campfire, CAP / 2);
+        assertFuel(helper, campfire, CAMPFIRE_CAP / 2);
         assertFuel(helper, soul, SOUL_CAP / 2);
 
-        useOn(helper, player, new ItemStack(Items.STICK), campfire);
-        assertFuel(helper, campfire, CAP / 2 + 1000);
+        useOn(helper, player, new ItemStack(Items.STICK), campfire, Direction.UP);
+        assertFuel(helper, campfire, CAMPFIRE_CAP / 2 + 1000);
         var coal = new ItemStack(Items.COAL, 2);
-        useOn(helper, player, coal, campfire);
-        assertFuel(helper, campfire, CAP);
+        useOn(helper, player, coal, campfire, Direction.UP);
+        assertFuel(helper, campfire, CAMPFIRE_CAP);
         helper.assertTrue(coal.getCount() == 1, "fuelling took " + (2 - coal.getCount()) + " coal, not 1");
         leave(player);
         helper.succeed();
     }
 
     private static void assertCrafts(GameTestHelper helper, String recipe, List<Item> grid, Item campfire) {
-        var id = ResourceKey.create(Registries.RECIPE, Identifier.fromNamespaceAndPath(ATouchOfDarkness.MOD_ID, recipe));
-        var holder = helper.getLevel().getServer().getRecipeManager().byKey(id);
-        helper.assertTrue(holder.isPresent() && holder.get().value() instanceof CraftingRecipe, "no crafting recipe " + id.identifier());
-        var crafting = (CraftingRecipe) holder.get().value();
-        var input = CraftingInput.of(3, 3, grid.stream().map(ItemStack::new).toList());
-        helper.assertTrue(crafting.matches(input, helper.getLevel()), recipe + " doesn't take " + grid);
-        var result = crafting.assemble(input);
+        var result = crafted(helper, recipe, 3, 3, grid);
         helper.assertTrue(result.is(campfire), recipe + " gives " + result);
     }
 
     /** The player places the item on the floor, so the block stands at {@code at}. */
     private static void place(GameTestHelper helper, ServerPlayer player, Item item, BlockPos at) {
-        useOn(helper, player, new ItemStack(item), at.below());
+        useOn(helper, player, new ItemStack(item), at.below(), Direction.UP);
         helper.assertBlockPresent(((BlockItem) item).getBlock(), at);
     }
 
-    /** The player uses the stack on the top of the block at {@code at}. */
-    private static void useOn(GameTestHelper helper, ServerPlayer player, ItemStack stack, BlockPos at) {
-        player.setItemInHand(InteractionHand.MAIN_HAND, stack);
-        var pos = helper.absolutePos(at);
-        var hit = new BlockHitResult(Vec3.atCenterOf(pos).add(0, 0.4, 0), Direction.UP, pos, false);
-        player.gameMode.useItemOn(player, helper.getLevel(), stack, InteractionHand.MAIN_HAND, hit);
-    }
-
     private static void assertFuel(GameTestHelper helper, BlockPos at, int left) {
-        int fuel = PlacedFuel.left(helper.getLevel(), helper.absolutePos(at));
+        int fuel = LightFixture.fuel(helper, at);
         helper.assertTrue(fuel == left, "the Campfire at " + at + " holds " + fuel + " fuel, not " + left);
     }
 
@@ -136,8 +110,8 @@ final class CampfireTests {
         int[] lights = {15, 12, 9, 6};
         int[] soulLights = {11, 9, 7, 5};
         for (int i = 0; i < 4; i++) {
-            fuelled(helper, Light.CAMPFIRE.get(), new BlockPos(1 + 2 * i, 1, 2), CAP * fractions[i] / 4);
-            fuelled(helper, Light.SOUL_CAMPFIRE.get(), new BlockPos(1 + 2 * i, 1, 6), SOUL_CAP * fractions[i] / 4);
+            campfire(helper, Light.CAMPFIRE.get(), new BlockPos(1 + 2 * i, 1, 2), CAMPFIRE_CAP * fractions[i] / 4);
+            campfire(helper, Light.SOUL_CAMPFIRE.get(), new BlockPos(1 + 2 * i, 1, 6), SOUL_CAP * fractions[i] / 4);
         }
         helper.runAtTickTime(3, () -> {
             for (int i = 0; i < 4; i++) {
@@ -150,11 +124,10 @@ final class CampfireTests {
 
     /** Raw beef put on a burning Campfire by a player is cooked in vanilla's time. */
     private static void cooks(GameTestHelper helper) {
-        var player = survivalPlayer(helper);
-        standAt(helper, STAND, player);
+        var player = survivalPlayerAt(helper, STAND);
         var campfire = new BlockPos(4, 1, 2);
         helper.setBlock(campfire, Light.CAMPFIRE.get());
-        useOn(helper, player, new ItemStack(Items.BEEF), campfire);
+        useOn(helper, player, new ItemStack(Items.BEEF), campfire, Direction.UP);
         leave(player);
         helper.runAtTickTime(COOKING + 10, () -> {
             // Vanilla drops it with a random push.
@@ -165,8 +138,7 @@ final class CampfireTests {
 
     /** Three campfires and two soul campfires of vanilla's in a player's inventory become the Pillar's, stack for stack. */
     private static void vanillaCampfires(GameTestHelper helper) {
-        var player = survivalPlayer(helper);
-        standAt(helper, STAND, player);
+        var player = survivalPlayerAt(helper, STAND);
         player.getInventory().setItem(9, new ItemStack(Items.CAMPFIRE, 3));
         player.getInventory().setItem(10, new ItemStack(Items.SOUL_CAMPFIRE, 2));
         helper.runAtTickTime(3, () -> {
@@ -197,7 +169,7 @@ final class CampfireTests {
         helper.runAtTickTime(2, () -> {
             saved[0] = helper.getBlockEntity(unloaded, CampfireBlockEntity.class).saveWithFullMetadata(registries);
             helper.setBlock(unloaded, Blocks.AIR);
-            KeepsClock.advance(helper, CAP / 2 - MARGIN);
+            KeepsClock.advance(helper, CAMPFIRE_CAP / 2 - MARGIN);
         });
         helper.runAtTickTime(4, () -> {
             assertLit(helper, loaded);
@@ -222,7 +194,7 @@ final class CampfireTests {
         helper.setBlock(open, Light.CAMPFIRE.get());
         helper.setBlock(roofed, Light.CAMPFIRE.get());
         helper.setBlock(roofed.above(), Blocks.STONE);
-        helper.runAtTickTime(2, () -> KeepsClock.advance(helper, CAP / 4 - MARGIN));
+        helper.runAtTickTime(2, () -> KeepsClock.advance(helper, CAMPFIRE_CAP / 4 - MARGIN));
         helper.runAtTickTime(4, () -> {
             assertLit(helper, open);
             KeepsClock.advance(helper, 2 * MARGIN);
@@ -232,12 +204,6 @@ final class CampfireTests {
             assertLit(helper, roofed);
             helper.succeed();
         });
-    }
-
-    /** A Campfire set at the block, holding this much fuel. */
-    private static void fuelled(GameTestHelper helper, Block campfire, BlockPos at, int fuel) {
-        helper.setBlock(at, campfire);
-        PlacedFuel.set(helper.getLevel(), helper.absolutePos(at), fuel);
     }
 
     /** Lit, and giving this light. */

@@ -5,6 +5,8 @@ package io.github._5thlayer.atouchofdarkness.gametest;
 
 import static io.github._5thlayer.atouchofdarkness.gametest.DarkFixture.caged;
 import static io.github._5thlayer.atouchofdarkness.gametest.DarkFixture.leave;
+import static io.github._5thlayer.atouchofdarkness.gametest.LightFixture.lamp;
+import static io.github._5thlayer.atouchofdarkness.gametest.LightFixture.useOn;
 
 import java.util.Map;
 import java.util.Set;
@@ -18,6 +20,7 @@ import io.github._5thlayer.atouchofdarkness.lampad.Lampad;
 import io.github._5thlayer.atouchofdarkness.light.Light;
 import io.github._5thlayer.atouchofdarkness.nightbrand.Nightbrand;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
@@ -72,7 +75,7 @@ final class DiscoveryTests {
             expectKnown(helper, player, id, false);
         }
         helper.setBlock(VOTIVE, Blocks.GOLD_BLOCK);
-        LampTests.lamp(helper, Light.LAMP.get(), VOTIVE.above(), 0);
+        lamp(helper, Light.LAMP.get(), VOTIVE.above(), 0);
         helper.startSequence()
                 .thenExecute(() -> player.getInventory().add(Light.LAMP_ITEM.toStack()))
                 .thenWaitUntil(() -> expectKnown(helper, player, Discoveries.FUEL, true))
@@ -101,7 +104,7 @@ final class DiscoveryTests {
                 .thenWaitUntil(() -> expectKnown(helper, player, Discoveries.VOTIVE, true))
                 .thenExecute(() -> {
                     expectKnown(helper, player, Discoveries.LAMPAD, false);
-                    LampTests.useOn(helper, player, Light.TORCH.toStack(), VOTIVE.above());
+                    useOn(helper, player, Light.TORCH.toStack(), VOTIVE.above(), Direction.SOUTH);
                     helper.assertBlockPresent(Lampad.VOTIVE.get(), VOTIVE);
                     expectKnown(helper, player, Discoveries.LAMPAD, true);
                     for (var id : Discoveries.IDS) {

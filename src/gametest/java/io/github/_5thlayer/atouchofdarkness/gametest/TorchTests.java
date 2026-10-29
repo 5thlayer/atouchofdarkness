@@ -4,10 +4,10 @@
 package io.github._5thlayer.atouchofdarkness.gametest;
 
 import static io.github._5thlayer.atouchofdarkness.gametest.DarkFixture.*;
+import static io.github._5thlayer.atouchofdarkness.gametest.LightFixture.*;
 
 import java.util.List;
 
-import io.github._5thlayer.atouchofdarkness.ATouchOfDarkness;
 import io.github._5thlayer.atouchofdarkness.dark.Dark;
 import io.github._5thlayer.atouchofdarkness.dark.DarkCues;
 import io.github._5thlayer.atouchofdarkness.dark.Lit;
@@ -18,12 +18,9 @@ import io.github._5thlayer.atouchofdarkness.light.Light;
 import net.minecraft.commands.arguments.EntityAnchorArgument;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.core.registries.Registries;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.gametest.framework.TestEnvironmentDefinition.Weather;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.Identifier;
-import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.monster.Monster;
@@ -31,15 +28,12 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.TooltipFlag;
-import net.minecraft.world.item.crafting.CraftingInput;
-import net.minecraft.world.item.crafting.CraftingRecipe;
 import net.minecraft.world.level.GameType;
 import net.minecraft.world.level.LightLayer;
 import net.minecraft.world.level.MoonPhase;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.WallTorchBlock;
 import net.minecraft.world.level.block.entity.ChestBlockEntity;
-import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
 import org.jspecify.annotations.Nullable;
 
@@ -135,13 +129,7 @@ final class TorchTests {
     }
 
     private static void assertCrafts(GameTestHelper helper, String recipe, List<Item> column, Item torch, int light) {
-        var id = ResourceKey.create(Registries.RECIPE, Identifier.fromNamespaceAndPath(ATouchOfDarkness.MOD_ID, recipe));
-        var holder = helper.getLevel().getServer().getRecipeManager().byKey(id);
-        helper.assertTrue(holder.isPresent() && holder.get().value() instanceof CraftingRecipe, "no crafting recipe " + id.identifier());
-        var crafting = (CraftingRecipe) holder.get().value();
-        var input = CraftingInput.of(1, column.size(), column.stream().map(ItemStack::new).toList());
-        helper.assertTrue(crafting.matches(input, helper.getLevel()), recipe + " doesn't take " + column);
-        var result = crafting.assemble(input);
+        var result = crafted(helper, recipe, 1, column.size(), column);
         helper.assertTrue(result.is(torch) && result.getCount() == 1, recipe + " from " + column + " gives " + result);
         helper.assertTrue(heldLight(result) == light, recipe + " gives a torch of light " + heldLight(result) + ", not " + light);
         helper.assertTrue(result.getMaxStackSize() == 1, recipe + " gives a torch that stacks to " + result.getMaxStackSize());
@@ -286,14 +274,10 @@ final class TorchTests {
 
     /** A Torch, a soul Torch and a Spent Torch used on the floor: nothing is placed. */
     private static void neverPlaced(GameTestHelper helper) {
-        var player = survivalPlayer(helper);
-        standAt(helper, STAND, player);
+        var player = survivalPlayerAt(helper, STAND);
         var floor = new BlockPos(5, 0, 4);
         for (var item : List.of(Light.TORCH.get(), Light.SOUL_TORCH.get(), Light.SPENT_TORCH.get())) {
-            var stack = new ItemStack(item);
-            player.setItemInHand(InteractionHand.MAIN_HAND, stack);
-            var hit = new BlockHitResult(Vec3.atCenterOf(helper.absolutePos(floor)).add(0, 0.5, 0), Direction.UP, helper.absolutePos(floor), false);
-            player.gameMode.useItemOn(player, helper.getLevel(), stack, InteractionHand.MAIN_HAND, hit);
+            useOn(helper, player, new ItemStack(item), floor, Direction.UP);
             helper.assertTrue(helper.getBlockState(floor.above()).isAir(), item + " placed " + helper.getBlockState(floor.above()));
         }
         leave(player);
@@ -319,7 +303,7 @@ final class TorchTests {
 
     /** The tooltip has the hint, and the countdown or, given none, no countdown at all. */
     private static void assertTooltip(GameTestHelper helper, ItemStack stack, TooltipFlag flag, String hint, @Nullable String countdown) {
-        var lines = stack.getTooltipLines(Item.TooltipContext.of(helper.getLevel()), null, flag).stream().map(Component::getString).toList();
+        var lines = tooltip(helper, stack, flag);
         helper.assertTrue(lines.contains(hint), stack + "'s tooltip " + lines + " lacks \"" + hint + "\"");
         boolean counted = lines.stream().anyMatch(line -> line.endsWith("of burn left"));
         helper.assertTrue(countdown == null ? !counted : lines.contains(countdown), stack + "'s tooltip " + lines + " with " + flag + " should read " + countdown);
@@ -330,8 +314,7 @@ final class TorchTests {
      * soul Torches, one to a slot; vanilla's torch, wall torch and soul torch broken each drop a Spent Torch.
      */
     private static void vanillaTorches(GameTestHelper helper) {
-        var player = survivalPlayer(helper);
-        standAt(helper, STAND, player);
+        var player = survivalPlayerAt(helper, STAND);
         player.getInventory().setItem(9, new ItemStack(Items.TORCH, 3));
         player.getInventory().setItem(10, new ItemStack(Items.SOUL_TORCH, 2));
         var placed = List.of(new BlockPos(1, 1, 1), new BlockPos(7, 1, 1), new BlockPos(1, 1, 7));
@@ -466,8 +449,7 @@ final class TorchTests {
     }
 
     private static ServerPlayer relighter(GameTestHelper helper, BlockPos stand, ItemStack offHand) {
-        var player = survivalPlayer(helper);
-        standAt(helper, stand, player);
+        var player = survivalPlayerAt(helper, stand);
         player.setItemInHand(InteractionHand.MAIN_HAND, Light.SPENT_TORCH.toStack());
         player.setItemInHand(InteractionHand.OFF_HAND, offHand);
         return player;

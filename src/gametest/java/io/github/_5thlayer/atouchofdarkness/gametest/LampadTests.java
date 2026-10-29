@@ -4,6 +4,7 @@
 package io.github._5thlayer.atouchofdarkness.gametest;
 
 import static io.github._5thlayer.atouchofdarkness.gametest.DarkFixture.*;
+import static io.github._5thlayer.atouchofdarkness.gametest.LightFixture.*;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -78,17 +79,16 @@ final class LampadTests {
      * becomes a Lampad too.
      */
     private static void summons(GameTestHelper helper) {
-        var player = survivalPlayer(helper);
-        standAt(helper, STAND, player);
+        var player = survivalPlayerAt(helper, STAND);
         var votive = new BlockPos(2, 1, 2);
         var soulVotive = new BlockPos(6, 1, 2);
         for (var gold : new BlockPos[] {votive, soulVotive}) {
             helper.setBlock(gold, Blocks.GOLD_BLOCK);
         }
-        LampTests.lamp(helper, Light.LAMP.get(), votive.above(), 1000);
-        LampTests.lamp(helper, Light.SOUL_LAMP.get(), soulVotive.above(), 0);
-        LampTests.useOn(helper, player, Light.TORCH.toStack(), votive.above());
-        LampTests.useOn(helper, player, Light.SOUL_TORCH.toStack(), soulVotive.above());
+        lamp(helper, Light.LAMP.get(), votive.above(), 1000);
+        lamp(helper, Light.SOUL_LAMP.get(), soulVotive.above(), 0);
+        useOn(helper, player, Light.TORCH.toStack(), votive.above(), Direction.SOUTH);
+        useOn(helper, player, Light.SOUL_TORCH.toStack(), soulVotive.above(), Direction.SOUTH);
         for (var at : new BlockPos[] {votive, soulVotive}) {
             helper.assertBlockPresent(Lampad.VOTIVE.get(), at);
             helper.assertBlockNotPresent(Light.LAMP.get(), at.above());
@@ -97,12 +97,12 @@ final class LampadTests {
         assertLampads(helper, 2);
 
         var first = helper.getEntities(Lampad.LAMPAD.get(), votive.above(), 1.5).getFirst();
-        LampTests.lamp(helper, Light.LAMP.get(), votive.above(), 1000);
-        LampTests.useOn(helper, player, Light.TORCH.toStack(), votive.above());
+        lamp(helper, Light.LAMP.get(), votive.above(), 1000);
+        useOn(helper, player, Light.TORCH.toStack(), votive.above(), Direction.SOUTH);
         helper.assertBlockPresent(Light.LAMP.get(), votive.above());
         assertLampads(helper, 2);
         first.kill(helper.getLevel());
-        LampTests.useOn(helper, player, Light.TORCH.toStack(), votive.above());
+        useOn(helper, player, Light.TORCH.toStack(), votive.above(), Direction.SOUTH);
         helper.assertBlockNotPresent(Light.LAMP.get(), votive.above());
         assertLampads(helper, 2);
         leave(player);
@@ -155,8 +155,7 @@ final class LampadTests {
      * A second nugget put in her Votive then pays for the farthest Lamp, and she feeds it.
      */
     private static void tends(GameTestHelper helper) {
-        var player = survivalPlayer(helper);
-        standAt(helper, new BlockPos(7, 1, 6), player);
+        var player = survivalPlayerAt(helper, new BlockPos(7, 1, 6));
         player.setItemInHand(InteractionHand.MAIN_HAND, Light.LAMP_ITEM.toStack());
         var votive = new BlockPos(0, 1, 0);
         var onDry = new BlockPos(0, 1, 2);
@@ -166,14 +165,13 @@ final class LampadTests {
         var fed = List.of(new BlockPos(2, 1, 0), onDry, new BlockPos(4, 1, 0), new BlockPos(0, 1, 4), new BlockPos(4, 1, 2),
                 new BlockPos(2, 1, 4), new BlockPos(4, 1, 4));
         for (var lamp : fed) {
-            LampTests.lamp(helper, Light.LAMP.get(), lamp, 0);
+            lamp(helper, Light.LAMP.get(), lamp, 0);
         }
         helper.setBlock(onDry, Light.LAMP.get().defaultBlockState().setValue(LampBlock.ON, true));
-        LampTests.lamp(helper, Light.LAMP.get(), farthest, 0);
+        lamp(helper, Light.LAMP.get(), farthest, 0);
         helper.setBlock(nearlyFull, Light.LAMP.get());
-        PlacedFuel.set(helper.getLevel(), helper.absolutePos(nearlyFull), LampTests.CAP - 1000);
-        helper.setBlock(campfire, Light.SOUL_CAMPFIRE.get());
-        PlacedFuel.set(helper.getLevel(), helper.absolutePos(campfire), 2000);
+        PlacedFuel.set(helper.getLevel(), helper.absolutePos(nearlyFull), LAMP_CAP - 1000);
+        campfire(helper, Light.SOUL_CAMPFIRE.get(), campfire, 2000);
         var votiveEntity = summon(helper, player, votive);
         votiveEntity.setItem(VotiveBlockEntity.FUEL, new ItemStack(Items.COAL, 20));
         votiveEntity.setItem(VotiveBlockEntity.NIGHTBRAND, Nightbrand.NIGHTBRAND.toStack());
@@ -182,26 +180,26 @@ final class LampadTests {
         var fedAt = new long[] {-1};
         helper.onEachTick(() -> {
             if (fedAt[0] < 0) {
-                if (fed.stream().allMatch(lamp -> PlacedFuel.left(helper.getLevel(), helper.absolutePos(lamp)) > 0)) {
+                if (fed.stream().allMatch(lamp -> fuel(helper, lamp) > 0)) {
                     fedAt[0] = helper.getTick();
                 }
             } else if (helper.getTick() == fedAt[0] + 200) {
                 for (var lamp : fed) {
-                    int left = PlacedFuel.left(helper.getLevel(), helper.absolutePos(lamp));
+                    int left = fuel(helper, lamp);
                     helper.assertTrue(lamp.equals(onDry) ? left > 15_000 && left <= 16_000 : left == 16_000,
                             "the Lamp at " + lamp + " holds " + left + ", not a coal's 16000");
                 }
                 helper.assertTrue(helper.getBlockState(onDry).getValue(LampBlock.LIT), "the Lamp on but dry doesn't shine once fed");
-                LampTests.assertPlaced(helper, new BlockPos(2, 1, 0), false, 16_000);
-                LampTests.assertPlaced(helper, nearlyFull, false, LampTests.CAP - 1000);
-                LampTests.assertPlaced(helper, farthest, false, 0);
-                var fire = PlacedFuel.left(helper.getLevel(), helper.absolutePos(campfire));
+                assertLamp(helper, new BlockPos(2, 1, 0), false, 16_000);
+                assertLamp(helper, nearlyFull, false, LAMP_CAP - 1000);
+                assertLamp(helper, farthest, false, 0);
+                var fire = fuel(helper, campfire);
                 helper.assertTrue(fire <= 2000, "the Lampad fed the Campfire, to " + fire);
                 helper.assertTrue(player.getMainHandItem().getOrDefault(Light.LAMP_FUEL, 0) == 0, "the Lampad fed a carried Lamp");
                 assertHolds(helper, votiveEntity, VotiveBlockEntity.FUEL, Items.COAL, 20 - fed.size());
                 assertHolds(helper, votiveEntity, VotiveBlockEntity.GOLD, Items.GOLD_NUGGET, 0);
                 votiveEntity.setItem(VotiveBlockEntity.GOLD, new ItemStack(Items.GOLD_NUGGET));
-            } else if (helper.getTick() > fedAt[0] + 200 && PlacedFuel.left(helper.getLevel(), helper.absolutePos(farthest)) == 16_000) {
+            } else if (helper.getTick() > fedAt[0] + 200 && fuel(helper, farthest) == 16_000) {
                 assertHolds(helper, votiveEntity, VotiveBlockEntity.GOLD, Items.GOLD_NUGGET, 0);
                 leave(player);
                 helper.succeed();
@@ -218,8 +216,7 @@ final class LampadTests {
      * other's 1.
      */
     private static void counts(GameTestHelper helper) {
-        var player = survivalPlayer(helper);
-        standAt(helper, STAND, player);
+        var player = survivalPlayerAt(helper, STAND);
         var votive = new BlockPos(4, 40, 4);
         var other = votive.east(12);
         var hers = List.of(votive.west(16), votive.north(16), votive.above(8), votive.below(8), votive.west(16).north(16).above(8),
@@ -299,8 +296,7 @@ final class LampadTests {
      * have landed on a player there she has taken nothing.
      */
     private static void unlitUnstruck(GameTestHelper helper) {
-        var player = survivalPlayer(helper);
-        standAt(helper, STAND.east(3), player);
+        var player = survivalPlayerAt(helper, STAND.east(3));
         cage(helper, STAND);
         var votiveEntity = summon(helper, player, STAND.below());
         votiveEntity.setItem(VotiveBlockEntity.NIGHTBRAND, Nightbrand.NIGHTBRAND.toStack());
@@ -324,12 +320,11 @@ final class LampadTests {
      * caught none of those days up, and she feeds the Lamp.
      */
     private static void unloaded(GameTestHelper helper) {
-        var player = survivalPlayer(helper);
-        standAt(helper, STAND, player);
+        var player = survivalPlayerAt(helper, STAND);
         var votive = new BlockPos(1, 1, 1);
         var lamp = new BlockPos(4, 1, 1);
         helper.setBlock(lamp, Light.LAMP.get());
-        PlacedFuel.set(helper.getLevel(), helper.absolutePos(lamp), LampTests.CAP);
+        PlacedFuel.set(helper.getLevel(), helper.absolutePos(lamp), LAMP_CAP);
         var votiveEntity = summon(helper, player, votive);
         votiveEntity.setItem(VotiveBlockEntity.NIGHTBRAND, Nightbrand.NIGHTBRAND.toStack());
         votiveEntity.setItem(VotiveBlockEntity.GOLD, new ItemStack(Items.GOLD_NUGGET));
@@ -348,7 +343,7 @@ final class LampadTests {
         });
         var reloaded = new LampadEntity[1];
         helper.runAtTickTime(100, () -> {
-            LampTests.assertPlaced(helper, lamp, false, 0);
+            assertLamp(helper, lamp, false, 0);
             reloaded[0] = Lampad.LAMPAD.get().create(helper.getLevel(), EntitySpawnReason.LOAD);
             reloaded[0].load(TagValueInput.create(ProblemReporter.DISCARDING, registries, saved[0]));
             helper.getLevel().addFreshEntity(reloaded[0]);
@@ -358,7 +353,7 @@ final class LampadTests {
                 return;
             }
             helper.assertFalse(reloaded[0].isDormant(), "the Lampad caught her absence up and stands dormant");
-            if (PlacedFuel.left(helper.getLevel(), helper.absolutePos(lamp)) == 16_000) {
+            if (fuel(helper, lamp) == 16_000) {
                 leave(player);
                 helper.succeed();
             }
@@ -371,8 +366,7 @@ final class LampadTests {
      * the other and keeps working, and once that one's has she stands dormant again. A third wakes her.
      */
     private static void binding(GameTestHelper helper) {
-        var player = survivalPlayer(helper);
-        standAt(helper, STAND, player);
+        var player = survivalPlayerAt(helper, STAND);
         var votiveEntity = summon(helper, player, new BlockPos(2, 1, 2));
         var lampad = helper.getEntities(Lampad.LAMPAD.get()).getFirst();
         helper.runAtTickTime(3, () -> {
@@ -403,8 +397,7 @@ final class LampadTests {
      * target, as it would a villager, and she keeps her 12 health. Its blow still hurts her.
      */
     private static void passive(GameTestHelper helper) {
-        var player = survivalPlayer(helper);
-        standAt(helper, STAND, player);
+        var player = survivalPlayerAt(helper, STAND);
         var votiveEntity = summon(helper, player, new BlockPos(2, 1, 2));
         votiveEntity.setItem(VotiveBlockEntity.NIGHTBRAND, Nightbrand.NIGHTBRAND.toStack());
         leave(player);
@@ -431,8 +424,7 @@ final class LampadTests {
      * her dry Lamp nothing, until her binding fades and she stands dormant.
      */
     private static void heals(GameTestHelper helper) {
-        var player = survivalPlayer(helper);
-        standAt(helper, new BlockPos(4, 1, 0), player);
+        var player = survivalPlayerAt(helper, new BlockPos(4, 1, 0));
         var votive = new BlockPos(1, 1, 1);
         var lamp = new BlockPos(0, 1, 2);
         helper.setBlock(new BlockPos(0, 2, 0), Blocks.LIGHT);
@@ -471,7 +463,7 @@ final class LampadTests {
         var waited = new boolean[1];
         helper.onEachTick(() -> {
             long tick = helper.getTick();
-            int fed = PlacedFuel.left(helper.getLevel(), helper.absolutePos(lamp));
+            int fed = fuel(helper, lamp);
             helper.assertTrue(fed == 0 || !lampad.isHurt(), "the Lampad fed a Lamp while hurt, " + lampad.getHealth() + " health");
             if (lampad.isHealing()) {
                 helper.assertFalse(Lit.isLit(level, BlockPos.containing(lampad.getEyePosition())), "the Lampad heals where it is Lit");
@@ -490,7 +482,7 @@ final class LampadTests {
             if (!waited[0]) {
                 helper.assertTrue(waiting.getHealth() == 10F, "the Lampad with no Dark in range healed to " + waiting.getHealth());
                 helper.assertTrue(waiting.position().distanceTo(waitingAt) < 0.5, "the Lampad with no Dark in range walked off");
-                LampTests.assertPlaced(helper, ledgeLamp, false, 0);
+                assertLamp(helper, ledgeLamp, false, 0);
                 waited[0] = waiting.isDormant() && tick > 50;
             }
             if (waited[0] && fed == 16_000) {
@@ -508,12 +500,11 @@ final class LampadTests {
      * and her Nightbrand, and no gold. The other, killed, drops the soul Lamp with its 3000 and her Nightbrand.
      */
     private static void lost(GameTestHelper helper) {
-        var player = survivalPlayer(helper);
-        standAt(helper, new BlockPos(8, 1, 0), player);
+        var player = survivalPlayerAt(helper, new BlockPos(8, 1, 0));
         var votive = new BlockPos(2, 1, 2);
         var soulVotive = new BlockPos(6, 1, 6);
         helper.setBlock(new BlockPos(0, 1, 0), Light.LAMP.get());
-        PlacedFuel.set(helper.getLevel(), helper.absolutePos(new BlockPos(0, 1, 0)), LampTests.CAP);
+        PlacedFuel.set(helper.getLevel(), helper.absolutePos(new BlockPos(0, 1, 0)), LAMP_CAP);
         var votiveEntity = summonFrom(helper, player, votive, Light.LAMP.get(), 5000);
         var soulVotiveEntity = summonFrom(helper, player, soulVotive, Light.SOUL_LAMP.get(), 3000);
         votiveEntity.setItem(VotiveBlockEntity.FUEL, new ItemStack(Items.COAL, 5));
@@ -572,7 +563,7 @@ final class LampadTests {
         helper.setBlock(at, Blocks.GOLD_BLOCK);
         helper.setBlock(at.above(), lamp);
         PlacedFuel.set(helper.getLevel(), helper.absolutePos(at.above()), fuel);
-        LampTests.useOn(helper, player, Light.TORCH.toStack(), at.above());
+        useOn(helper, player, Light.TORCH.toStack(), at.above(), Direction.SOUTH);
         player.setItemInHand(InteractionHand.MAIN_HAND, ItemStack.EMPTY);
         return helper.getBlockEntity(at, VotiveBlockEntity.class);
     }

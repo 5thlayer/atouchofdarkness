@@ -68,8 +68,7 @@ final class DarkFixture {
     }
 
     private static ServerPlayer standing(GameTestHelper helper, BlockPos stand) {
-        var player = survivalPlayer(helper);
-        standAt(helper, stand, player);
+        var player = survivalPlayerAt(helper, stand);
         withHealth(player);
         return player;
     }
@@ -129,6 +128,13 @@ final class DarkFixture {
     static void standAt(GameTestHelper helper, BlockPos stand, ServerPlayer player) {
         var at = helper.absolutePos(stand);
         player.snapTo(at.getX() + 0.5, at.getY(), at.getZ() + 0.5);
+    }
+
+    /** A survival player standing at the stand. */
+    static ServerPlayer survivalPlayerAt(GameTestHelper helper, BlockPos stand) {
+        var player = survivalPlayer(helper);
+        standAt(helper, stand, player);
+        return player;
     }
 
     /**

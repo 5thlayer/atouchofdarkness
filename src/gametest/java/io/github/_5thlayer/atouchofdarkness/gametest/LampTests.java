@@ -4,25 +4,20 @@
 package io.github._5thlayer.atouchofdarkness.gametest;
 
 import static io.github._5thlayer.atouchofdarkness.gametest.DarkFixture.*;
+import static io.github._5thlayer.atouchofdarkness.gametest.LightFixture.*;
 
 import java.util.List;
 
-import io.github._5thlayer.atouchofdarkness.ATouchOfDarkness;
 import io.github._5thlayer.atouchofdarkness.light.LampBlock;
 import io.github._5thlayer.atouchofdarkness.light.LampBlockEntity;
 import io.github._5thlayer.atouchofdarkness.light.Light;
-import io.github._5thlayer.atouchofdarkness.light.PlacedFuel;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.core.registries.Registries;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.gametest.framework.TestEnvironmentDefinition.Weather;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
-import net.minecraft.resources.ResourceKey;
-import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.ProblemReporter;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.EntityType;
@@ -32,16 +27,11 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.TooltipFlag;
-import net.minecraft.world.item.crafting.CraftingInput;
-import net.minecraft.world.item.crafting.CraftingRecipe;
 import net.minecraft.world.level.MoonPhase;
-import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.ComparatorBlock;
 import net.minecraft.world.level.block.entity.ComparatorBlockEntity;
 import net.minecraft.world.level.storage.TagValueInput;
-import net.minecraft.world.phys.BlockHitResult;
-import net.minecraft.world.phys.Vec3;
 import org.jspecify.annotations.Nullable;
 
 /**
@@ -53,9 +43,8 @@ import org.jspecify.annotations.Nullable;
  */
 final class LampTests {
 
-    /** A Lamp's cap at the defaults, a day, and the soul Lamp's. */
-    static final int CAP = 24_000;
-    private static final int SOUL_CAP = 2 * CAP;
+    /** The soul Lamp's cap at the defaults. */
+    private static final int SOUL_CAP = 2 * LAMP_CAP;
 
     /** Ticks short of a burn the clock is moved, and then past it, as the clock also runs a tick a tick. */
     private static final int MARGIN = 100;
@@ -92,17 +81,16 @@ final class LampTests {
         assertCrafts(helper, "lamp", Light.TORCH.get(), Light.LAMP_ITEM.get());
         assertCrafts(helper, "soul_lamp", Light.SOUL_TORCH.get(), Light.SOUL_LAMP_ITEM.get());
 
-        var player = survivalPlayer(helper);
-        standAt(helper, STAND, player);
+        var player = survivalPlayerAt(helper, STAND);
         var lamp = new BlockPos(4, 1, 2);
         helper.setBlock(lamp, Light.LAMP.get().defaultBlockState().setValue(LampBlock.ON, true));
-        useOn(helper, player, new ItemStack(Items.STICK), lamp);
-        assertPlaced(helper, lamp, true, 1000);
+        useOn(helper, player, new ItemStack(Items.STICK), lamp, Direction.SOUTH);
+        assertLamp(helper, lamp, true, 1000);
         var coal = new ItemStack(Items.COAL, 3);
-        useOn(helper, player, coal, lamp);
-        assertPlaced(helper, lamp, true, 17_000);
-        useOn(helper, player, coal, lamp);
-        assertPlaced(helper, lamp, true, CAP);
+        useOn(helper, player, coal, lamp, Direction.SOUTH);
+        assertLamp(helper, lamp, true, 17_000);
+        useOn(helper, player, coal, lamp, Direction.SOUTH);
+        assertLamp(helper, lamp, true, LAMP_CAP);
         helper.assertTrue(coal.getCount() == 1, "fuelling took " + (3 - coal.getCount()) + " coal, not 2");
 
         player.setItemInHand(InteractionHand.MAIN_HAND, Light.LAMP_ITEM.toStack());
@@ -111,29 +99,23 @@ final class LampTests {
         player.containerMenu.clicked(36, 0, ContainerInput.PICKUP, player);
         assertCarried(helper, player.getMainHandItem(), true, 16_000);
         player.containerMenu.clicked(36, 0, ContainerInput.PICKUP, player);
-        assertCarried(helper, player.getMainHandItem(), true, CAP);
+        assertCarried(helper, player.getMainHandItem(), true, LAMP_CAP);
         helper.assertTrue(player.containerMenu.getCarried().isEmpty(), "clicking fuel on left " + player.containerMenu.getCarried());
 
         var placed = new BlockPos(2, 1, 6);
         useOn(helper, player, player.getMainHandItem(), placed.below(), Direction.UP);
-        assertPlaced(helper, placed, true, CAP);
+        assertLamp(helper, placed, true, LAMP_CAP);
         helper.getLevel().destroyBlock(helper.absolutePos(placed), true);
         var dropped = helper.getEntities(EntityType.ITEM, placed, 1.0).stream().map(ItemEntity::getItem).filter(stack -> stack.is(Light.LAMP_ITEM)).toList();
         helper.assertTrue(dropped.size() == 1, "the broken Lamp dropped " + dropped);
-        assertCarried(helper, dropped.getFirst(), true, CAP);
+        assertCarried(helper, dropped.getFirst(), true, LAMP_CAP);
         leave(player);
         helper.succeed();
     }
 
     private static void assertCrafts(GameTestHelper helper, String recipe, Item torch, Item lamp) {
-        var id = ResourceKey.create(Registries.RECIPE, Identifier.fromNamespaceAndPath(ATouchOfDarkness.MOD_ID, recipe));
-        var holder = helper.getLevel().getServer().getRecipeManager().byKey(id);
-        helper.assertTrue(holder.isPresent() && holder.get().value() instanceof CraftingRecipe, "no crafting recipe " + id.identifier());
-        var crafting = (CraftingRecipe) holder.get().value();
         var nugget = Items.IRON_NUGGET;
-        var input = CraftingInput.of(3, 3, List.of(nugget, nugget, nugget, nugget, torch, nugget, nugget, nugget, nugget).stream().map(ItemStack::new).toList());
-        helper.assertTrue(crafting.matches(input, helper.getLevel()), recipe + " doesn't take nuggets around " + torch);
-        var result = crafting.assemble(input);
+        var result = crafted(helper, recipe, 3, 3, List.of(nugget, nugget, nugget, nugget, torch, nugget, nugget, nugget, nugget));
         helper.assertTrue(result.is(lamp) && result.getCount() == 1, recipe + " gives " + result);
         assertCarried(helper, result, false, 0);
     }
@@ -151,7 +133,7 @@ final class LampTests {
      */
     private static void tooltips(GameTestHelper helper) {
         var half = Light.LAMP_ITEM.get().full();
-        half.set(Light.LAMP_FUEL, CAP / 2);
+        half.set(Light.LAMP_FUEL, LAMP_CAP / 2);
         String hint = "Click fuel onto it to fill it";
         assertTooltip(helper, Light.LAMP_ITEM.get().full(), TooltipFlag.NORMAL, hint, null);
         assertTooltip(helper, Light.LAMP_ITEM.toStack(), TooltipFlag.ADVANCED, hint, "0:00 of fuel left");
@@ -163,7 +145,7 @@ final class LampTests {
 
     /** The tooltip has the hint, and the countdown or, given none, no countdown at all. */
     private static void assertTooltip(GameTestHelper helper, ItemStack stack, TooltipFlag flag, String hint, @Nullable String countdown) {
-        var lines = stack.getTooltipLines(Item.TooltipContext.of(helper.getLevel()), null, flag).stream().map(Component::getString).toList();
+        var lines = tooltip(helper, stack, flag);
         for (var line : List.of(hint, "Right-click it placed to turn it on or off")) {
             helper.assertTrue(lines.contains(line), stack + "'s tooltip " + lines + " lacks \"" + line + "\"");
         }
@@ -176,8 +158,7 @@ final class LampTests {
      * full Lamps and a full soul Lamp, one to a slot.
      */
     private static void vanillaLanterns(GameTestHelper helper) {
-        var player = survivalPlayer(helper);
-        standAt(helper, STAND, player);
+        var player = survivalPlayerAt(helper, STAND);
         var inventory = player.getInventory();
         inventory.setItem(9, new ItemStack(Items.LANTERN, 2));
         inventory.setItem(10, new ItemStack(Items.SOUL_LANTERN));
@@ -189,7 +170,7 @@ final class LampTests {
             for (int slot = 0; slot < inventory.getContainerSize(); slot++) {
                 var stack = inventory.getItem(slot);
                 if (stack.is(Light.LAMP_ITEM)) {
-                    assertCarried(helper, stack, true, CAP);
+                    assertCarried(helper, stack, true, LAMP_CAP);
                 }
             }
             assertCarried(helper, inventory.getItem(10), true, SOUL_CAP);
@@ -203,32 +184,31 @@ final class LampTests {
      * don't burn while the clock moves on; one held on beside them does. A dry one can't be turned on.
      */
     private static void toggled(GameTestHelper helper) {
-        var player = survivalPlayer(helper);
-        standAt(helper, STAND, player);
+        var player = survivalPlayerAt(helper, STAND);
         var placed = new BlockPos(4, 1, 2);
         lamp(helper, Light.LAMP.get(), placed, 1000);
         var dry = new BlockPos(2, 1, 4);
         lamp(helper, Light.LAMP.get(), dry, 0);
         for (boolean lit : List.of(false, true, false)) {
-            useOn(helper, player, ItemStack.EMPTY, placed);
+            useOn(helper, player, ItemStack.EMPTY, placed, Direction.SOUTH);
             helper.assertTrue(helper.getBlockState(placed).getValue(LampBlock.LIT) == lit, "an empty hand didn't turn the Lamp " + (lit ? "on" : "off"));
         }
-        useOn(helper, player, ItemStack.EMPTY, dry);
-        assertPlaced(helper, dry, false, 0);
+        useOn(helper, player, ItemStack.EMPTY, dry, Direction.SOUTH);
+        assertLamp(helper, dry, false, 0);
 
         var off = caged(helper, new BlockPos(2, 1, 7), 0);
         off.setItemInHand(InteractionHand.MAIN_HAND, Light.LAMP_ITEM.get().full());
         off.gameMode.useItem(off, helper.getLevel(), off.getMainHandItem(), InteractionHand.MAIN_HAND);
-        assertCarried(helper, off.getMainHandItem(), false, CAP);
+        assertCarried(helper, off.getMainHandItem(), false, LAMP_CAP);
         var on = caged(helper, new BlockPos(6, 1, 7), 0);
         on.setItemInHand(InteractionHand.MAIN_HAND, Light.LAMP_ITEM.get().full());
 
         helper.runAtTickTime(2, () -> KeepsClock.advance(helper, 500));
         helper.runAtTickTime(4, () -> {
-            assertPlaced(helper, placed, false, 1000);
-            assertCarried(helper, off.getMainHandItem(), false, CAP);
+            assertLamp(helper, placed, false, 1000);
+            assertCarried(helper, off.getMainHandItem(), false, LAMP_CAP);
             int left = on.getMainHandItem().getOrDefault(Light.LAMP_FUEL, 0);
-            helper.assertTrue(left <= CAP - 500, "a Lamp held on burned to " + left + " in 500 ticks");
+            helper.assertTrue(left <= LAMP_CAP - 500, "a Lamp held on burned to " + left + " in 500 ticks");
             List.of(player, off, on).forEach(DarkFixture::leave);
             helper.succeed();
         });
@@ -239,19 +219,18 @@ final class LampTests {
      * the stick's 1000, and one that's on but dry shines again. Turned on, the first shines too.
      */
     private static void fuelKeepsSwitch(GameTestHelper helper) {
-        var player = survivalPlayer(helper);
-        standAt(helper, STAND, player);
+        var player = survivalPlayerAt(helper, STAND);
         var off = new BlockPos(2, 1, 2);
         var onDry = new BlockPos(6, 1, 2);
         helper.setBlock(off, Light.LAMP.get());
         helper.setBlock(onDry, Light.LAMP.get().defaultBlockState().setValue(LampBlock.ON, true));
-        useOn(helper, player, new ItemStack(Items.STICK), off);
-        useOn(helper, player, new ItemStack(Items.STICK), onDry);
-        assertPlaced(helper, off, false, 1000);
+        useOn(helper, player, new ItemStack(Items.STICK), off, Direction.SOUTH);
+        useOn(helper, player, new ItemStack(Items.STICK), onDry, Direction.SOUTH);
+        assertLamp(helper, off, false, 1000);
         assertLight(helper, off, 0);
-        assertPlaced(helper, onDry, true, 1000);
-        useOn(helper, player, ItemStack.EMPTY, off);
-        assertPlaced(helper, off, true, 1000);
+        assertLamp(helper, onDry, true, 1000);
+        useOn(helper, player, ItemStack.EMPTY, off, Direction.SOUTH);
+        assertLamp(helper, off, true, 1000);
         leave(player);
         helper.succeed();
     }
@@ -262,8 +241,7 @@ final class LampTests {
      * the signal turns the first off.
      */
     private static void placedIntoSignal(GameTestHelper helper) {
-        var player = survivalPlayer(helper);
-        standAt(helper, STAND, player);
+        var player = survivalPlayerAt(helper, STAND);
         var lamp = new BlockPos(2, 1, 2);
         var dry = new BlockPos(6, 1, 2);
         helper.setBlock(lamp.east(), Blocks.REDSTONE_BLOCK);
@@ -272,12 +250,12 @@ final class LampTests {
         fuelled.set(Light.LAMP_FUEL, 1000);
         useOn(helper, player, fuelled, lamp.below(), Direction.UP);
         useOn(helper, player, Light.LAMP_ITEM.toStack(), dry.below(), Direction.UP);
-        assertPlaced(helper, lamp, true, 1000);
-        assertPlaced(helper, dry, false, 0);
-        useOn(helper, player, new ItemStack(Items.STICK), dry);
-        assertPlaced(helper, dry, true, 1000);
+        assertLamp(helper, lamp, true, 1000);
+        assertLamp(helper, dry, false, 0);
+        useOn(helper, player, new ItemStack(Items.STICK), dry, Direction.SOUTH);
+        assertLamp(helper, dry, true, 1000);
         helper.setBlock(lamp.east(), Blocks.AIR);
-        assertPlaced(helper, lamp, false, 1000);
+        assertLamp(helper, lamp, false, 1000);
         leave(player);
         helper.succeed();
     }
@@ -289,34 +267,33 @@ final class LampTests {
      * until it is fuelled.
      */
     private static void redstone(GameTestHelper helper) {
-        var player = survivalPlayer(helper);
-        standAt(helper, STAND, player);
+        var player = survivalPlayerAt(helper, STAND);
         var lamp = new BlockPos(4, 1, 2);
         var power = lamp.east();
         lamp(helper, Light.LAMP.get(), lamp, 1000);
-        useOn(helper, player, ItemStack.EMPTY, lamp);
-        assertPlaced(helper, lamp, false, -1);
+        useOn(helper, player, ItemStack.EMPTY, lamp, Direction.SOUTH);
+        assertLamp(helper, lamp, false, -1);
         helper.setBlock(power, Blocks.REDSTONE_BLOCK);
-        assertPlaced(helper, lamp, true, -1);
-        useOn(helper, player, ItemStack.EMPTY, lamp);
+        assertLamp(helper, lamp, true, -1);
+        useOn(helper, player, ItemStack.EMPTY, lamp, Direction.SOUTH);
         var dry = new BlockPos(2, 1, 4);
         lamp(helper, Light.LAMP.get(), dry, 0);
         helper.setBlock(dry.east(), Blocks.REDSTONE_BLOCK);
-        assertPlaced(helper, dry, false, 0);
+        assertLamp(helper, dry, false, 0);
         helper.runAtTickTime(3, () -> {
-            assertPlaced(helper, lamp, false, -1);
+            assertLamp(helper, lamp, false, -1);
             helper.setBlock(power, Blocks.AIR);
-            assertPlaced(helper, lamp, false, -1);
-            useOn(helper, player, ItemStack.EMPTY, lamp);
-            useOn(helper, player, new ItemStack(Items.STICK), dry);
-            assertPlaced(helper, dry, true, 1000);
+            assertLamp(helper, lamp, false, -1);
+            useOn(helper, player, ItemStack.EMPTY, lamp, Direction.SOUTH);
+            useOn(helper, player, new ItemStack(Items.STICK), dry, Direction.SOUTH);
+            assertLamp(helper, dry, true, 1000);
         });
         helper.runAtTickTime(5, () -> {
-            assertPlaced(helper, lamp, true, -1);
+            assertLamp(helper, lamp, true, -1);
             helper.setBlock(power, Blocks.REDSTONE_BLOCK);
-            assertPlaced(helper, lamp, true, -1);
+            assertLamp(helper, lamp, true, -1);
             helper.setBlock(power, Blocks.AIR);
-            assertPlaced(helper, lamp, false, -1);
+            assertLamp(helper, lamp, false, -1);
             leave(player);
             helper.succeed();
         });
@@ -344,7 +321,7 @@ final class LampTests {
             KeepsClock.advance(helper, 1000 - MARGIN);
         });
         helper.runAtTickTime(4, () -> {
-            assertPlaced(helper, lamp, true, -1);
+            assertLamp(helper, lamp, true, -1);
             helper.setBlock(unloaded, Light.LAMP.get().defaultBlockState().setValue(LampBlock.ON, true).setValue(LampBlock.LIT, true));
             helper.getBlockEntity(unloaded, LampBlockEntity.class)
                     .loadWithComponents(TagValueInput.create(ProblemReporter.DISCARDING, registries, saved[0]));
@@ -352,7 +329,7 @@ final class LampTests {
         });
         helper.runAtTickTime(6, () -> {
             for (var pos : List.of(lamp, soul, unloaded)) {
-                assertPlaced(helper, pos, false, 0);
+                assertLamp(helper, pos, false, 0);
                 assertLight(helper, pos, 0);
             }
             helper.succeed();
@@ -376,7 +353,7 @@ final class LampTests {
         saved.put("fuel", fuel);
         lamp.loadWithComponents(TagValueInput.create(ProblemReporter.DISCARDING, registries, saved));
         helper.runAtTickTime(2, () -> {
-            assertPlaced(helper, at, false, 1000);
+            assertLamp(helper, at, false, 1000);
             helper.succeed();
         });
     }
@@ -390,10 +367,9 @@ final class LampTests {
         var full = new BlockPos(2, 1, 2);
         var low = new BlockPos(4, 1, 2);
         var campfire = new BlockPos(6, 1, 2);
-        lamp(helper, Light.LAMP.get(), full, CAP);
+        lamp(helper, Light.LAMP.get(), full, LAMP_CAP);
         lamp(helper, Light.LAMP.get(), low, 100);
-        helper.setBlock(campfire, Light.CAMPFIRE.get());
-        PlacedFuel.set(helper.getLevel(), helper.absolutePos(campfire), CampfireTests.CAP);
+        campfire(helper, Light.CAMPFIRE.get(), campfire, CAMPFIRE_CAP);
         for (var light : List.of(full, low, campfire)) {
             helper.setBlock(light.south(), Blocks.COMPARATOR.defaultBlockState().setValue(ComparatorBlock.FACING, Direction.NORTH));
         }
@@ -401,7 +377,7 @@ final class LampTests {
             assertReads(helper, full, 15);
             assertReads(helper, low, 1);
             assertReads(helper, campfire, 15);
-            KeepsClock.advance(helper, CampfireTests.CAP / 2 - MARGIN);
+            KeepsClock.advance(helper, CAMPFIRE_CAP / 2 - MARGIN);
         });
         helper.runAtTickTime(8, () -> {
             assertReads(helper, full, 12);
@@ -434,38 +410,11 @@ final class LampTests {
         player.setItemInHand(InteractionHand.MAIN_HAND, held);
         helper.runAtTickTime(2, () -> KeepsClock.advance(helper, 1000 + MARGIN));
         helper.runAtTickTime(4, () -> {
-            assertPlaced(helper, placed, true, -1);
+            assertLamp(helper, placed, true, -1);
             assertCarried(helper, player.getMainHandItem(), true, -1);
             leave(player);
             helper.succeed();
         });
-    }
-
-    /** A Lamp set at the block, on if it holds any fuel. */
-    static void lamp(GameTestHelper helper, Block lamp, BlockPos at, int fuel) {
-        helper.setBlock(at, lamp.defaultBlockState().setValue(LampBlock.ON, fuel > 0).setValue(LampBlock.LIT, fuel > 0));
-        PlacedFuel.set(helper.getLevel(), helper.absolutePos(at), fuel);
-    }
-
-    /** The player uses the stack on the side of the block at {@code at}. */
-    static void useOn(GameTestHelper helper, ServerPlayer player, ItemStack stack, BlockPos at) {
-        useOn(helper, player, stack, at, Direction.SOUTH);
-    }
-
-    static void useOn(GameTestHelper helper, ServerPlayer player, ItemStack stack, BlockPos at, Direction side) {
-        player.setItemInHand(InteractionHand.MAIN_HAND, stack);
-        var pos = helper.absolutePos(at);
-        var hit = new BlockHitResult(Vec3.atCenterOf(pos).relative(side, 0.5), side, pos, false);
-        player.gameMode.useItemOn(player, helper.getLevel(), stack, InteractionHand.MAIN_HAND, hit);
-    }
-
-    /** The placed Lamp is a Lamp still, on or not, with this much fuel, or any for -1. */
-    static void assertPlaced(GameTestHelper helper, BlockPos at, boolean lit, int fuel) {
-        var state = helper.getBlockState(at);
-        helper.assertTrue(state.getBlock() instanceof LampBlock, "the Lamp at " + at + " became " + state);
-        int left = PlacedFuel.left(helper.getLevel(), helper.absolutePos(at));
-        helper.assertTrue(state.getValue(LampBlock.LIT) == lit && (fuel < 0 || left == fuel),
-                "the Lamp at " + at + " is " + state + " with " + left + " fuel, not " + (lit ? "on" : "off") + " with " + fuel);
     }
 
     /** The carried Lamp is on or not, with this much fuel, or any for -1. */
