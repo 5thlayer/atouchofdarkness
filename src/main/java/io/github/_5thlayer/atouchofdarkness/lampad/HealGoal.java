@@ -70,7 +70,7 @@ final class HealGoal extends Goal {
     public void tick() {
         var level = (ServerLevel) lampad.level();
         var votive = lampad.votive();
-        boolean inTheDark = votive != null && TendedLamps.inRange(votive, lampad.blockPosition())
+        boolean inTheDark = votive != null && ClaimedLamps.inRange(votive, lampad.blockPosition())
                 && !Lit.isLit(level, BlockPos.containing(lampad.getEyePosition()));
         if (inTheDark) {
             // Counted from the tick she is in the Dark, so each health comes a whole 40 ticks after.
@@ -100,7 +100,7 @@ final class HealGoal extends Goal {
             return null;
         }
         var spots = new ArrayList<BlockPos>();
-        for (var pos : TendedLamps.range(votive)) {
+        for (var pos : ClaimedLamps.range(votive)) {
             if (level.isLoaded(pos) && standsOn(level, pos) && !Lit.isLit(level, pos.above())) {
                 spots.add(pos.immutable());
             }

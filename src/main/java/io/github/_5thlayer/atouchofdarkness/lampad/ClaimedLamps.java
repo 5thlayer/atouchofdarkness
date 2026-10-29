@@ -16,16 +16,16 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import org.jspecify.annotations.Nullable;
 
 /**
- * The placed Lamps a Votive's Lampad tends: those within 16 blocks of it either way across, 32 in all,
+ * The Claimed Lamps of a Votive's Lampad (GLOSSARY.md): the placed Lamps within 16 blocks of it either way across, 32 in all,
  * and 8 up or down, in loaded chunks, that are nearer it than any other Votive with a Lampad in whose
  * range they are, a tie going to the Votive first in block order. A Votive with no Lampad claims none. Carried Lamps and Campfires are never among them.
  */
-final class TendedLamps {
+final class ClaimedLamps {
 
     static final int ACROSS = 16;
     static final int UP_DOWN = 8;
 
-    private TendedLamps() {
+    private ClaimedLamps() {
     }
 
     /** Its Lamps, nearest it first. */

@@ -166,18 +166,10 @@ final class TendLampsGoal extends Goal {
 
     /** The nearest Lamp she tends that has room for the whole of this, but those she couldn't reach of late. */
     private @Nullable BlockPos lampToFeed(ItemStack fuel) {
-        if (fuel.isEmpty()) {
-            return null;
-        }
         var level = (ServerLevel) lampad.level();
         long now = level.getGameTime();
         unreachable.values().removeIf(until -> until <= now);
-        for (var pos : lampad.tended()) {
-            if (!unreachable.containsKey(pos) && PlacedFuel.fits(level, pos, fuel)) {
-                return pos;
-            }
-        }
-        return null;
+        return lampad.tending().nextLamp(level, fuel, unreachable.keySet());
     }
 
     private ItemStack votiveFuel() {

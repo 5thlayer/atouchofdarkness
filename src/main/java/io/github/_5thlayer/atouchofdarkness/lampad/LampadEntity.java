@@ -52,7 +52,6 @@ public final class LampadEntity extends PathfinderMob {
 
     private static final String VOTIVE = "votive";
     private static final String BINDING = "binding";
-    private static final String NUGGETS = "nuggets";
 
     /** Ticks between her looks for Lamps come into range that her gold hasn't paid for yet. */
     private static final int CHARGE_INTERVAL = 20;
@@ -64,8 +63,8 @@ public final class LampadEntity extends PathfinderMob {
     /** Ticks of her binding left; none while dormant. */
     private int binding;
 
-    /** The gold nuggets this binding has taken. */
-    private int nuggets;
+    /** The gold her binding has taken, and the Lamps it pays for. */
+    private final Tending tending = new Tending();
 
     private ItemStack lamp = ItemStack.EMPTY;
     private ItemStack nightbrand = ItemStack.EMPTY;
@@ -102,7 +101,7 @@ public final class LampadEntity extends PathfinderMob {
     void summonedAt(BlockPos votive, ItemStack lamp) {
         this.votive = votive.immutable();
         this.lamp = lamp;
-        setHomeTo(votive, TendedLamps.ACROSS);
+        setHomeTo(votive, ClaimedLamps.ACROSS);
     }
 
     /** Standing as a statue, her binding faded or with no Votive, until a Nightbrand renews it. */
@@ -146,23 +145,9 @@ public final class LampadEntity extends PathfinderMob {
                 && entity.isBoundTo(getUUID()) ? entity : null;
     }
 
-    /** The Lamps she tends: those her Votive tends that this binding's gold paid for, nearest it first. */
-    List<BlockPos> tended() {
-        if (votive == null || !(level() instanceof ServerLevel server)) {
-            return List.of();
-        }
-        var lamps = TendedLamps.of(server, votive);
-        return lamps.subList(0, Math.min(Gold.paidFor(nuggets, LightConfig.LAMPAD_LAMPS_PER_NUGGET.getAsInt()), lamps.size()));
-    }
-
-    /** Takes from her Votive the nuggets owed for more Lamps in range than this binding has paid for, as far as it has them. */
-    private void charge(ServerLevel level, VotiveBlockEntity votiveEntity) {
-        int owed = Gold.owed(TendedLamps.of(level, votive).size(), LightConfig.LAMPAD_LAMPS_PER_NUGGET.getAsInt()) - nuggets;
-        int taken = owed > 0 ? votiveEntity.takeGold(owed) : 0;
-        if (taken > 0) {
-            nuggets += taken;
-            goldTakenCues(level);
-        }
+    /** The gold her binding has taken, and the Tended Lamps it pays for. */
+    Tending tending() {
+        return tending;
     }
 
     /** A clink of gold, and golden sparks over her Votive. */
@@ -194,6 +179,7 @@ public final class LampadEntity extends PathfinderMob {
             // Broken: she stands dormant for good.
             votive = null;
             binding = 0;
+            tending.end();
             clearHome();
             setDormant(true);
             return;
@@ -203,23 +189,28 @@ public final class LampadEntity extends PathfinderMob {
         }
         if (binding == 0) {
             renew(level, votiveEntity);
-        } else if (tickCount % CHARGE_INTERVAL == 0) {
-            charge(level, votiveEntity);
+        } else if (tickCount % CHARGE_INTERVAL == 0 || !tending.scanned()) {
+            // Also on her first tick loaded, so she tends from the start.
+            if (tending.charge(level, votiveEntity) > 0) {
+                goldTakenCues(level);
+            }
         }
     }
 
     /** The next Nightbrand, and the gold its Lamps owe; with none, the faded one is spent and she stands dormant. */
     private void renew(ServerLevel level, VotiveBlockEntity votiveEntity) {
-        nuggets = 0;
         var next = votiveEntity.takeNightbrand();
         if (next.isEmpty()) {
+            tending.end();
             nightbrand = ItemStack.EMPTY;
             setDormant(true);
             return;
         }
         nightbrand = next;
         binding = LightConfig.LAMPAD_BINDING.getAsInt();
-        charge(level, votiveEntity);
+        if (tending.renew(level, votiveEntity) > 0) {
+            goldTakenCues(level);
+        }
         setDormant(false);
     }
 
@@ -287,7 +278,7 @@ public final class LampadEntity extends PathfinderMob {
         super.addAdditionalSaveData(output);
         output.storeNullable(VOTIVE, BlockPos.CODEC, votive);
         output.putInt(BINDING, binding);
-        output.putInt(NUGGETS, nuggets);
+        tending.save(output);
         if (!lamp.isEmpty()) {
             output.store(LAMP, ItemStack.CODEC, lamp);
         }
@@ -301,12 +292,12 @@ public final class LampadEntity extends PathfinderMob {
         super.readAdditionalSaveData(input);
         votive = input.read(VOTIVE, BlockPos.CODEC).orElse(null);
         binding = input.getIntOr(BINDING, 0);
-        nuggets = input.getIntOr(NUGGETS, 0);
+        tending.load(input);
         lamp = input.read(LAMP, ItemStack.CODEC).orElse(ItemStack.EMPTY);
         nightbrand = input.read(NIGHTBRAND, ItemStack.CODEC).orElse(ItemStack.EMPTY);
         entityData.set(DORMANT, binding == 0);
         if (votive != null) {
-            setHomeTo(votive, TendedLamps.ACROSS);
+            setHomeTo(votive, ClaimedLamps.ACROSS);
         }
     }
 }
