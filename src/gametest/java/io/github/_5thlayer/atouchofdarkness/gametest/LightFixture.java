@@ -27,9 +27,10 @@ import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
 
 /**
- * The shared fixture of the tests of a Light Source, placed or carried: a crafted item, a player's click
- * on a block, a tooltip's lines, and a Lamp or Campfire placed with fuel. It sets things up and reads them
- * back, and each test makes its own assertions of what it reads, save the one of a placed Lamp.
+ * The shared fixture of the tests of a Light Source, placed or carried, and of what a torch becomes: a
+ * crafted item, a player's click on a block, a tooltip's lines, a Spent Torch's or Nightbrand's among
+ * them, and a Lamp or Campfire placed with fuel. It sets things up and reads them back, and each test
+ * makes its own assertions of what it reads, save the one of a placed Lamp.
  */
 final class LightFixture {
 
