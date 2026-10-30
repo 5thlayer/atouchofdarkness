@@ -29,6 +29,10 @@ import net.neoforged.neoforge.network.registration.NetworkRegistry;
  * Strikes a test counts never kill it, standing on the platform, shut in a stone cage where neither sky
  * nor block light reaches, with their eyes lit by vanilla's light block at the level a test needs, or
  * else under the open sky. The light engine is settled after each block placed.
+ *
+ * <p>Strikes are read as health at ticks that bracket their landing on purpose: the timing is what the
+ * spec says and the tests check, and the settled cage makes them land on the same tick every run.
+ * Health stays the measure, as armour, difficulty and Peaceful change only the damage.
  */
 final class DarkFixture {
 
