@@ -67,7 +67,12 @@ final class LightFixture {
 
     /** A Lamp set at the block, on if it holds any fuel. */
     static void lamp(GameTestHelper helper, Block lamp, BlockPos at, int fuel) {
-        helper.setBlock(at, lamp.defaultBlockState().setValue(LampBlock.ON, fuel > 0).setValue(LampBlock.LIT, fuel > 0));
+        lamp(helper, lamp, at, fuel, fuel > 0);
+    }
+
+    /** A Lamp set at the block, holding this much fuel, on or off: lit only if on with fuel. */
+    static void lamp(GameTestHelper helper, Block lamp, BlockPos at, int fuel, boolean on) {
+        helper.setBlock(at, lamp.defaultBlockState().setValue(LampBlock.ON, on).setValue(LampBlock.LIT, on && fuel > 0));
         PlacedFuel.set(helper.getLevel(), helper.absolutePos(at), fuel);
     }
 

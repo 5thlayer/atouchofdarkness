@@ -167,10 +167,9 @@ final class LampadTests {
         for (var lamp : fed) {
             lamp(helper, Light.LAMP.get(), lamp, 0);
         }
-        helper.setBlock(onDry, Light.LAMP.get().defaultBlockState().setValue(LampBlock.ON, true));
+        lamp(helper, Light.LAMP.get(), onDry, 0, true);
         lamp(helper, Light.LAMP.get(), farthest, 0);
-        helper.setBlock(nearlyFull, Light.LAMP.get());
-        PlacedFuel.set(helper.getLevel(), helper.absolutePos(nearlyFull), LAMP_CAP - 1000);
+        lamp(helper, Light.LAMP.get(), nearlyFull, LAMP_CAP - 1000, false);
         campfire(helper, Light.SOUL_CAMPFIRE.get(), campfire, 2000);
         var votiveEntity = summon(helper, player, votive);
         votiveEntity.setItem(VotiveBlockEntity.FUEL, new ItemStack(Items.COAL, 20));
@@ -323,8 +322,7 @@ final class LampadTests {
         var player = survivalPlayerAt(helper, STAND);
         var votive = new BlockPos(1, 1, 1);
         var lamp = new BlockPos(4, 1, 1);
-        helper.setBlock(lamp, Light.LAMP.get());
-        PlacedFuel.set(helper.getLevel(), helper.absolutePos(lamp), LAMP_CAP);
+        lamp(helper, Light.LAMP.get(), lamp, LAMP_CAP, false);
         var votiveEntity = summon(helper, player, votive);
         votiveEntity.setItem(VotiveBlockEntity.NIGHTBRAND, Nightbrand.NIGHTBRAND.toStack());
         votiveEntity.setItem(VotiveBlockEntity.GOLD, new ItemStack(Items.GOLD_NUGGET));
@@ -503,8 +501,7 @@ final class LampadTests {
         var player = survivalPlayerAt(helper, new BlockPos(8, 1, 0));
         var votive = new BlockPos(2, 1, 2);
         var soulVotive = new BlockPos(6, 1, 6);
-        helper.setBlock(new BlockPos(0, 1, 0), Light.LAMP.get());
-        PlacedFuel.set(helper.getLevel(), helper.absolutePos(new BlockPos(0, 1, 0)), LAMP_CAP);
+        lamp(helper, Light.LAMP.get(), new BlockPos(0, 1, 0), LAMP_CAP, false);
         var votiveEntity = summonFrom(helper, player, votive, Light.LAMP.get(), 5000);
         var soulVotiveEntity = summonFrom(helper, player, soulVotive, Light.SOUL_LAMP.get(), 3000);
         votiveEntity.setItem(VotiveBlockEntity.FUEL, new ItemStack(Items.COAL, 5));
@@ -561,8 +558,7 @@ final class LampadTests {
     /** A Lampad summoned by the player from a Lamp of this kind, off with this much fuel, on a gold block at {@code at}; her Votive. */
     private static VotiveBlockEntity summonFrom(GameTestHelper helper, ServerPlayer player, BlockPos at, Block lamp, int fuel) {
         helper.setBlock(at, Blocks.GOLD_BLOCK);
-        helper.setBlock(at.above(), lamp);
-        PlacedFuel.set(helper.getLevel(), helper.absolutePos(at.above()), fuel);
+        lamp(helper, lamp, at.above(), fuel, false);
         useOn(helper, player, Light.TORCH.toStack(), at.above(), Direction.SOUTH);
         player.setItemInHand(InteractionHand.MAIN_HAND, ItemStack.EMPTY);
         return helper.getBlockEntity(at, VotiveBlockEntity.class);
