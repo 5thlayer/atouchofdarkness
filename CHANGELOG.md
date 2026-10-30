@@ -4,6 +4,8 @@ Written for Consumers: what a mod building against A Touch of Darkness can use, 
 
 ## Unreleased
 
+## 0.1.2
+
 - A player carrying a burning Torch or Lamp is Lit on the tick they jump into the dark, by an ender pearl, chorus fruit, a teleport, a change of dimension, joining or respawning: the Dark now counts the light in their hands at their eyes, as well as the carried light block, which shows a tick later. They no longer hear the Dark's entry sound for nothing, nor lose a tick of their Grace Period or its refill. Held light counts on every tick, so a carrier whose eye block can't take the light block, such as flowing water or a partial block, is Lit too. The Vesper Dial's meter reads the same. Vanilla's light still shows the gap for that tick, for mobs and for A Touch of Madness (#40).
 
 ## 0.1.1
