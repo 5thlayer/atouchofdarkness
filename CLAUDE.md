@@ -1,6 +1,6 @@
 # A Touch of Darkness
 
-A Pillar of the A Touch Of suite (`5thlayer/atouchof`, which holds the suite's glossary and ADRs): a mod its Consumers, modpacks, read from the local maven repository by version. See `GLOSSARY.md` for the domain glossary.
+A Pillar of the A Touch Of suite (whose glossary and ADRs are in the private Home Repo, `~/5thlayer/home/atouchof/`): a mod its Consumers, modpacks, read from the local maven repository by version. See `GLOSSARY.md` for the domain glossary.
 
 ## Workflow
 
