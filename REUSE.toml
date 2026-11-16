@@ -40,13 +40,6 @@ path = [
 SPDX-FileCopyrightText = "2026 5thlayer"
 SPDX-License-Identifier = "CC-BY-4.0"
 
-# The agent skills, from mattpocock/skills.
-[[annotations]]
-path = [".claude/skills/**", ".gitmodules"]
-precedence = "override"
-SPDX-FileCopyrightText = "Matt Pocock"
-SPDX-License-Identifier = "MIT"
-
 # The Lampad's generated sheet, which scripts/build-textures.py dresses in third-party art.
 [[annotations]]
 path = ["data/lampad_template.png"]
